@@ -2,6 +2,8 @@
 
 Hardest shit since sliced pan
 
+![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/chuck.jpg?raw=true)
+
 ### Get setup
 ```
 npm ci
