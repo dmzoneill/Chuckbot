@@ -42,6 +42,17 @@ function start(client) {
       word_strategies_dict = get_strategies(client);
     }
 
+    if(message.body.toLowerCase() === "help") {
+      help = "";
+      Object.keys(word_strategies_dict).forEach(key => {
+        word_strategies_dict[key].provides().forEach(term => {
+          help += term + "\n"
+        })        
+      });
+      help += "help\n"
+      client.sendText(message.from, help);
+    }
+
     Object.keys(word_strategies_dict).forEach(key => {
       if(word_strategies_dict[key].handleMessage(message)) {
         return;

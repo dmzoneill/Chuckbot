@@ -68,6 +68,10 @@ class ChuckJokes extends MessageStrategy {
     ];
   }
 
+  provides() {
+    return ['chuck', 'stfu chuck']
+  }
+
   get_joke() {
     var joke = request('GET', 'https://api.chucknorris.io/jokes/random', {
       headers: {       
@@ -106,13 +110,14 @@ class ChuckJokes extends MessageStrategy {
 
 
 // ####################################
-// Chuck jokes 
+// yoga asanas
 // ####################################
 
 class Asthanga extends MessageStrategy {
   constructor(client) {
     super(client);
     this.enabled = true;
+
     this.yoga_keywords = [
       'primary series',
       'Samasthiti', 
@@ -275,6 +280,10 @@ class Asthanga extends MessageStrategy {
     let max_indice = wanted > len - 1 ? len - 1 : wanted -1;
     return arr.myJoin(" ", pos, max_indice);
   }
+
+  provides() {
+    return ['bend', 'stiff', 'list', 'poses']
+  }
   
   handleMessage(message) {
     this.message = message;
@@ -295,6 +304,15 @@ class Asthanga extends MessageStrategy {
     if(message.body.toLowerCase() === 'list') {
       this.typing();
       this.print_sorted_with_files();
+    }
+
+    if(message.body.toLowerCase() === 'poses') {
+      this.typing();
+      var msg = ""
+      this.yoga_keywords.forEach(term => {
+        msg += term + "\n";
+      });
+      this.client.sendText(message.from, msg);
     }
 
     if(this.enabled) {
@@ -338,6 +356,10 @@ class Youtube extends MessageStrategy {
   constructor(client) {
     super(client);
     this.enabled = true;
+  }
+
+  provides() {
+    return ['youtube']
   }
   
   handleMessage(message) {
@@ -391,6 +413,10 @@ class TikTok extends MessageStrategy {
   constructor(client) {
     super(client);
     this.enabled = true;
+  }
+
+  provides() {
+    return []
   }
   
   handleMessage(message) {
@@ -453,6 +479,10 @@ class HyperLink extends MessageStrategy {
     super(client);
     this.enabled = true;
   }
+
+  provides() {
+    return []
+  }
   
   handleMessage(message) {
     this.message = message;
@@ -480,6 +510,10 @@ class Currency extends MessageStrategy {
     this.enabled = true;
   }
   
+  provides() {
+    return ['fiat']
+  }
+
   handleMessage(message) {
     this.message = message;
     var self = this;
@@ -507,6 +541,10 @@ class Crypto extends MessageStrategy {
   constructor(client) {
     super(client);
     this.enabled = true;
+  }
+
+  provides() {
+    return ['coin']
   }
 
   async cmp(self) {
@@ -553,6 +591,10 @@ class Imdb extends MessageStrategy {
     super(client);
     this.enabled = true;
   }
+
+  provides() {
+    return ['imdb']
+  }
   
   handleMessage(message) {
     this.message = message;
@@ -578,6 +620,10 @@ class Google extends MessageStrategy {
     super(client);
     this.enabled = true;
   }
+
+  provides() {
+    return ['google']
+  }
   
   handleMessage(message) {
     this.message = message;
@@ -601,7 +647,11 @@ class Wikipedia extends MessageStrategy {
     super(client);
     this.enabled = true;
   }
-  
+
+  provides() {
+    return ['wiki']
+  }
+
   handleMessage(message) {
     this.message = message;
     var self = this;
@@ -628,6 +678,10 @@ class Hi extends MessageStrategy {
     super(client);
     this.enabled = true;
   }
+
+  provides() {
+    return ['hi']
+  }
   
   handleMessage(message) {
     this.message = message;
@@ -651,6 +705,10 @@ class Weather extends MessageStrategy {
   constructor(client) {
     super(client);
     this.enabled = true;
+  }
+
+  provides() {
+    return ['weather']
   }
   
   handleMessage(message) {
@@ -688,6 +746,10 @@ class UrbanDictionary extends MessageStrategy {
   constructor(client) {
     super(client);
     this.enabled = true;
+  }
+
+  provides() {
+    return ['urban']
   }
   
   handleMessage(message) {
