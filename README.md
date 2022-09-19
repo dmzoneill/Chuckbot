@@ -2,7 +2,7 @@
 
 Hardest shit since sliced pan
 
-![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/chuck.png?raw=true)
+![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/logo.png?raw=true)
 
 ### Get setup
 ```
