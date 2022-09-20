@@ -26,6 +26,8 @@ Array.prototype.myJoin = function(seperator,start,end){
 // ####################################
 
 class MessageStrategy {
+  static derived = new Set();
+
   constructor(client) {
     this.client = client;
   }
@@ -36,6 +38,17 @@ class MessageStrategy {
     await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 2000)));
     await this.client.simulateTyping(this.message.chatId, false);
   }
+
+  static getStrategies(client) {
+    let strategies = {}
+
+    MessageStrategy.derived.forEach(key => {
+      strategies[key] = eval(`new ${key}()`);
+      strategies[key].client = client;
+    });
+
+    return strategies;
+  }
 }
 
 
@@ -44,6 +57,8 @@ class MessageStrategy {
 // ####################################
 
 class ChuckJokes extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -114,6 +129,8 @@ class ChuckJokes extends MessageStrategy {
 // ####################################
 
 class Asthanga extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -353,6 +370,8 @@ class Asthanga extends MessageStrategy {
 // ####################################
 
 class Youtube extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -410,6 +429,8 @@ class Youtube extends MessageStrategy {
 // ####################################
 
 class TikTok extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -475,6 +496,8 @@ class TikTok extends MessageStrategy {
 // ####################################
 
 class HyperLink extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -505,6 +528,8 @@ class HyperLink extends MessageStrategy {
 // ####################################
 
 class Currency extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -538,6 +563,8 @@ class Currency extends MessageStrategy {
 // ####################################
 
 class Crypto extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -587,6 +614,8 @@ class Crypto extends MessageStrategy {
 // ####################################
 
 class Imdb extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -616,6 +645,8 @@ class Imdb extends MessageStrategy {
 // ####################################
 
 class Google extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -643,6 +674,8 @@ class Google extends MessageStrategy {
 // ####################################
 
 class Wikipedia extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -674,6 +707,8 @@ class Wikipedia extends MessageStrategy {
 // ####################################
 
 class Hi extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -702,6 +737,8 @@ class Hi extends MessageStrategy {
 // ####################################
 
 class Weather extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -743,6 +780,8 @@ class Weather extends MessageStrategy {
 // ####################################
 
 class UrbanDictionary extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
   constructor(client) {
     super(client);
     this.enabled = true;
@@ -774,17 +813,5 @@ class UrbanDictionary extends MessageStrategy {
 }
 
 module.exports = {
-    ChuckJokes: ChuckJokes,
-    Asthanga: Asthanga,
-    Youtube: Youtube,
-    TikTok: TikTok,
-    HyperLink: HyperLink,
-    Currency: Currency,
-    Crypto: Crypto,
-    Imdb: Imdb,
-    Google: Google,
-    Wikipedia: Wikipedia,
-    Weather: Weather,
-    UrbanDictionary: UrbanDictionary,
-    Hi: Hi
+    MessageStrategy: MessageStrategy
 }

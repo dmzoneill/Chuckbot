@@ -1,4 +1,9 @@
 const wa = require('@open-wa/wa-automate');
+const fs = require('fs');
+
+let chuck = null;
+let word_strategies_dict = null;
+let message_strategies_file = "./strategies.js";
 
 wa.create({
   sessionId: "COVID_HELPER",
@@ -13,33 +18,25 @@ wa.create({
   qrTimeout: 0, //0 means it will wait forever for you to scan the qr code
 }).then(client => start(client));
 
-function get_strategies(client) {
-  delete require.cache[require.resolve('./strategies.js')];
-  Strategies = require('./strategies.js');
-
-  return {
-    chuck: new Strategies.ChuckJokes(client),
-    yoga: new Strategies.Asthanga(client),
-    youtube: new Strategies.Youtube(client),
-    tiktok: new Strategies.TikTok(client),
-    hyperlink: new Strategies.HyperLink(client),
-    currency: new Strategies.Currency(client),
-    crypto: new Strategies.Crypto(client),
-    imdb: new Strategies.Imdb(client),
-    google: new Strategies.Google(client),
-    wiki: new Strategies.Wikipedia(client),
-    weather: new Strategies.Weather(client),
-    urban: new Strategies.UrbanDictionary(client),
-    hi: new Strategies.Hi(client)
+fs.watch(message_strategies_file, (event, filename) => {
+  if (filename) {
+    update_strategies();
   }
+});
+
+function update_strategies() {
+  delete require.cache[require.resolve(message_strategies_file)];
+  Strategies = require(message_strategies_file);
+  word_strategies_dict = Strategies.MessageStrategy.getStrategies(chuck);
 }
 
 function start(client) {
-  let word_strategies_dict = get_strategies(client);
+  chuck = client;
+  update_strategies();
 
   client.onMessage(async message => {
     if(message.body.toLowerCase() === "reload") {
-      word_strategies_dict = get_strategies(client);
+      update_strategies();
     }
 
     if(message.body.toLowerCase() === "help") {
