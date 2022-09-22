@@ -7,7 +7,7 @@ Hardest shit since sliced pan
 ### Get setup
 ```
 npm ci
-node whatsbot.js
+node chuckbot.js
 ```
 
 Using the phone number you supplied to the setup.
@@ -23,11 +23,12 @@ basic commands are:
  - fiat
  - youtube rusted suzuki swift
  - chuck
- - stfu chuck
+ - chuck stfu
  - stiff
  - bend
  - poses
  - weather cork
  - urban
  - hi 
+ - ...
 
