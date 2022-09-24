@@ -71,7 +71,7 @@ class MessageStrategy {
     return MessageStrategy.contacts
   }
 
-  get_contacts() {
+  get_contacts_verbose() {
     return MessageStrategy.contacts_verbose
   }
 
@@ -187,6 +187,8 @@ class Spam extends MessageStrategy {
       Spam.banned[spammer] = Date.now() / 1000;
       return true;
     }
+
+    return false;
   }
 }
 
@@ -220,6 +222,8 @@ class Help extends MessageStrategy {
       });
       MessageStrategy.client.sendText(self.message.from, help);
     }
+
+    return false;
   }
 }
 
@@ -242,14 +246,14 @@ class Hi extends MessageStrategy {
   
   handleMessage(message) {
     this.message = message;
-    var self = this;
 
-    if(message.body.toLowerCase() === 'hi') {
-      MessageStrategy.typing(self.message);   
-      self.client.sendText(this.message.from, '👋 Hello!!!');
-      return;
+    if(this.message.body.toLowerCase() === 'hi') {
+      MessageStrategy.typing(this.message);   
+      this.client.sendText(this.message.from, '👋 Hello!!!');
+      return true;
     }
 
+    return false;
   }
 }
 
@@ -421,6 +425,8 @@ class Harass extends MessageStrategy {
       this.listharass();
       return true;
     }
+
+    return false;
   }
 }
 
@@ -496,7 +502,9 @@ class ChuckJokes extends MessageStrategy {
           console.log(err);
         } 
       });
-    }    
+    }  
+    
+    return false;
   }
 }
 
@@ -752,6 +760,8 @@ class Asthanga extends MessageStrategy {
         self.post_yoga_image(self.client, message, nearest);
       }
     } 
+
+    return false;
   }
 }
 
@@ -783,7 +793,7 @@ class Youtube extends MessageStrategy {
         try {
           const results = await yt.search(search_term);
           if(results.length == 0) {
-            return
+            return false;
           }
           MessageStrategy.typing(self.message);   
           self.client.sendYoutubeLink(this.message.from, results[0].url);
@@ -792,7 +802,7 @@ class Youtube extends MessageStrategy {
         }
       })();
 
-      return;
+      return false;
     }
 
     if (this.message.body.match(new RegExp(/^https:\/\/.*.youtube.com\/.*/)) || this.message.body.match(new RegExp(/^https:\/\/youtu.be\/.*/))) {
@@ -810,11 +820,13 @@ class Youtube extends MessageStrategy {
             let data = "data:" + response.headers["content-type"] + ";base64," + Buffer.from(body).toString('base64');   
             MessageStrategy.typing(self.message);   
             self.client.sendYoutubeLink(message.from, self.message.body, '', data);
-            return;
+            return false;
           }
         });        
       }
     }
+
+    return false;
   }
 }
 
@@ -877,8 +889,10 @@ class TikTok extends MessageStrategy {
         }
       });
 
-      return;
+      return false;
     }
+
+    return false;
   }
 }
 
@@ -968,8 +982,10 @@ class Facebook extends MessageStrategy {
         }
       });
 
-      return;
+      return false;
     }
+
+    return false;
   }
 }
 
@@ -999,7 +1015,7 @@ class HyperLink extends MessageStrategy {
       if(this.message.body.indexOf('facebook') > -1) return;
 
       if(!("thumbnail" in this.message)) {
-        return;
+        return false;
       }
 
       if(this.message.thumbnail.length == 0) {
@@ -1007,6 +1023,8 @@ class HyperLink extends MessageStrategy {
         MessageStrategy.client.sendLinkWithAutoPreview(this.message.from, this.message.body);
       }
     }
+
+    return false;
   }
 }
 
@@ -1042,6 +1060,8 @@ class Currency extends MessageStrategy {
         }
       })();
     }
+
+    return false;
   }
 }
 
@@ -1239,6 +1259,8 @@ class Crypto extends MessageStrategy {
       this.get_graph(this, this.message);
       return true;
     }
+
+    return false;
   }
 }
 
@@ -1270,6 +1292,8 @@ class Imdb extends MessageStrategy {
         self.client.sendLinkWithAutoPreview(self.message.from, "https://www.imdb.com/title/" + res + "/");
       });
     }
+
+    return false;
   }
 }
 
@@ -1299,6 +1323,8 @@ class Google extends MessageStrategy {
       MessageStrategy.typing(self.message);   
       self.client.sendLinkWithAutoPreview(message.from, "https://www.google.com/search?q=" + urlencode(search_term));
     }
+
+    return false;
   }
 }
 
@@ -1330,8 +1356,9 @@ class Wikipedia extends MessageStrategy {
       .page(search_term)
       .then(page => page.info())
       .then(console.log);
-      return;
     }
+
+    return false;
   }
 }
 
@@ -1375,6 +1402,8 @@ class Weather extends MessageStrategy {
         self.client.sendText(message.from, report);
       });
     }
+
+    return false;
   }
 }
 
@@ -1417,6 +1446,8 @@ class Levenshteiner extends MessageStrategy {
       
       return true;
     }
+
+    return false;
   }
 }
 
@@ -1456,6 +1487,8 @@ class UrbanDictionary extends MessageStrategy {
         console.error(`random (promise) - error ${error.message}`)
       }) 
     }
+
+    return false;
   }
 }
 
@@ -1631,6 +1664,8 @@ class Translate extends MessageStrategy {
         }
       });
     }
+
+    return false;
   }
 }
 
