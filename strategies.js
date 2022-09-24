@@ -16,6 +16,7 @@ const { translate } = require('bing-translate-api');
 const CronJob = require('cron').CronJob;
 const urlencode = require('rawurlencode');
 const puppeteer = require('puppeteer');
+const crypto = require('crypto')
 
 
 Array.prototype.myJoin = function(seperator,start,end){
@@ -31,20 +32,79 @@ Array.prototype.myJoin = function(seperator,start,end){
 // ####################################
 
 class MessageStrategy {
+  static client = null;
   static derived = new Set();
+  static contacts = [];
+  static contacts_verbose = [];
+  static groups = [];
+  static groups_verbose = [];
 
-  constructor(client) {
-    this.client = client;
+  constructor() {}
+
+  static async update_active_chat_contacts() {
+    MessageStrategy.contacts = [];
+    let all_chats = await MessageStrategy.client.getAllChats();
+    
+    for(let h=0; h < all_chats.length; h++) {
+      MessageStrategy.contacts.push(all_chats[h].contact.id);
+      MessageStrategy.contacts_verbose.push(all_chats[h].contact.id + " " + all_chats[h].contact.name);
+    }
+
+    let all_groups = await MessageStrategy.client.getAllGroups();
+
+    for(let h=0; h < all_groups.length; h++) {
+      MessageStrategy.groups.push(all_groups[h].id);
+      MessageStrategy.groups_verbose.push(all_groups[h].id + " " + all_groups[h].name);
+      let members = await MessageStrategy.client.getGroupMembers(all_groups[h].id);
+      for(let k=0; k < members.length; k++) {
+        if(MessageStrategy.contacts.includes(members[k].id.trim())) continue;
+        MessageStrategy.contacts.push(members[k].id.trim());
+      }
+    }
   }
 
-  async typing() {
-    await this.client.simulateTyping(this.message.chatId, true);
-    // simulate typing for up to 2 seconds
-    await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 2000)));
-    await this.client.simulateTyping(this.message.chatId, false);
+  async call_update_active_chat_contacts() {
+    MessageStrategy.update_active_chat_contacts()
+  }
+
+  get_contacts() {
+    return MessageStrategy.contacts
+  }
+
+  get_contacts() {
+    return MessageStrategy.contacts_verbose
+  }
+
+  get_groups() {
+    return MessageStrategy.groups
+  }
+
+  get_groups_verbose() {
+    return MessageStrategy.groups_verbose
+  }
+
+  static async get_chat_id(message) {
+    if("chatId" in message) {
+      return message.chatId;
+    }
+    else {
+      return message.from;
+    }
+  }
+
+  static async typing(message) {
+    try {
+      console.log("1");
+      await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), true);
+      await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000)));
+      await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), false);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   static getStrategies(client) {
+    MessageStrategy.client = client;
     let strategies = {}
 
     MessageStrategy.derived.forEach(key => {
@@ -66,8 +126,8 @@ class Spam extends MessageStrategy {
   static tracker = {}
   static banned = {}
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -81,7 +141,7 @@ class Spam extends MessageStrategy {
 
     if(spammer in Spam.banned) {
       if(Spam.banned[spammer] + 1800 > Date.now() / 1000) {
-        this.client.sendText(this.message.sender.id, "Jesus loves you");
+        MessageStrategy.client.sendText(this.message.sender.id, "Jesus loves you");
         return true;
       }
       delete Spam.banned[spammer];
@@ -138,8 +198,8 @@ class Spam extends MessageStrategy {
 class Help extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -158,7 +218,7 @@ class Help extends MessageStrategy {
           help += term + "\n"
         })        
       });
-      this.client.sendText(self.message.from, help);
+      MessageStrategy.client.sendText(self.message.from, help);
     }
   }
 }
@@ -171,8 +231,8 @@ class Help extends MessageStrategy {
 class Hi extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -185,7 +245,7 @@ class Hi extends MessageStrategy {
     var self = this;
 
     if(message.body.toLowerCase() === 'hi') {
-      self.typing();
+      MessageStrategy.typing(self.message);   
       self.client.sendText(this.message.from, '👋 Hello!!!');
       return;
     }
@@ -204,8 +264,8 @@ class Harass extends MessageStrategy {
   static sluts = []
   static cronjob = null;
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
     let self = this;
     this.setup_cron();
@@ -252,71 +312,91 @@ class Harass extends MessageStrategy {
     return body.split("\"")[3]
   }
 
-  async get_sluts() {   
-    Harass.sluts = []
-    let all_chats = await this.client.getAllChats();
-    
-    for(let h=0; h < all_chats.length; h++) {
-      let name = "name" in all_chats[h].contact ? all_chats[h].contact.name : "";
-      let entry = all_chats[h].contact.id + " " + name;
-
-      if(name.indexOf("Richel") > -1) continue;
-      if(Harass.sluts.includes(entry.trim())) continue;
-
-      Harass.sluts.push(entry.trim());
-    }
-
-    let all_groups = await this.client.getAllGroups();
-
-    for(let h=0; h < all_groups.length; h++) {
-      let members = await this.client.getGroupMembers(all_groups[h].id);
-      for(let k=0; k < members.length; k++) {
-        let name = "name" in members[k] ? members[k].name : "";
-        let entry = members[k].id + " " + name;
+  async get_sluts() { 
+    try {
+      Harass.sluts = []
+      let all_chats = await MessageStrategy.client.getAllChats();
+      
+      for(let h=0; h < all_chats.length; h++) {
+        let name = "name" in all_chats[h].contact ? all_chats[h].contact.name : "";
+        let entry = all_chats[h].contact.id + " " + name;
 
         if(name.indexOf("Richel") > -1) continue;
         if(Harass.sluts.includes(entry.trim())) continue;
 
         Harass.sluts.push(entry.trim());
       }
-    }
+
+      let all_groups = await MessageStrategy.client.getAllGroups();
+
+      for(let h=0; h < all_groups.length; h++) {
+        let members = await MessageStrategy.client.getGroupMembers(all_groups[h].id);
+        for(let k=0; k < members.length; k++) {
+          let name = "name" in members[k] ? members[k].name : "";
+          let entry = members[k].id + " " + name;
+
+          if(name.indexOf("Richel") > -1) continue;
+          if(Harass.sluts.includes(entry.trim())) continue;
+
+          Harass.sluts.push(entry.trim());
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }   
   }
 
   async get_known_sluts() {
-    await this.get_sluts();
-    this.typing();
-    let msg = "";
-    for(let y=0; y < Harass.sluts.length; y++){
-      msg += (y+1).toString() + " :" + Harass.sluts[y] + "\n";
+    try {
+      await this.get_sluts();
+      MessageStrategy.typing(this.message);
+      let msg = "";
+      for(let y=0; y < Harass.sluts.length; y++){
+        msg += (y+1).toString() + " :" + Harass.sluts[y] + "\n";
+      }
+      MessageStrategy.client.sendText(this.message.from, msg);
+    } catch (err) {
+      console.log(err);
     }
-    this.client.sendText(this.message.from, msg);
   }
 
   async harass() {
-    let cunt = this.message.body.split(" ");
-    let the_cunt = parseInt(cunt[1].trim()) -1;
-    if(Harass.sluts.includes(the_cunt)) {
-      return;
+    try {
+      let cunt = this.message.body.split(" ");
+      let the_cunt = parseInt(cunt[1].trim()) -1;
+      if(Harass.sluts.includes(the_cunt)) {
+        return;
+      }
+      Harass.cunts.push(Harass.sluts[the_cunt]);
+    } catch (err) {
+      console.log(err);
     }
-    Harass.cunts.push(Harass.sluts[the_cunt]);
   }
   
   async stopharass() {
-    let cunt = this.message.body.split(" ");
-    let the_cunt = cunt[2].trim();
-    for(let y=0; y < Harass.cunts.length; y++) {
-      if(!Harass.cunts[y]) continue;
-
-      if(Harass.cunts[y].toLowerCase().indexOf(the_cunt) > -1) {
-        delete Harass.cunts[y];
-        y = y -1;
+    try {
+      let cunt = this.message.body.split(" ");
+      let the_cunt = cunt[2].trim();
+      for(let y=0; y < Harass.cunts.length; y++) {
+        if(!Harass.cunts[y]) continue;
+  
+        if(Harass.cunts[y].toLowerCase().indexOf(the_cunt) > -1) {
+          delete Harass.cunts[y];
+          y = y -1;
+        }
       }
+    } catch (err) {
+      console.log(err);
     }
   }
 
   async listharass() {
-    this.typing();
-    this.client.sendText(this.message.from, Harass.cunts.join("\n"));
+    try {
+      MessageStrategy.typing(this.message);
+      MessageStrategy.client.sendText(this.message.from, Harass.cunts.join("\n"));
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   handleMessage(message, strategies) {
@@ -352,8 +432,8 @@ class Harass extends MessageStrategy {
 class ChuckJokes extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
     this.chuck_keywords = [
       'joke', 
@@ -394,23 +474,27 @@ class ChuckJokes extends MessageStrategy {
     var self = this;
 
     if(this.message.body.toLowerCase() === 'chuck stfu') {      
-      this.typing();
-      this.client.sendText(message.from, 'Don\'t let anyone tell you you\'re not powerful.  You\'re the most powerful woman i know');
+      MessageStrategy.typing(self.message);   
+      MessageStrategy.client.sendText(message.from, 'Don\'t let anyone tell you you\'re not powerful.  You\'re the most powerful woman i know');
       this.chuck_enabled = false;
     }
 
     if(this.message.body.toLowerCase() === 'chuck') {  
-      this.typing();
-      this.client.sendText(this.message.from, 'How many lesbians does it take to screw in a light bulb');
+      MessageStrategy.typing(self.message);   
+      MessageStrategy.client.sendText(this.message.from, 'How many lesbians does it take to screw in a light bulb');
       this.chuck_enabled = true;
     }   
 
     if(this.chuck_enabled === true) {
       this.chuck_keywords.forEach(async function(word) {
-        if (self.message.body.toLowerCase().indexOf(word) > -1) {  
-          self.typing();
-          self.client.sendText(self.message.from, self.get_joke());
-        }
+        try {
+          if (self.message.body.toLowerCase().indexOf(word) > -1) {  
+            MessageStrategy.typing(self.message);
+            self.client.sendText(self.message.from, self.get_joke());
+          }
+        } catch (err) {
+          console.log(err);
+        } 
       });
     }    
   }
@@ -423,9 +507,9 @@ class ChuckJokes extends MessageStrategy {
 
 class Asthanga extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
-  
-  constructor(client) {
-    super(client);
+
+  constructor() {
+    super();
     this.enabled = true;
 
     this.yoga_keywords = [
@@ -542,44 +626,52 @@ class Asthanga extends MessageStrategy {
   }
 
   async print_sorted_with_files() {
-    this.yoga_keywords.sort();
+    try {
+      this.yoga_keywords.sort();
   
-    const paths = await globby("poses/*.png");
+      const paths = await globby("poses/*.png");
+    
+      this.yoga_keywords.forEach(async function(move) {
+        let nearest_distance = 999;
+        let nearest = "";
+    
+        paths.forEach(async function(path) {    
+          let distance = levenshtein("poses/" + move + ".png", path);
+          if(distance < nearest_distance && distance < 5) {
+            nearest_distance = distance;
+            nearest = path;
+          }
+        });
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
   
-    this.yoga_keywords.forEach(async function(move) {
+  async post_yoga_image(client, message, move) {
+    try {
+      const paths = await globby("poses/*.png");
+  
       let nearest_distance = 999;
       let nearest = "";
-  
+    
       paths.forEach(async function(path) {    
         let distance = levenshtein("poses/" + move + ".png", path);
-        if(distance < nearest_distance && distance < 5) {
+        if(distance < nearest_distance) {
           nearest_distance = distance;
           nearest = path;
         }
       });
-    });
-  }
-  
-  async post_yoga_image(client, message, move) {
-    const paths = await globby("poses/*.png");
-  
-    let nearest_distance = 999;
-    let nearest = "";
-  
-    paths.forEach(async function(path) {    
-      let distance = levenshtein("poses/" + move + ".png", path);
-      if(distance < nearest_distance) {
-        nearest_distance = distance;
-        nearest = path;
-      }
-    });
-  
-    if(nearest_distance > 3) {
-      return;
-    }
     
-    if(nearest !== "") {
-      await client.sendImage(message.from, nearest, move, move, null, null, false, false, true, false);
+      if(nearest_distance > 3) {
+        return;
+      }
+      
+      if(nearest !== "") {
+        await client.sendImage(message.from, nearest, move, move, null, null, false, false, true, false);
+      }
+    } catch (err) {
+      console.log(err);
     }
   }
   
@@ -600,29 +692,29 @@ class Asthanga extends MessageStrategy {
     var self = this;
     
     if(this.message.body.toLowerCase() === 'yoga start') {   
-      this.typing();
-      this.client.sendText(this.message.from, 'First series');
+      MessageStrategy.typing(self.message);   
+      MessageStrategy.client.sendText(this.message.from, 'First series');
       this.enabled = true;
     }  
 
     if(message.body.toLowerCase() === 'yoga stop') {
-      this.typing();
-      this.client.sendText(message.from, 'Lets go to the gym');
+      MessageStrategy.typing(self.message);   
+      MessageStrategy.client.sendText(message.from, 'Lets go to the gym');
       this.enabled = true;
     }  
 
     if(message.body.toLowerCase() === 'yoga list') {
-      this.typing();
+      MessageStrategy.typing(self.message);   
       this.print_sorted_with_files();
     }
 
     if(message.body.toLowerCase() === 'yoga poses') {
-      this.typing();
+      MessageStrategy.typing(self.message);   
       var msg = ""
       this.yoga_keywords.forEach(term => {
         msg += term + "\n";
       });
-      this.client.sendText(message.from, msg);
+      MessageStrategy.client.sendText(message.from, msg);
     }
 
     if(this.enabled) {
@@ -630,27 +722,33 @@ class Asthanga extends MessageStrategy {
       let nearest = 9999;
 
       this.yoga_keywords.forEach(async function(pose) {
-        let yoga_pose = pose.toLowerCase();
-        // get the length of the pose 
-        // use this length to match sentance in the message
-        let yoga_pose_arr = yoga_pose.indexOf(' ') > -1 ? yoga_pose.split(' ') : [yoga_pose];
-        let target_string_arr = self.message.body.toLowerCase().indexOf(' ') > -1 ? self.message.body.toLowerCase().split(' ') : [self.message.body.toLowerCase()];
-        
-        for(let x = 0; x < target_string_arr.length; x++) {
-          // create a string of the next yoga_pose_arr.lenght indices from the target string
-          let substring = self.get_next_indices(target_string_arr, x, yoga_pose_arr.length);
-          // e.g: substring = "string of the next"
-
-          let distance = levenshtein(yoga_pose, substring);
-          if(distance < nearest_distance) {
-            nearest_distance = distance;
-            nearest = pose;            
+        try {
+          let yoga_pose = pose.toLowerCase();
+          // get the length of the pose 
+          // use this length to match sentance in the message
+          let yoga_pose_arr = yoga_pose.indexOf(' ') > -1 ? yoga_pose.split(' ') : [yoga_pose];
+          let target_string_arr = self.message.body.toLowerCase().indexOf(' ') > -1 ? self.message.body.toLowerCase().split(' ') : [self.message.body.toLowerCase()];
+          
+          for(let x = 0; x < target_string_arr.length; x++) {
+            // create a string of the next yoga_pose_arr.lenght indices from the target string
+            let substring = self.get_next_indices(target_string_arr, x, yoga_pose_arr.length);
+            // e.g: substring = "string of the next"
+  
+            let distance = levenshtein(yoga_pose, substring);
+            if(distance < nearest_distance) {
+              nearest_distance = distance;
+              nearest = pose;
+            }
           }
-        }
+        } catch (err) {
+          console.log(err);
+        } 
       });
 
-      if (nearest_distance < 5) {      
-        self.typing();
+      let check_distance = nearest == "Navasana" ? 1 : 5;
+
+      if (nearest_distance < check_distance) {      
+        MessageStrategy.typing(self.message);   
         self.post_yoga_image(self.client, message, nearest);
       }
     } 
@@ -665,8 +763,8 @@ class Asthanga extends MessageStrategy {
 class Youtube extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -682,12 +780,16 @@ class Youtube extends MessageStrategy {
       let search_term = this.message.body.substring(7);
 
       (async () => {
-        const results = await yt.search(search_term);
-        if(results.length == 0) {
-          return
+        try {
+          const results = await yt.search(search_term);
+          if(results.length == 0) {
+            return
+          }
+          MessageStrategy.typing(self.message);   
+          self.client.sendYoutubeLink(this.message.from, results[0].url);
+        } catch (err) {
+          console.log(err);
         }
-        self.typing();
-        self.client.sendYoutubeLink(this.message.from, results[0].url);
       })();
 
       return;
@@ -706,7 +808,7 @@ class Youtube extends MessageStrategy {
 
           if (!error && response.statusCode == 200) {
             let data = "data:" + response.headers["content-type"] + ";base64," + Buffer.from(body).toString('base64');   
-            self.typing();   
+            MessageStrategy.typing(self.message);   
             self.client.sendYoutubeLink(message.from, self.message.body, '', data);
             return;
           }
@@ -724,8 +826,8 @@ class Youtube extends MessageStrategy {
 class TikTok extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -788,8 +890,9 @@ class TikTok extends MessageStrategy {
 class Facebook extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
+    this.enabled = true;
   }
 
   provides() {
@@ -878,8 +981,8 @@ class Facebook extends MessageStrategy {
 class HyperLink extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -900,8 +1003,8 @@ class HyperLink extends MessageStrategy {
       }
 
       if(this.message.thumbnail.length == 0) {
-        this.typing();
-        this.client.sendLinkWithAutoPreview(this.message.from, this.message.body);
+        MessageStrategy.typing(this.message);
+        MessageStrategy.client.sendLinkWithAutoPreview(this.message.from, this.message.body);
       }
     }
   }
@@ -915,8 +1018,8 @@ class HyperLink extends MessageStrategy {
 class Currency extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
   
@@ -929,7 +1032,7 @@ class Currency extends MessageStrategy {
     var self = this;
 
     if(this.message.body.toLowerCase().startsWith('fiat')) {
-      this.typing();
+      MessageStrategy.typing(self.message);   
       (async () => {
         try {
           self.client.sendText(self.message.from, await exchangeRates().latest().fetch());  
@@ -950,9 +1053,10 @@ class Currency extends MessageStrategy {
 class Crypto extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   static coinslugs = [];
+  static coins = null;
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -960,9 +1064,29 @@ class Crypto extends MessageStrategy {
     return ['coin', 'coin btc']
   }
 
+  get_coin_value(slug) {    
+    for(var i = 0; i < Crypto.coins.length; i++) {      
+      if(Crypto.coins[i]['slug'] == slug) {
+        return parseFloat(Crypto.coins[i]['quote']['EUR']['price']).toFixed(2)
+      }
+    }
+    return "0";
+  }
+
+  get_coin(slug) {    
+    for(var i = 0; i < Crypto.coins.length; i++) {      
+      if(Crypto.coins[i]['slug'] == slug) {
+        return Crypto.coins[i];
+      }
+    }
+    return {};
+  }
+
   async cmp(self) {
     const apiKey = fs.readFileSync("coincap-api.key").toString().trim();
     const client = new CoinMarketCap(apiKey);
+
+    MessageStrategy.typing(self.message);   
 
     client.getTickers(
       {
@@ -971,7 +1095,9 @@ class Crypto extends MessageStrategy {
       }
     ).then((value) => {
       Crypto.coinslugs = [];
-      let coins = value['data'];      
+      let coins = value['data'];
+      Crypto.coins = coins;
+
       let msg = "```";
       for(var i = 0; i < coins.length; i++) {
         Crypto.coinslugs.push(coins[i]['slug']);
@@ -982,82 +1108,122 @@ class Crypto extends MessageStrategy {
         msg += symbol + padding + " : €" + price + "\n";
         if(i%5==4) msg += "\n";
       }
-      self.typing();
-      self.client.sendText(self.message.from, msg + "```");  
-    }).catch(console.error);
+      
+      self.client.sendText(self.message.from, msg.trim() + "```");  
+    }).catch(err => {
+      console.log(err);
+      self.client.sendText(self.message.from, err);  
+    });
   }
 
   async waitFor (ms) {
     return new Promise(resolve => setTimeout(() => resolve(), ms));
   }
 
-  get_graph(self, message) {
+  async get_graph(self, message) {
     let coin = message.body.split(" ")[1];
 
     if(!Crypto.coinslugs.includes(coin)) {
-      self.typing();
+      MessageStrategy.typing(self.message);   
       self.client.sendText(message.from, "Available coins\n\n" + Crypto.coinslugs.join("\n")); 
       return;
     }
 
     (async () => {
-      console.log("1");
-      const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
-      const page = await browser.newPage();
-      await page.goto('https://coinmarketcap.com/currencies/' + coin + '/');
-      console.log("1.5");
-      await page.setViewport({ width: 1366, height: 768});
-      // Get the height of the page after navigating to it.
-      // This strategy to calculate height doesn't work always though. 
-      const bodyHandle = await page.$('body');
-      const { height } = await bodyHandle.boundingBox();
+      try {
+        MessageStrategy.typing(self.message);   
 
-      await bodyHandle.dispose();
-      console.log("2");
-      const calculatedVh = page.viewport().height;
-      let vhIncrease = 0;
-      while (vhIncrease + calculatedVh < height) {
-        // Here we pass the calculated viewport height to the context
-        // of the page and we scroll by that amount
-        await page.evaluate(_calculatedVh => {
-          window.scrollBy(0, _calculatedVh);
-        }, calculatedVh);
-        await this.waitFor(300);
-        vhIncrease = vhIncrease + calculatedVh;
+        const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
+        const page = await browser.newPage();
+        await page.goto('https://coinmarketcap.com/currencies/' + coin + '/');
+        await page.setViewport({ width: 1366, height: 768});
+        
+        const bodyHandle = await page.$('body');
+        const { height } = await bodyHandle.boundingBox();
+
+        MessageStrategy.typing(self.message);   
+  
+        await bodyHandle.dispose();
+        const calculatedVh = page.viewport().height;
+        let vhIncrease = 0;
+        while (vhIncrease + calculatedVh < height) {
+          // Here we pass the calculated viewport height to the context
+          // of the page and we scroll by that amount
+          await page.evaluate(_calculatedVh => {
+            window.scrollBy(0, _calculatedVh);
+          }, calculatedVh);
+          await this.waitFor(300);
+          vhIncrease = vhIncrease + calculatedVh;
+        }
+
+        MessageStrategy.typing(self.message);   
+  
+            // Setting the viewport to the full height might reveal extra elements
+        await page.setViewport({ width: 1366, height: calculatedVh});
+  
+        // Wait for a little bit more
+        await this.waitFor(1500);
+  
+        // Scroll back to the top of the page by using evaluate again.
+        await page.evaluate(_ => {
+          window.scrollTo(0, 0);
+        });
+  
+        const button = await page.waitForSelector("#cmc-cookie-policy-banner > div.cmc-cookie-policy-banner__close");
+        if (button) {
+            await button.click();
+        }
+
+        MessageStrategy.typing(self.message);   
+        
+        await page.waitForXPath('/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[9]/div/div[2]')
+        let xpath = '//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]';
+        await page.waitForXPath(xpath);  
+        // wait for the selector to load
+        let element = await page.$x(xpath);
+        let sha = crypto.createHash('sha1').digest('hex');
+        let text = await page.evaluate(element => element.textContent, element[0]);
+        await element[0].screenshot({path: sha + '.png'});
+        await browser.close();
+
+        if(!fs.existsSync(sha + '.png')) {
+          self.client.sendText(message.from, "Problem, try again");
+          return;
+        }
+
+        MessageStrategy.typing(self.message);   
+        let coindetails = self.get_coin(coin);
+        let coin_msg = "";
+        coin_msg += "*" + coindetails.name + "* 🪙 ";                
+        coin_msg += "*" + parseFloat(coindetails.quote.EUR.percent_change_24h).toFixed(2).toString() + "%* (24hr)";
+        coin_msg += coindetails.quote.EUR.percent_change_24h > 0 ? "🔺\n" : "🔻\n";
+        coin_msg += "\n";
+        coin_msg += "```";
+        coin_msg += "Symbol           : " + coindetails.symbol + "\n";
+        coin_msg += "Slug             : " + coindetails.slug + "\n";
+        coin_msg += "Max supply       : " + coindetails.max_supply + "\n";
+        coin_msg += "Supply           : " + coindetails.circulating_supply + "\n";
+        coin_msg += "\n";
+        coin_msg += "Price 🇪🇺        : €" + self.get_coin_value(coin) + "\n";
+        coin_msg += "Volume 24h       : " + Math.round(coindetails.quote.EUR.volume_24h).toString() + "\n";        
+        coin_msg += "Market Cap       : €" + Math.round(coindetails.quote.EUR.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "\n";
+        coin_msg += "Market Dominance : " + parseFloat(coindetails.quote.EUR.market_cap_dominance).toFixed(2).toString() + "%";
+        coin_msg += "```";
+          
+        await self.client.sendImage(
+          message.from,
+          sha + '.png',
+          "",
+          coin_msg);
+
+        if(fs.existsSync(sha + '.png')) {
+          fs.unlinkSync(sha + '.png');
+        }
+        
+      } catch (err) {
+        console.log(err);
+        self.client.sendText(message.from, err);
       }
-
-          // Setting the viewport to the full height might reveal extra elements
-      await page.setViewport({ width: 1366, height: calculatedVh});
-
-      // Wait for a little bit more
-      await this.waitFor(1000);
-
-      // Scroll back to the top of the page by using evaluate again.
-      await page.evaluate(_ => {
-        window.scrollTo(0, 0);
-      });
-
-      const button = await page.waitForSelector("#cmc-cookie-policy-banner > div.cmc-cookie-policy-banner__close");
-      if (button) {
-          await button.click();
-      }
-
-      console.log("2.5");
-      await page.waitForXPath('/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[9]/div/div[2]')
-      console.log("3");
-      let xpath = '//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]';
-      await page.waitForXPath(xpath);  
-      console.log("4");        // wait for the selector to load
-      let element = await page.$x(xpath);
-      let text = await page.evaluate(element => element.textContent, element[0]);
-      await element[0].screenshot({path: message.id + '.png'});
-      console.log("5");
-      await browser.close();
-      console.log("6");
-
-      self.typing();
-      self.client.sendImage(message.from, message.id + '.png', "" ,coin);
-      fs.unlinkSync(message.id + '.png');
     })();
   }
   
@@ -1069,7 +1235,7 @@ class Crypto extends MessageStrategy {
       return true;
     }
 
-    if (this.message.body.match(/^coin ([0-9a-z]+)$/i)) {
+    if (this.message.body.match(/^coin ([0-9a-z]+)$/i) != null) {
       this.get_graph(this, this.message);
       return true;
     }
@@ -1084,8 +1250,8 @@ class Crypto extends MessageStrategy {
 class Imdb extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -1100,7 +1266,7 @@ class Imdb extends MessageStrategy {
     if(this.message.body.toLowerCase().startsWith('imdb')) {
       let search_term = this.message.body.substring(5);
       nameToImdb(search_term, function(err, res, inf) { 
-        self.typing();
+        MessageStrategy.typing(self.message);
         self.client.sendLinkWithAutoPreview(self.message.from, "https://www.imdb.com/title/" + res + "/");
       });
     }
@@ -1115,8 +1281,8 @@ class Imdb extends MessageStrategy {
 class Google extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -1130,7 +1296,7 @@ class Google extends MessageStrategy {
 
     if(message.body.toLowerCase().startsWith('google')) {
       let search_term = message.body.substring(7).trim();
-      self.typing();
+      MessageStrategy.typing(self.message);   
       self.client.sendLinkWithAutoPreview(message.from, "https://www.google.com/search?q=" + urlencode(search_term));
     }
   }
@@ -1144,8 +1310,8 @@ class Google extends MessageStrategy {
 class Wikipedia extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -1158,7 +1324,7 @@ class Wikipedia extends MessageStrategy {
     var self = this;
 
     if(message.body.toLowerCase().startsWith('wiki')) {
-      this.typing();
+      MessageStrategy.typing(self.message);   
       let search_term = this.message.body.substring(4);
       wiki({ apiUrl: 'https://en.wikipedia.org/w/api.php' })
       .page(search_term)
@@ -1177,8 +1343,8 @@ class Wikipedia extends MessageStrategy {
 class Weather extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -1195,7 +1361,7 @@ class Weather extends MessageStrategy {
       weather.find({search: search_term, degreeType: 'C'}, function(err, result) {
         if(err) console.log(err);
       
-        self.typing();
+        MessageStrategy.typing(self.message);   
         var report = result[0]["location"]["name"];
         report += "\n";
         report += "Current: ";
@@ -1214,14 +1380,57 @@ class Weather extends MessageStrategy {
 
 
 // ####################################
+// Levenshtein distance
+// ####################################
+
+class Levenshteiner extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
+  constructor() {
+    super();
+    this.enabled = true;
+  }
+
+  provides() {
+    return ['levenshtein']
+  }
+  
+  handleMessage(message) {
+    this.message = message;
+
+    if(this.message.body.toLowerCase().startsWith("levenshtein")){
+      if(this.message.body.indexOf(" ") == -1){
+        return;
+      }
+  
+      let parts = this.message.body.split(" ");
+
+      console.log(parts);
+  
+      if(parts.length < 3){
+        return;
+      }
+  
+      MessageStrategy.typing(this.message);
+      MessageStrategy.client.sendText(this.message.from, 
+        "levenshtein(" + parts[1] + ", " + parts[2] + ") = " + levenshtein(parts[1], parts[2]).toString());
+      
+      return true;
+    }
+  }
+}
+
+
+
+// ####################################
 // Urban dictionary
 // ####################################
 
 class UrbanDictionary extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
   }
 
@@ -1240,7 +1449,7 @@ class UrbanDictionary extends MessageStrategy {
         workd += "*Definition:* " + results[0]['definition'];
         workd += "\n\n";
         workd += "*Example:* " + results[0]['example'];
-        self.typing();
+        MessageStrategy.typing(self.message);   
         self.client.sendText(message.from, workd);
 
       }).catch((error) => {
@@ -1259,8 +1468,8 @@ class Translate extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   static user_defaults = { }
   
-  constructor(client) {
-    super(client);
+  constructor() {
+    super();
     this.enabled = true;
     this.supported = `      Afrikaans - af
       Albanian - sq
@@ -1411,7 +1620,7 @@ class Translate extends MessageStrategy {
       }
 
       translate(msg, source_lang, target_lang, true, true).then(res => {
-        self.typing();
+        MessageStrategy.typing(self.message);   
         self.client.reply(self.message.from, res.translation, self.message.id, true);
       }).catch(err => {
         console.error(err);

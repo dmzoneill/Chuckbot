@@ -1,7 +1,12 @@
 const wa = require('@open-wa/wa-automate');
+const worker = require("worker_threads");
 const fs = require('fs');
 
 let chuck = null;
+
+let chuck_express = null;
+let chuck_express_file = "./web.js";
+
 let word_strategies_dict = null;
 let message_strategies_file = "./strategies.js";
 
@@ -27,6 +32,14 @@ wa.create({
 fs.watch(message_strategies_file, (event, filename) => {
   if (filename) {
     update_strategies();
+    update_web();
+  }
+});
+
+fs.watch(chuck_express_file, (event, filename) => {
+  if (filename) {
+    update_strategies();
+    update_web();
   }
 });
 
@@ -34,12 +47,33 @@ function update_strategies() {
   delete require.cache[require.resolve(message_strategies_file)];
   Strategies = require(message_strategies_file);
   word_strategies_dict = Strategies.MessageStrategy.getStrategies(chuck);
-  console.log("Chuck reloaded!");
+  console.log("Chuck strategies reloaded!");
+}
+
+function update_web() {
+  if(chuck_express != null) {
+    chuck_express.stop();
+    chuck_express = null;
+  }
+  
+  delete require.cache[require.resolve(chuck_express_file)];
+  Web = require(chuck_express_file);
+  
+  (async () => {
+    try {
+      chuck_express = new Web.Web(chuck, word_strategies_dict);
+      chuck_express.launch();
+      console.log("Chuck web reloaded!");
+    } catch (err) {
+      console.log(err);
+    }
+  })();
 }
 
 function start(client) {
   chuck = client;
   update_strategies();
+  update_web();
 
   client.onMessage(async message => {
     try {
