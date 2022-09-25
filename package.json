@@ -13,6 +13,7 @@
     "glob": "^8.0.3",
     "globby": "^10.0.2",
     "google-images": "^2.1.0",
+    "imagemagick": "^0.1.3",
     "js-levenshtein": "^1.1.6",
     "name-to-imdb": "^3.0.3",
     "pretty": "^2.0.0",

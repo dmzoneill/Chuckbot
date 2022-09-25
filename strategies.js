@@ -16,8 +16,7 @@ const { translate } = require('bing-translate-api');
 const CronJob = require('cron').CronJob;
 const urlencode = require('rawurlencode');
 const puppeteer = require('puppeteer');
-const crypto = require('crypto')
-
+const crypto = require('crypto');
 
 Array.prototype.myJoin = function(seperator,start,end){
   if(!start) start = 0;
@@ -94,7 +93,6 @@ class MessageStrategy {
 
   static async typing(message) {
     try {
-      console.log("1");
       await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), true);
       await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000)));
       await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), false);
@@ -758,6 +756,7 @@ class Asthanga extends MessageStrategy {
       if (nearest_distance < check_distance) {      
         MessageStrategy.typing(self.message);   
         self.post_yoga_image(self.client, message, nearest);
+        return true;
       }
     } 
 
@@ -802,7 +801,7 @@ class Youtube extends MessageStrategy {
         }
       })();
 
-      return false;
+      return true;
     }
 
     if (this.message.body.match(new RegExp(/^https:\/\/.*.youtube.com\/.*/)) || this.message.body.match(new RegExp(/^https:\/\/youtu.be\/.*/))) {
@@ -846,6 +845,28 @@ class TikTok extends MessageStrategy {
   provides() {
     return []
   }
+
+  async postTiktokPreview(self, config) {
+    axios.get(self.message.body, config).then(async resp => {
+      try {
+        let data = resp.data;
+        let re1 = /property="twitter:image" content="(.*?)"/i;
+        let match1 = re1.exec(data);
+
+        let re2 = /property="twitter:description" content="(.*?)"/i;
+        let match2 = re2.exec(data);
+
+        const responseImage = await axios(match1[1], { responseType: 'arraybuffer', headers: config['headers'] });
+        const buffer64 = Buffer.from(responseImage.data, 'binary').toString('base64')
+
+        data = "data:image/jpeg;base64," + buffer64;          
+        self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, match2[1], data);
+      }
+      catch(err) {
+        console.log(err);
+      }
+    });
+  }
   
   handleMessage(message) {
     this.message = message;
@@ -869,27 +890,9 @@ class TikTok extends MessageStrategy {
         }
       }
 
-      axios.get(this.message.body, config).then(async resp => {
-        try {
-          let data = resp.data;
-          let re1 = /property="twitter:image" content="(.*?)"/i;
-          let match1 = re1.exec(data);
+      this.postTiktokPreview(self, config);
 
-          let re2 = /property="twitter:description" content="(.*?)"/i;
-          let match2 = re2.exec(data);
-
-          const responseImage = await axios(match1[1], { responseType: 'arraybuffer', headers: config['headers'] });
-          const buffer64 = Buffer.from(responseImage.data, 'binary').toString('base64')
-
-          data = "data:image/jpeg;base64," + buffer64;          
-          self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, match2[1], data);
-        }
-        catch(err) {
-          console.log(err);
-        }
-      });
-
-      return false;
+      return true;
     }
 
     return false;
@@ -898,7 +901,122 @@ class TikTok extends MessageStrategy {
 
 
 // ####################################
-// tiktok previews 
+// twitter previews 
+// ####################################
+
+class Twitter extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
+  constructor() {
+    super();
+    this.enabled = true;
+  }
+
+  provides() {
+    return []
+  }
+
+  async waitFor (ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
+  }
+
+  async postTwitterPreview(self) {
+    try {
+      MessageStrategy.typing(self.message);   
+
+      const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
+      const page = await browser.newPage();
+      await page.goto(self.message.body);
+      await page.setViewport({ width: 1366, height: 768});
+      
+      const bodyHandle = await page.$('body');
+      const { height } = await bodyHandle.boundingBox();
+
+      MessageStrategy.typing(self.message);   
+
+      await bodyHandle.dispose();
+      const calculatedVh = page.viewport().height;
+      let vhIncrease = 0;
+      while (vhIncrease + calculatedVh < height) {
+        // Here we pass the calculated viewport height to the context
+        // of the page and we scroll by that amount
+        await page.evaluate(_calculatedVh => {
+          window.scrollBy(0, _calculatedVh);
+        }, calculatedVh);
+        await self.waitFor(300);
+        vhIncrease = vhIncrease + calculatedVh;
+      }
+
+      MessageStrategy.typing(self.message);   
+
+          // Setting the viewport to the full height might reveal extra elements
+      await page.setViewport({ width: 1366, height: calculatedVh});
+
+      // Wait for a little bit more
+      await self.waitFor(1500);
+
+      // Scroll back to the top of the page by using evaluate again.
+      await page.evaluate(_ => {
+        window.scrollTo(0, 0);
+      });
+
+      MessageStrategy.typing(self.message);  
+
+      let data = await page.evaluate(() => document.querySelector('head').innerHTML);
+
+      let re1 = /"og:description" data-rh="true"><meta content="(.*?)" property="og:image"/i;
+      let match1 = re1.exec(data);
+
+      let re2 = /property="og:title" data-rh="true"><meta content="(.*?)" property="og:description" data-rh="true">/i;
+      let match2 = re2.exec(data);
+
+      const responseImage = await axios(match1[1], { responseType: 'arraybuffer', headers: config['headers'] });
+      const image = await resizeImg(responseImage.data, { width: 120, format: "jpg" });
+      const buffer64 = Buffer.from(image, 'binary').toString('base64');
+
+      MessageStrategy.typing(self.message);  
+
+      data = "data:image/jpeg;base64," + buffer64;          
+      self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, match2[1], data);
+    }
+    catch(err) {
+      console.log(err);
+    }
+  }
+  
+  handleMessage(message) {
+    this.message = message;
+    var self = this;
+
+    if (this.message.body.match(new RegExp(/^https:\/\/.*?twitter.com\/.*/))) {
+      var config = {
+        headers: {
+          'Accept': '*/*',
+          'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+          'Access-Control-Request-Headers': 'content-type',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Origin': 'https://twitter.com/',
+          'Pragma': 'no-cache',
+          'Referer': 'https://twitter.com/',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+        }
+      };
+
+      this.postTwitterPreview(self);
+      return true;
+    }
+
+    return false;
+  }
+}
+
+
+// ####################################
+// Facebook previews 
 // ####################################
 
 class Facebook extends MessageStrategy {
@@ -911,6 +1029,51 @@ class Facebook extends MessageStrategy {
 
   provides() {
     return ['facebook']
+  }
+
+  async postFacebookPreview(self, config) {
+    axios.get(this.message.body, config).then(async resp => {
+      let url = null;
+      let description = null;
+
+      try {
+        let data = resp.data;
+        let re1 = /property="og:image" content="(.*?)"/i;
+        let match1 = re1.exec(data);
+        url = match1[1];
+
+        let re2 = /property="og:description" content="(.*?)"/i;
+        let match2 = re2.exec(data);
+        description = match2[1];
+
+        url = url.replace(/&amp;/g, "&");
+        const responseImage = await axios(url, { responseType: 'arraybuffer', headers: {
+          'authority': 'external-dub4-1.xx.fbcdn.net',
+          'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+          'cache-control': 'no-cache',
+          'dnt': '1',
+          'pragma': 'no-cache',
+          'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Linux"',
+          'sec-fetch-dest': 'document',
+          'sec-fetch-mode': 'navigate',
+          'sec-fetch-site': 'cross-site',
+          'sec-fetch-user': '?1',
+          'upgrade-insecure-requests': '1',
+          'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+        }  });
+        const buf = Buffer.from(responseImage.data, 'binary');
+        const image = await resizeImg(buf, { width: 300, height: 300, format: "jpg" });
+        const buffer64 = image.toString('base64');
+        let image64 = "data:image/jpeg;base64," + buffer64;          
+        self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, description, image64);
+      }
+      catch(err) {
+        console.log(err);
+      }
+    });
   }
   
   handleMessage(message) {
@@ -939,50 +1102,9 @@ class Facebook extends MessageStrategy {
         }
       }
 
-      axios.get(this.message.body, config).then(async resp => {
-        let url = null;
-        let description = null;
+      this.postFacebookPreview(self, config);
 
-        try {
-          let data = resp.data;
-          let re1 = /property="og:image" content="(.*?)"/i;
-          let match1 = re1.exec(data);
-          url = match1[1];
-
-          let re2 = /property="og:description" content="(.*?)"/i;
-          let match2 = re2.exec(data);
-          description = match2[1];
-
-          url = url.replace(/&amp;/g, "&");
-          const responseImage = await axios(url, { responseType: 'arraybuffer', headers: {
-            'authority': 'external-dub4-1.xx.fbcdn.net',
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
-            'cache-control': 'no-cache',
-            'dnt': '1',
-            'pragma': 'no-cache',
-            'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Linux"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'cross-site',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
-          }  });
-          const buf = Buffer.from(responseImage.data, 'binary');
-          const image = await resizeImg(buf, { width: 300, height: 300, format: "jpg" });
-          const buffer64 = image.toString('base64');
-          let image64 = "data:image/jpeg;base64," + buffer64;          
-          self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, description, image64);
-        }
-        catch(err) {
-          console.log(err);
-        }
-      });
-
-      return false;
+      return true;
     }
 
     return false;
@@ -1022,10 +1144,12 @@ class HyperLink extends MessageStrategy {
         MessageStrategy.typing(this.message);
         MessageStrategy.client.sendLinkWithAutoPreview(this.message.from, this.message.body);
       }
+
+      return true;
     }
 
     return false;
-  }
+  }  
 }
 
 
@@ -1255,7 +1379,7 @@ class Crypto extends MessageStrategy {
       return true;
     }
 
-    if (this.message.body.match(/^coin ([0-9a-z]+)$/i) != null) {
+    if (this.message.body.match(/^coin ([0-9a-z\-]+)$/i) != null) {
       this.get_graph(this, this.message);
       return true;
     }
@@ -1291,6 +1415,7 @@ class Imdb extends MessageStrategy {
         MessageStrategy.typing(self.message);
         self.client.sendLinkWithAutoPreview(self.message.from, "https://www.imdb.com/title/" + res + "/");
       });
+      return true;
     }
 
     return false;
@@ -1322,6 +1447,7 @@ class Google extends MessageStrategy {
       let search_term = message.body.substring(7).trim();
       MessageStrategy.typing(self.message);   
       self.client.sendLinkWithAutoPreview(message.from, "https://www.google.com/search?q=" + urlencode(search_term));
+      return true;
     }
 
     return false;
@@ -1356,6 +1482,7 @@ class Wikipedia extends MessageStrategy {
       .page(search_term)
       .then(page => page.info())
       .then(console.log);
+      return true;
     }
 
     return false;
@@ -1401,6 +1528,8 @@ class Weather extends MessageStrategy {
         report += result[0]["location"]["degreetype"];
         self.client.sendText(message.from, report);
       });
+
+      return true;
     }
 
     return false;
@@ -1433,8 +1562,6 @@ class Levenshteiner extends MessageStrategy {
       }
   
       let parts = this.message.body.split(" ");
-
-      console.log(parts);
   
       if(parts.length < 3){
         return;
@@ -1452,7 +1579,6 @@ class Levenshteiner extends MessageStrategy {
 }
 
 
-
 // ####################################
 // Urban dictionary
 // ####################################
@@ -1468,24 +1594,28 @@ class UrbanDictionary extends MessageStrategy {
   provides() {
     return ['urban']
   }
+
+  async postUrbanQuote(self) {
+    ud.random().then((results) => {   
+      var workd = "*" + results[0]['word'];
+      workd += "*\n\n";
+      workd += "*Definition:* " + results[0]['definition'];
+      workd += "\n\n";
+      workd += "*Example:* " + results[0]['example'];
+      MessageStrategy.typing(self.message);   
+      self.client.sendText(self.message.from, workd);
+    }).catch((error) => {
+      console.error(`random (promise) - error ${error.message}`)
+    });
+  }
   
   handleMessage(message) {
     this.message = message;
     var self = this;
 
     if(this.message.body.toLowerCase().startsWith('urban')) {
-      ud.random().then((results) => {   
-        var workd = "*" + results[0]['word'];
-        workd += "*\n\n";
-        workd += "*Definition:* " + results[0]['definition'];
-        workd += "\n\n";
-        workd += "*Example:* " + results[0]['example'];
-        MessageStrategy.typing(self.message);   
-        self.client.sendText(message.from, workd);
-
-      }).catch((error) => {
-        console.error(`random (promise) - error ${error.message}`)
-      }) 
+      this.postUrbanQuote(self);
+      return true;
     }
 
     return false;
@@ -1504,146 +1634,190 @@ class Translate extends MessageStrategy {
   constructor() {
     super();
     this.enabled = true;
-    this.supported = `      Afrikaans - af
-      Albanian - sq
-      Amharic - am
-      Arabic - ar
-      Armenian - hy
-      Assamese - as
-      Azerbaijani - az
-      Bangla - bn
-      Bashkir - ba
-      Basque - eu
-      Bosnian - bs
-      Bulgarian - bg
-      Cantonese (Traditional) - yue
-      Catalan - ca
-      Chinese (Literary) - lzh
-      Chinese Simplified - zh-Hans
-      Chinese Traditional - zh-Hant
-      Croatian - hr
-      Czech - cs
-      Danish - da
-      Dari - prs
-      Divehi - dv
-      Dutch - nl
-      English - en
-      Estonian - et
-      Faroese - fo
-      Fijian - fj
-      Filipino - fil
-      Finnish - fi
-      French - fr
-      French (Canada) - fr-CA
-      Galician - gl
-      Georgian - ka
-      German - de
-      Greek - el
-      Gujarati - gu
-      Haitian Creole - ht
-      Hebrew - he
-      Hindi - hi
-      Hmong Daw - mww
-      Hungarian - hu
-      Icelandic - is
-      Indonesian - id
-      Inuinnaqtun - ikt
-      Inuktitut - iu
-      Inuktitut (Latin) - iu-Latn
-      Irish - ga
-      Italian - it
-      Japanese - ja
-      Kannada - kn
-      Kazakh - kk
-      Khmer - km
-      Klingon (Latin) - tlh-Latn
-      Korean - ko
-      Kurdish (Central) - ku
-      Kurdish (Northern) - kmr
-      Kyrgyz - ky
-      Lao - lo
-      Latvian - lv
-      Lithuanian - lt
-      Macedonian - mk
-      Malagasy - mg
-      Malay - ms
-      Malayalam - ml
-      Maltese - mt
-      Marathi - mr
-      Mongolian (Cyrillic) - mn-Cyrl
-      Mongolian (Traditional) - mn-Mong
-      Myanmar (Burmese) - my
-      Māori - mi
-      Nepali - ne
-      Norwegian - nb
-      Odia - or
-      Pashto - ps
-      Persian - fa
-      Polish - pl
-      Portuguese (Brazil) - pt
-      Portuguese (Portugal) - pt-PT
-      Punjabi - pa
-      Querétaro Otomi - otq
-      Romanian - ro
-      Russian - ru
-      Samoan - sm
-      Serbian (Cyrillic) - sr-Cyrl
-      Serbian (Latin) - sr-Latn
-      Slovak - sk
-      Slovenian - sl
-      Somali - so
-      Spanish - es
-      Swahili - sw
-      Swedish - sv
-      Tahitian - ty
-      Tamil - ta
-      Tatar - tt
-      Telugu - te
-      Thai - th
-      Tibetan - bo
-      Tigrinya - ti
-      Tongan - to
-      Turkish - tr
-      Turkmen - tk
-      Ukrainian - uk
-      Upper Sorbian - hsb
-      Urdu - ur
-      Uyghur - ug
-      Uzbek (Latin) - uz
-      Vietnamese - vi
-      Welsh - cy
-      Yucatec Maya - yua
-      Zulu - zu`;
+    this.supported = {
+      'Afrikaans': 'af',
+      'Albanian': 'sq',
+      'Amharic': 'am',
+      'Arabic': 'ar',
+      'Armenian': 'hy',
+      'Assamese': 'as',
+      'Azerbaijani': 'az',
+      'Bangla': 'bn',
+      'Bashkir': 'ba',
+      'Basque': 'eu',
+      'Bosnian': 'bs',
+      'Bulgarian': 'bg',
+      'Cantonese (Traditional)': 'yue',
+      'Catalan': 'ca',
+      'Chinese (Literary)': 'lzh',
+      'Chinese Simplified': 'zh-Hans',
+      'Chinese Traditional': 'zh-Hant',
+      'Croatian': 'hr',
+      'Czech': 'cs',
+      'Danish': 'da',
+      'Dari': 'prs',
+      'Divehi': 'dv',
+      'Dutch': 'nl',
+      'English': 'en',
+      'Estonian': 'et',
+      'Faroese': 'fo',
+      'Fijian': 'fj',
+      'Filipino': 'fil',
+      'Finnish': 'fi',
+      'French': 'fr',
+      'French (Canada)': 'fr-CA',
+      'Galician': 'gl',
+      'Georgian': 'ka',
+      'German': 'de',
+      'Greek': 'el',
+      'Gujarati': 'gu',
+      'Haitian Creole': 'ht',
+      'Hebrew': 'he',
+      'Hindi': 'hi',
+      'Hmong Daw': 'mww',
+      'Hungarian': 'hu',
+      'Icelandic': 'is',
+      'Indonesian': 'id',
+      'Inuinnaqtun': 'ikt',
+      'Inuktitut': 'iu',
+      'Inuktitut (Latin)': 'iu-Latn',
+      'Irish': 'ga',
+      'Italian': 'it',
+      'Japanese': 'ja',
+      'Kannada': 'kn',
+      'Kazakh': 'kk',
+      'Khmer': 'km',
+      'Klingon (Latin)': 'tlh-Latn',
+      'Korean': 'ko',
+      'Kurdish (Central)': 'ku',
+      'Kurdish (Northern)': 'kmr',
+      'Kyrgyz': 'ky',
+      'Lao': 'lo',
+      'Latvian': 'lv',
+      'Lithuanian': 'lt',
+      'Macedonian': 'mk',
+      'Malagasy': 'mg',
+      'Malay': 'ms',
+      'Malayalam': 'ml',
+      'Maltese': 'mt',
+      'Marathi': 'mr',
+      'Mongolian (Cyrillic)': 'mn-Cyrl',
+      'Mongolian (Traditional)': 'mn-Mong',
+      'Myanmar (Burmese)': 'my',
+      'Māori': 'mi',
+      'Nepali': 'ne',
+      'Norwegian': 'nb',
+      'Odia': 'or',
+      'Pashto': 'ps',
+      'Persian': 'fa',
+      'Polish': 'pl',
+      'Portuguese (Brazil)': 'pt',
+      'Portuguese (Portugal)': 'pt-PT',
+      'Punjabi': 'pa',
+      'Querétaro Otomi': 'otq',
+      'Romanian': 'ro',
+      'Russian': 'ru',
+      'Samoan': 'sm',
+      'Serbian (Cyrillic)': 'sr-Cyrl',
+      'Serbian (Latin)': 'sr-Latn',
+      'Slovak': 'sk',
+      'Slovenian': 'sl',
+      'Somali': 'so',
+      'Spanish': 'es',
+      'Swahili': 'sw',
+      'Swedish': 'sv',
+      'Tahitian': 'ty',
+      'Tamil': 'ta',
+      'Tatar': 'tt',
+      'Telugu': 'te',
+      'Thai': 'th',
+      'Tibetan': 'bo',
+      'Tigrinya': 'ti',
+      'Tongan': 'to',
+      'Turkish': 'tr',
+      'Turkmen': 'tk',
+      'Ukrainian': 'uk',
+      'Upper Sorbian': 'hsb',
+      'Urdu': 'ur',
+      'Uyghur': 'ug',
+      'Uzbek (Latin)': 'uz',
+      'Vietnamese': 'vi',
+      'Welsh': 'cy',
+      'Yucatec Maya': 'yua',
+      'Zulu': 'zu'
+    };
+  }
+
+  get_defaults() {
+    return Translate.user_defaults;
   }
 
   provides() {
     return ['translate en/pt', 'translate default en/pt', 'translate off']
+  }
+
+  sendSupported(self) {
+    let msg = "```";
+    let i = 1;
+    Object.keys(self.supported).forEach(key => {
+      let padding = " ".repeat(25 - key.length);
+      msg += key + padding + " : " + self.supported[key] + "\n";
+      msg += i % 5 == 0 ? "\n" : "";
+      i += 1;
+    });
+    msg += "```";
+    self.client.sendText(self.message.from, msg);
   }
   
   handleMessage(message) {
     this.message = message;
     var self = this;
 
-    if(this.message.body.toLowerCase().startsWith('translate') || this.message.from in Translate.user_defaults) {
+    if(this.message.body.toLowerCase().startsWith('translate default')) {
       let parts = this.message.body.split(" ");
-      let target_lang = parts[1];
-
-      if(target_lang == "default") {
+      if(parts.length == 3) {
+        if(Object.values(this.supported).includes(parts[2]) == false) {
+          this.sendSupported(self);
+          return false;
+        }
         Translate.user_defaults[this.message.from] = parts[2];
-        return;
+        return true;
+      } else {
+        self.client.sendText(self.message.from, "Failed to provide default language")
+        return false;
       }
+    }
 
-      if(target_lang == "off") {
+    if(this.message.body.toLowerCase().startsWith('translate off')) {
+      if(Object.keys(Translate.user_defaults).includes(this.message.from)){
         delete Translate.user_defaults[this.message.from];
-        return;
       }
+      return true;
+    }
 
-      if(this.message.from in Translate.user_defaults) {
-        target_lang = Translate.user_defaults[this.message.from];
-      }
-
+    if(Object.keys(Translate.user_defaults).includes(this.message.from)) {
+      let target_lang = Translate.user_defaults[this.message.from];
       let source_lang = "en";
-      let start = this.message.from in Translate.user_defaults ? "" : "translate " + target_lang;
+      translate(this.message.body, source_lang, target_lang, true, true).then(res => {
+        MessageStrategy.typing(self.message);   
+        self.client.reply(self.message.from, res.translation, self.message.id, true);
+      }).catch(err => {
+        self.client.sendText(self.message.from, err);
+        self.client.sendText(self.message.from, err);
+      });
+      return true;
+    }
+
+    if(this.message.body.toLowerCase().startsWith('translate')) {
+      let parts = this.message.body.indexOf(" ") > -1 ? this.message.body.split(" ") : [this.message.body];
+      if(parts.length < 3) {
+        // translate provided without addittional arguments
+        return false;
+      }
+
+      let target_lang = parts[1];
+      let source_lang = "en";
+      let start = "translate " + target_lang;
       let msg = this.message.body.substring(start.trim().length);
 
       if(target_lang.indexOf("/") > -1) {
@@ -1652,19 +1826,21 @@ class Translate extends MessageStrategy {
         target_lang = langparts[1];        
       }
 
+      if(Object.values(this.supported).includes(target_lang) == false) {
+        this.sendSupported(self);
+        return false;
+      }
+
       translate(msg, source_lang, target_lang, true, true).then(res => {
         MessageStrategy.typing(self.message);   
         self.client.reply(self.message.from, res.translation, self.message.id, true);
       }).catch(err => {
-        console.error(err);
         self.client.sendText(self.message.from, err);
-
-        if(err.toString().indexOf("is not supported") > -1) {
-          self.client.sendText(self.message.from, this.supported)
-        }
+        self.client.sendText(self.message.from, err);
       });
-    }
 
+      return true;
+    }
     return false;
   }
 }
