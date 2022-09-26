@@ -117,7 +117,7 @@ class MessageStrategy {
 
 
 // ####################################
-// StrategyEnablement
+// Feature Enablement
 // ####################################
 
 class Feature extends MessageStrategy {
@@ -130,8 +130,15 @@ class Feature extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Feature provides the ability to mangage the state of features."
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['feature', 'feature list', 'feature enable', 'feature disable']
+    return ['feature list', 'feature enable (.*)', 'feature disable (.*)']
   }
   
   handleMessage(message, strategies) {
@@ -178,6 +185,13 @@ class Spam extends MessageStrategy {
     MessageStrategy.state['Spam'] = {
       'enabled': true
     }
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Manages spam attempts on the bot"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
@@ -258,25 +272,40 @@ class Help extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Print the list of commands provided by the features.  You can use the feature list to get the name of features and for a further message describing the feature.  e.g help Hi"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['help']
+    return ['help', 'help feature']
   }
   
   handleMessage(message, strategies) {
     if(MessageStrategy.state['Help'].enabled == false) return;
 
     this.message = message;
-    var self = this;
 
-    if(message.body.toLowerCase() === "help") {
+    if(this.message.body.toLowerCase() === "help") {
       MessageStrategy.typing(this.message); 
       let help = "";
       Object.keys(strategies).forEach(key => {
+        help += "*" + key + "*\n";
+        help += "  | - " + key + " describe\n";
         strategies[key].provides().forEach(term => {
-          help += term + "\n"
-        })        
+          help += "  | - " + term + "\n";
+        });
+        help += "";
       });
-      MessageStrategy.client.sendText(self.message.from, help);
+      MessageStrategy.client.sendText(self.message.from, help.trim());
+    }
+
+    if(this.message.body.toLowerCase().startsWith("help")) {
+      MessageStrategy.typing(this.message); 
+      let parts = this.message.body.split(" ");
+      MessageStrategy.client.sendText(self.message.from, strategies[parts[1]].describe());
     }
 
     return false;
@@ -296,6 +325,13 @@ class Hi extends MessageStrategy {
     MessageStrategy.state['Hi'] = {
       'enabled': true
     }
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "An exmaple feature that just responds to hi"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
@@ -363,8 +399,15 @@ class Harass extends MessageStrategy {
     Harass.cronjob.start();
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Harasses individual(s) with your mamma jokes"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['harass', 'harass stop', 'harass list']
+    return ['harass', 'harass (\d+)', 'harass stop ([0-9a-zA-Z]+)', 'harass list']
   }
 
   get_joke() {
@@ -526,6 +569,13 @@ class ChuckJokes extends MessageStrategy {
       'slut', 
       'bitch'
     ];
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Chuck will look for bads words and post a chuck norris joke"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
@@ -761,6 +811,13 @@ class Ashtanga extends MessageStrategy {
     return arr.myJoin(" ", pos, max_indice);
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Prints a picture of a yoga pose when detected and other functionality"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
     return ['yoga start', 'yoga stop', 'yoga list', 'yoga poses']
   }
@@ -853,6 +910,13 @@ class Youtube extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Searches for top youtube video given a search string"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
     return ['youtube']
   }
@@ -920,6 +984,13 @@ class TikTok extends MessageStrategy {
     MessageStrategy.state['TikTok'] = {
       'enabled': true
     }
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Detects tiktok urls and provides thumbnail preview if not provided"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
@@ -994,6 +1065,13 @@ class Twitter extends MessageStrategy {
     MessageStrategy.state['Twitter'] = {
       'enabled': true
     }
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Detects twitter urls and provides thumbnail preview if not provided"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
@@ -1115,8 +1193,15 @@ class Facebook extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Detects facebook urls and provides thumbnail preview if not provided"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['facebook']
+    return []
   }
 
   async postFacebookPreview(self, config) {
@@ -1216,6 +1301,13 @@ class HyperLink extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Detects urls and provides thumbnail preview if not provided"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
     return []
   }
@@ -1261,6 +1353,13 @@ class Currency extends MessageStrategy {
     }
   }
   
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Tries to provide currency exchange rates"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
     return ['fiat']
   }
@@ -1304,8 +1403,15 @@ class Crypto extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Downloads the top 30 coins from coin market cap and provides images and other states"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['coin', 'coin btc']
+    return ['coin', 'coin ([a-zA-Z0-9]+)']
   }
 
   get_coin_value(slug) {    
@@ -1505,8 +1611,15 @@ class Imdb extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Provides url with preview to imdb movies"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['imdb']
+    return ['imdb (.*)']
   }
   
   handleMessage(message) {
@@ -1543,8 +1656,15 @@ class Google extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Provides google url for those too lazy to type it into google"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['google']
+    return ['google (.*)']
   }
   
   handleMessage(message) {
@@ -1579,8 +1699,15 @@ class Wikipedia extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Search wikipedia for a given string and provides a link to the page"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['wiki']
+    return ['wiki (.*)']
   }
 
   handleMessage(message) {
@@ -1618,8 +1745,15 @@ class Weather extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Provides the weather report for a given region"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['weather']
+    return ['weather ([a-zA-Z]+)']
   }
   
   handleMessage(message) {
@@ -1669,8 +1803,15 @@ class Levenshteiner extends MessageStrategy {
     }
   }
 
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Provides the levenshtein distance between 2 strings"
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
+
   provides() {
-    return ['levenshtein']
+    return ['levenshtein (.*?) (.*?)']
   }
   
   handleMessage(message) {
@@ -1713,6 +1854,13 @@ class UrbanDictionary extends MessageStrategy {
     MessageStrategy.state['UrbanDictionary'] = {
       'enabled': true
     }
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Provides a random urban dictionary slang word"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
@@ -1880,6 +2028,13 @@ class Translate extends MessageStrategy {
 
   get_defaults() {
     return MessageStrategy.state.Translate.user_defaults;
+  }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message); 
+    let descirption = "Provides translations"
+    MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
