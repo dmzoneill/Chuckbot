@@ -33,6 +33,7 @@ Array.prototype.myJoin = function(seperator,start,end){
 class MessageStrategy {
   static client = null;
   static derived = new Set();
+  static state = {};
   static contacts = [];
   static contacts_verbose = [];
   static groups = [];
@@ -116,6 +117,54 @@ class MessageStrategy {
 
 
 // ####################################
+// StrategyEnablement
+// ####################################
+
+class Feature extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  
+  constructor() {
+    super();
+    MessageStrategy.state['Feature'] = { 
+      enabled: true
+    }
+  }
+
+  provides() {
+    return ['feature', 'feature list', 'feature enable', 'feature disable']
+  }
+  
+  handleMessage(message, strategies) {
+    this.message = message;
+
+    if(this.message.body.indexOf(" ") == -1) return;    
+   
+    if(this.message.body.toLowerCase().startsWith("feature")) {
+      let parts = this.message.body.split(" ");
+
+      if(parts[1] == "list") {
+        MessageStrategy.typing(this.message); 
+        MessageStrategy.client.sendText(this.message.from, Object.keys(strategies).join("\n"));
+      }
+
+      if(parts.length < 3) return;
+      if(Object.keys(strategies).includes(parts[2]) == false) return;
+      
+      if(parts[1] == "enable") {
+        MessageStrategy.typing(this.message); 
+        MessageStrategy.state[parts[2]].enabled = true;
+      }
+
+      if(parts[1] == "disable") {
+        MessageStrategy.typing(this.message); 
+        MessageStrategy.state[parts[2]].enabled = false;
+      }
+    }
+  }
+}
+
+
+// ####################################
 // Spam protection
 // ####################################
 
@@ -126,7 +175,9 @@ class Spam extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Spam'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -134,6 +185,8 @@ class Spam extends MessageStrategy {
   }
   
   handleMessage(message, strategies) {
+    if(MessageStrategy.state['Spam'].enabled == false) return;
+
     this.message = message;
     let spammer = this.message.chatId + " - " + this.message.sender.id;
 
@@ -200,7 +253,9 @@ class Help extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Help'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -208,10 +263,13 @@ class Help extends MessageStrategy {
   }
   
   handleMessage(message, strategies) {
+    if(MessageStrategy.state['Help'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
     if(message.body.toLowerCase() === "help") {
+      MessageStrategy.typing(this.message); 
       let help = "";
       Object.keys(strategies).forEach(key => {
         strategies[key].provides().forEach(term => {
@@ -235,7 +293,9 @@ class Hi extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Hi'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -243,6 +303,8 @@ class Hi extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Hi'].enabled == false) return;
+
     this.message = message;
 
     if(this.message.body.toLowerCase() === 'hi') {
@@ -268,8 +330,9 @@ class Harass extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
-    let self = this;
+    MessageStrategy.state['Harass'] = {
+      'enabled': true
+    }
     this.setup_cron();
   }
 
@@ -402,6 +465,8 @@ class Harass extends MessageStrategy {
   }
 
   handleMessage(message, strategies) {
+    if(MessageStrategy.state['Harass'].enabled == false) return;
+
     this.message = message;
 
     if(this.message.body.toLowerCase() === 'harass') {        
@@ -438,7 +503,10 @@ class ChuckJokes extends MessageStrategy {
 
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['ChuckJokes'] = {
+      'enabled': true
+    }
+
     this.chuck_keywords = [
       'joke', 
       'lol', 
@@ -474,6 +542,8 @@ class ChuckJokes extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['ChuckJokes'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -511,12 +581,14 @@ class ChuckJokes extends MessageStrategy {
 // yoga asanas
 // ####################################
 
-class Asthanga extends MessageStrategy {
+class Ashtanga extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Ashtanga'] = {
+      'enabled': true
+    }
 
     this.yoga_keywords = [
       'primary series',
@@ -694,6 +766,8 @@ class Asthanga extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Ashtanga'].enabled == false) return;
+
     this.message = message;
     var self = this;
     
@@ -774,7 +848,9 @@ class Youtube extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Youtube'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -782,6 +858,8 @@ class Youtube extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Youtube'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -839,7 +917,9 @@ class TikTok extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['TikTok'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -869,6 +949,8 @@ class TikTok extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['TikTok'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -909,7 +991,9 @@ class Twitter extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Twitter'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -985,6 +1069,8 @@ class Twitter extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Twitter'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1024,7 +1110,9 @@ class Facebook extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Facebook'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1077,6 +1165,8 @@ class Facebook extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Facebook'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1121,7 +1211,9 @@ class HyperLink extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['HyperLink'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1129,6 +1221,8 @@ class HyperLink extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['HyperLink'].enabled == false) return;
+
     this.message = message;
 
     if (this.message.body.match(new RegExp(/^https:\/\/.*/))) {
@@ -1162,7 +1256,9 @@ class Currency extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Currency'] = {
+      'enabled': true
+    }
   }
   
   provides() {
@@ -1170,6 +1266,8 @@ class Currency extends MessageStrategy {
   }
 
   handleMessage(message) {
+    if(MessageStrategy.state['Currency'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1201,7 +1299,9 @@ class Crypto extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Crypto'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1372,6 +1472,8 @@ class Crypto extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Crypto'].enabled == false) return;
+
     this.message = message;
 
     if(this.message.body.toLowerCase() === 'coin') {
@@ -1398,7 +1500,9 @@ class Imdb extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Imdb'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1406,6 +1510,8 @@ class Imdb extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Imdb'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1432,7 +1538,9 @@ class Google extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Google'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1440,6 +1548,8 @@ class Google extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Google'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1464,7 +1574,9 @@ class Wikipedia extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Wikipedia'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1472,6 +1584,8 @@ class Wikipedia extends MessageStrategy {
   }
 
   handleMessage(message) {
+    if(MessageStrategy.state['Wikipedia'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1499,7 +1613,9 @@ class Weather extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Weather'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1507,6 +1623,8 @@ class Weather extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Weather'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1546,7 +1664,9 @@ class Levenshteiner extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['Levenshteiner'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1554,6 +1674,8 @@ class Levenshteiner extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Levenshteiner'].enabled == false) return;
+
     this.message = message;
 
     if(this.message.body.toLowerCase().startsWith("levenshtein")){
@@ -1588,7 +1710,9 @@ class UrbanDictionary extends MessageStrategy {
   
   constructor() {
     super();
-    this.enabled = true;
+    MessageStrategy.state['UrbanDictionary'] = {
+      'enabled': true
+    }
   }
 
   provides() {
@@ -1610,6 +1734,8 @@ class UrbanDictionary extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['UrbanDictionary'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1628,12 +1754,16 @@ class UrbanDictionary extends MessageStrategy {
 // ####################################
 
 class Translate extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static user_defaults = { }
+  static dummy = MessageStrategy.derived.add(this.name); 
   
   constructor() {
     super();
-    this.enabled = true;
+
+    MessageStrategy.state['Translate'] = {
+      'enabled': true,
+      'user_defaults': {}
+    }
+
     this.supported = {
       'Afrikaans': 'af',
       'Albanian': 'sq',
@@ -1749,7 +1879,7 @@ class Translate extends MessageStrategy {
   }
 
   get_defaults() {
-    return Translate.user_defaults;
+    return MessageStrategy.state.Translate.user_defaults;
   }
 
   provides() {
@@ -1770,6 +1900,8 @@ class Translate extends MessageStrategy {
   }
   
   handleMessage(message) {
+    if(MessageStrategy.state['Translate'].enabled == false) return;
+
     this.message = message;
     var self = this;
 
@@ -1780,7 +1912,7 @@ class Translate extends MessageStrategy {
           this.sendSupported(self);
           return false;
         }
-        Translate.user_defaults[this.message.from] = parts[2];
+        MessageStrategy.state.Translate.user_defaults[this.message.from] = parts[2];
         return true;
       } else {
         self.client.sendText(self.message.from, "Failed to provide default language")
@@ -1789,14 +1921,14 @@ class Translate extends MessageStrategy {
     }
 
     if(this.message.body.toLowerCase().startsWith('translate off')) {
-      if(Object.keys(Translate.user_defaults).includes(this.message.from)){
-        delete Translate.user_defaults[this.message.from];
+      if(Object.keys(MessageStrategy.state.Translate.user_defaults).includes(this.message.from)){
+        delete MessageStrategy.state.Translate.user_defaults[this.message.from];
       }
       return true;
     }
 
-    if(Object.keys(Translate.user_defaults).includes(this.message.from)) {
-      let target_lang = Translate.user_defaults[this.message.from];
+    if(Object.keys(MessageStrategy.state.Translate.user_defaults).includes(this.message.from)) {
+      let target_lang = MessageStrategy.state.Translate.user_defaults[this.message.from];
       let source_lang = "en";
       translate(this.message.body, source_lang, target_lang, true, true).then(res => {
         MessageStrategy.typing(self.message);   
