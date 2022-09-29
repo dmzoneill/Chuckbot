@@ -2,7 +2,7 @@
 **/_IGNORE_COVID_HELPER/**
 **/COVID_HELPER.data.json
 **/coincap-api.key
-
+**/strategies/config/**
 # managed by open-wa
 **.data.json
 **.node-persist**

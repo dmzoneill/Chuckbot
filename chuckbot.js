@@ -1,91 +1,80 @@
 const wa = require('@open-wa/wa-automate');
-const worker = require("worker_threads");
 const fs = require('fs');
 
-let chuck = null;
+class ChuckBot {
+  static source_dir = "./";
+  static chuck = null;
+  static Strategies = null;
+  static chuck_express = null;
+  static message_strategy_file = "./MessageStrategy.js";
+  static web_file = "./web.js";
 
-let chuck_express = null;
-let chuck_express_file = "./web.js";
-
-let word_strategies_dict = null;
-let message_strategies_file = "./strategies.js";
-
-wa.create({
-  sessionId: "chuck",
-  multiDevice: true, //required to enable multiDevice support
-  authTimeout: 60, //wait only 60 seconds to get a connection with the host account device
-  blockCrashLogs: true,
-  disableSpins: true,
-  headless: true,
-  hostNotificationLang: 'IE_EN',
-  logConsole: true,
-  logConsoleErrors: true,
-  popup: true,
-  qrTimeout: 0, //0 means it will wait forever for you to scan the qr code
-  logging: [
-		{
-			"type": "console"
-		}
-	]
-}).then(client => start(client));
-
-fs.watch(message_strategies_file, (event, filename) => {
-  if (filename) {
-    update_strategies();
-    update_web();
-  }
-});
-
-fs.watch(chuck_express_file, (event, filename) => {
-  if (filename) {
-    update_strategies();
-    update_web();
-  }
-});
-
-function update_strategies() {
-  delete require.cache[require.resolve(message_strategies_file)];
-  Strategies = require(message_strategies_file);
-  word_strategies_dict = Strategies.MessageStrategy.getStrategies(chuck);
-  console.log("Chuck strategies reloaded!");
-}
-
-function update_web() {
-  if(chuck_express != null) {
-    chuck_express.stop();
-    chuck_express = null;
-  }
-  
-  delete require.cache[require.resolve(chuck_express_file)];
-  Web = require(chuck_express_file);
-  
-  (async () => {
-    try {
-      chuck_express = new Web.Web(chuck, word_strategies_dict);
-      chuck_express.launch();
-      console.log("Chuck web reloaded!");
-    } catch (err) {
-      console.log(err);
-    }
-  })();
-}
-
-function start(client) {
-  chuck = client;
-  update_strategies();
-  update_web();
-
-  client.onMessage(async message => {
-    try {
-      let keys = Object.keys(word_strategies_dict);
-      for(let y = 0; y < keys.length; y++) {
-        if(word_strategies_dict[keys[y]].handleMessage(message, word_strategies_dict)) {
-          return;
-        }
+  constructor() {
+    fs.watch(ChuckBot.source_dir, (event, filename) => {
+      if (filename == ChuckBot.message_strategy_file.substring(2) || filename == ChuckBot.web_file.substring(2)) {
+        ChuckBot.update_strategies();
+        ChuckBot.update_web();
       }
+    });
+
+    wa.create({
+      sessionId: "chuck",
+      multiDevice: true,
+      authTimeout: 60,
+      blockCrashLogs: true,
+      disableSpins: true,
+      headless: true,
+      hostNotificationLang: 'IE_EN',
+      logConsole: true,
+      logConsoleErrors: true,
+      popup: true,
+      qrTimeout: 0,
+      logging: [
+        {
+          "type": "console"
+        }
+      ]
+    }).then(client => ChuckBot.start(client));
+  }
+
+  static start(client) {
+    ChuckBot.chuck = client;
+    ChuckBot.update_strategies();
+    ChuckBot.update_web();
+
+    client.onMessage(async message => {
+      ChuckBot.Strategies.doHandleMessage(ChuckBot.chuck, message);
+    });
+  }
+
+  static async update_strategies() {
+    delete require.cache[require.resolve(ChuckBot.message_strategy_file)];
+    ChuckBot.Strategies = require(ChuckBot.message_strategy_file);
+    ChuckBot.Strategies.getStrategies(ChuckBot.chuck);
+  }
+
+  static async update_web() {
+    await new Promise(r => setTimeout(r, 1000));
+
+    if (ChuckBot.chuck_express != null) {
+      ChuckBot.chuck_express.stop();
+      ChuckBot.chuck_express = null;
     }
-    catch(err) {
-      console.log(err);
-    }
-  });
+
+    await new Promise(r => setTimeout(r, 1000));
+
+    delete require.cache[require.resolve(ChuckBot.web_file)];
+    let Web = require(ChuckBot.web_file);
+
+    (async () => {
+      try {
+        ChuckBot.chuck_express = new Web.Web(ChuckBot.Strategies);
+        ChuckBot.chuck_express.launch(ChuckBot.Strategies);
+      } catch (err) {
+        console.log(err);
+      }
+    })();
+  }
 }
+
+new ChuckBot();
