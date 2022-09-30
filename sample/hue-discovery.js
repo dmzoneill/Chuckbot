@@ -1,13 +1,15 @@
 const v3 = require('node-hue-api').v3
-  , discovery = v3.discovery
-  , hueApi = v3.api 
-;
+const discovery = require('node-hue-api').discovery
+hueApi = v3.api
+
 
 const appName = 'node-hue-api';
 const deviceName = 'example-code';
 
+
 async function discoverBridge() {
-  const discoveryResults = await discovery.nupnpSearch();
+  const discoveryResults = await discovery.mdnsSearch();
+  console.log(JSON.stringify(discoveryResults, null, 2));
 
   if (discoveryResults.length === 0) {
     console.error('Failed to resolve any Hue Bridges');
@@ -23,7 +25,7 @@ async function discoverAndCreateUser() {
 
   // Create an unauthenticated instance of the Hue API so that we can create a new user
   const unauthenticatedApi = await hueApi.createLocal(ipAddress).connect();
-  
+
   let createdUser;
   try {
     createdUser = await unauthenticatedApi.users.createUser(appName, deviceName);

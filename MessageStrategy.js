@@ -34,11 +34,12 @@ class MessageStrategy {
   static groups_verbose = [];
   static changed = false;
   static watcher = null;
+  static watched_events = {};
 
   constructor() { }
 
   static watch() {
-    if(MessageStrategy.watcher != null) {
+    if (MessageStrategy.watcher != null) {
       MessageStrategy.watcher.close();
     }
 
@@ -116,12 +117,22 @@ class MessageStrategy {
 
   static update_strategy(file) {
     try {
-      MessageStrategy.changed = true;
-      delete require.cache[require.resolve(strategies_dir + file)];
-      let instance = require(strategies_dir + file);
-      let obj = eval(`new ${instance.MessageStrategy}()`);
-      MessageStrategy.strategies[obj.constructor.name] = obj;
-      console.log(file + " reloaded")
+      if (Object.keys(MessageStrategy.watched_events).includes(strategies_dir + file) == false) {
+        MessageStrategy.watched_events[strategies_dir + file] = new Date(0);
+      }
+      fs.stat(strategies_dir + file, function (err, stats) {
+        if (stats.mtime.valueOf() === MessageStrategy.watched_events[strategies_dir + file].valueOf()) {
+          return;
+        }
+        MessageStrategy.watched_events[strategies_dir + file] = stats.mtime;
+
+        MessageStrategy.changed = true;
+        delete require.cache[require.resolve(strategies_dir + file)];
+        let instance = require(strategies_dir + file);
+        let obj = eval(`new ${instance.MessageStrategy}()`);
+        MessageStrategy.strategies[obj.constructor.name] = obj;
+        console.log(file + " reloaded")
+      });
     }
     catch (err) {
       console.log(err)
@@ -139,7 +150,7 @@ class MessageStrategy {
         throw err
       }
       files.forEach(file => {
-        if(file.endsWith("js")) {
+        if (file.endsWith("js")) {
           MessageStrategy.update_strategy(file);
         }
       });
@@ -165,20 +176,20 @@ class MessageStrategy {
 
   static doHandleMessage(chuck, message) {
 
-    if(MessageStrategy.changed) {
+    if (MessageStrategy.changed) {
       MessageStrategy.getStrategies(chuck);
     }
 
     try {
       let keys = Object.keys(MessageStrategy.strategies);
-      for(let y = 0; y < keys.length; y++) {
+      for (let y = 0; y < keys.length; y++) {
         console.log(keys[y] + ": " + message.body);
-        if(MessageStrategy.strategies[keys[y]].handleMessage(message, MessageStrategy.strategies)) {
+        if (MessageStrategy.strategies[keys[y]].handleMessage(message, MessageStrategy.strategies)) {
           return;
         }
       }
     }
-    catch(err) {
+    catch (err) {
       console.log(err);
     }
   }

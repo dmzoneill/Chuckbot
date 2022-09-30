@@ -26,8 +26,9 @@ class TikTok extends MessageStrategy {
   }
 
   async postTiktokPreview(self, config) {
-    axios.get(self.message.body, config).then(async resp => {
-      try {
+    try {
+      axios.get(self.message.body, config).then(async resp => {
+
         let data = resp.data;
         let re1 = /property="twitter:image" content="(.*?)"/i;
         let match1 = re1.exec(data);
@@ -40,11 +41,11 @@ class TikTok extends MessageStrategy {
 
         data = "data:image/jpeg;base64," + buffer64;
         self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, match2[1], data);
-      }
-      catch (err) {
-        console.log(err);
-      }
-    });
+      });
+    }
+    catch (err) {
+      console.log(err);
+    }
   }
 
   handleMessage(message) {

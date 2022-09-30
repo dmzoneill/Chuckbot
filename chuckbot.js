@@ -8,12 +8,17 @@ class ChuckBot {
   static chuck_express = null;
   static message_strategy_file = "./MessageStrategy.js";
   static web_file = "./web.js";
+  static last_update = new Date(0);
 
   constructor() {
     fs.watch(ChuckBot.source_dir, (event, filename) => {
       if (filename == ChuckBot.message_strategy_file.substring(2) || filename == ChuckBot.web_file.substring(2)) {
+        if(ChuckBot.last_update.valueOf() == Date.now()) {
+          return;
+        }
         ChuckBot.update_strategies();
         ChuckBot.update_web();
+        ChuckBot.last_update = Date.now();
       }
     });
 
@@ -54,26 +59,23 @@ class ChuckBot {
   }
 
   static async update_web() {
-    await new Promise(r => setTimeout(r, 1000));
+    try {
+      await new Promise(r => setTimeout(r, 1000));
 
-    if (ChuckBot.chuck_express != null) {
-      ChuckBot.chuck_express.stop();
-      ChuckBot.chuck_express = null;
-    }
-
-    await new Promise(r => setTimeout(r, 1000));
-
-    delete require.cache[require.resolve(ChuckBot.web_file)];
-    let Web = require(ChuckBot.web_file);
-
-    (async () => {
-      try {
-        ChuckBot.chuck_express = new Web.Web(ChuckBot.Strategies);
-        ChuckBot.chuck_express.launch(ChuckBot.Strategies);
-      } catch (err) {
-        console.log(err);
+      if (ChuckBot.chuck_express != null) {
+        ChuckBot.chuck_express.stop();
+        await new Promise(r => setTimeout(r, 1000));
+        ChuckBot.chuck_express = null;
       }
-    })();
+
+      delete require.cache[require.resolve(ChuckBot.web_file)];
+      let Web = require(ChuckBot.web_file);
+
+      ChuckBot.chuck_express = new Web.Web(ChuckBot.Strategies);
+      ChuckBot.chuck_express.launch(ChuckBot.Strategies);
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 
