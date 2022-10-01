@@ -15,9 +15,10 @@ const nameToImdb = require("name-to-imdb");
 const { translate } = require('bing-translate-api');
 const ud = require('urban-dictionary');
 const weather = require('weather-js');
-const wiki = require('wikijs').default;
+const wiki = require('wikipedia');
 const yt = require('youtube-search-without-api-key');
 const youtubeThumbnail = require('youtube-thumbnail');
+const NodeWebcam = require('node-webcam');
 
 // directory path
 const strategies_dir = './strategies/'
@@ -37,6 +38,13 @@ class MessageStrategy {
   static watched_events = {};
 
   constructor() { }
+
+  describe(message, strategies) {
+    this.message = message;
+    MessageStrategy.typing(this.message);
+    let description = "Didn't provide describe from " + this.constructor.name
+    MessageStrategy.client.sendText(this.message.from, description);
+  }
 
   static watch() {
     if (MessageStrategy.watcher != null) {
@@ -121,17 +129,22 @@ class MessageStrategy {
         MessageStrategy.watched_events[strategies_dir + file] = new Date(0);
       }
       fs.stat(strategies_dir + file, function (err, stats) {
-        if (stats.mtime.valueOf() === MessageStrategy.watched_events[strategies_dir + file].valueOf()) {
-          return;
-        }
-        MessageStrategy.watched_events[strategies_dir + file] = stats.mtime;
+        try {
+          if (stats.mtime.valueOf() === MessageStrategy.watched_events[strategies_dir + file].valueOf()) {
+            return;
+          }
+          MessageStrategy.watched_events[strategies_dir + file] = stats.mtime;
 
-        MessageStrategy.changed = true;
-        delete require.cache[require.resolve(strategies_dir + file)];
-        let instance = require(strategies_dir + file);
-        let obj = eval(`new ${instance.MessageStrategy}()`);
-        MessageStrategy.strategies[obj.constructor.name] = obj;
-        console.log(file + " reloaded")
+          MessageStrategy.changed = true;
+          delete require.cache[require.resolve(strategies_dir + file)];
+          let instance = require(strategies_dir + file);
+          let obj = eval(`new ${instance.MessageStrategy}()`);
+          MessageStrategy.strategies[obj.constructor.name] = obj;
+          console.log(file + " reloaded");
+        }
+        catch (err) {
+          console.log(err);
+        }
       });
     }
     catch (err) {

@@ -14,6 +14,7 @@ class Crypto extends MessageStrategy {
     MessageStrategy.state['Crypto'] = {
       'enabled': true
     }
+    this.get_coins(this);
   }
 
   describe(message, strategies) {
@@ -45,6 +46,27 @@ class Crypto extends MessageStrategy {
     return {};
   }
 
+  async get_coins(self) {
+    const apiKey = fs.readFileSync("strategies/config/coincap-api.key").toString().trim();
+    const client = new CoinMarketCap(apiKey);
+
+    client.getTickers(
+      {
+        convert: 'EUR',
+        limit: 50
+      }
+    ).then((value) => {
+      Crypto.coinslugs = [];
+      let coins = value['data'];
+      Crypto.coins = coins;
+      for (var i = 0; i < coins.length; i++) {
+        Crypto.coinslugs.push(coins[i]['slug']);
+      }
+    }).catch(err => {
+      console.log(err);
+    });
+  }
+
   async cmp(self) {
     const apiKey = fs.readFileSync("strategies/config/coincap-api.key").toString().trim();
     const client = new CoinMarketCap(apiKey);
@@ -54,7 +76,7 @@ class Crypto extends MessageStrategy {
     client.getTickers(
       {
         convert: 'EUR',
-        limit: 30
+        limit: 50
       }
     ).then((value) => {
       Crypto.coinslugs = [];
@@ -62,13 +84,25 @@ class Crypto extends MessageStrategy {
       Crypto.coins = coins;
 
       let msg = "```";
+      msg += "Coin    Price       1hr       24hr\n\n";
       for (var i = 0; i < coins.length; i++) {
         Crypto.coinslugs.push(coins[i]['slug']);
+
         var symbol = coins[i]['symbol'];
-        var total = 5 - symbol.length;
-        var padding = ' '.repeat(total)
+        var symboltotal = 5 - symbol.length;
+        var symbolpadding = ' '.repeat(symboltotal);
+
         var price = parseFloat(coins[i]['quote']['EUR']['price']).toFixed(2);
-        msg += symbol + padding + " : €" + price + "\n";
+        var pricetotal = 10 - price.toString().length;
+        var pricepadding = ' '.repeat(pricetotal);
+
+        var percent_change_1h = parseFloat(coins[i]['quote']['EUR']['percent_change_1h']).toFixed(2).toString();
+        percent_change_1h = percent_change_1h.startsWith("-") ? percent_change_1h : "+" + percent_change_1h;
+        var percent_change_24h = parseFloat(coins[i]['quote']['EUR']['percent_change_24h']).toFixed(2).toString();
+        percent_change_24h = percent_change_24h.startsWith("-") ? percent_change_24h : "+" + percent_change_24h;
+        var change = "" + percent_change_1h + "%    " + percent_change_24h + "%";
+
+        msg += symbol + symbolpadding + " : €" + price + pricepadding + change + "\n";
         if (i % 5 == 4) msg += "\n";
       }
 

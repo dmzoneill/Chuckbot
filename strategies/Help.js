@@ -48,8 +48,14 @@ class Help extends MessageStrategy {
     if (this.message.body.toLowerCase().startsWith("help")) {
       MessageStrategy.typing(this.message);
       let parts = this.message.body.split(" ");
-      let feature = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
-      MessageStrategy.client.sendText(this.message.from, strategies[feature].describe(this.message, strategies));
+      let feature = parts[1].toLowerCase();
+
+      Object.keys(strategies).forEach(key => {
+        if(key.toLowerCase() == feature) {
+          strategies[key].describe(this.message, strategies);
+        }
+      });
+
       return true;
     }
 
