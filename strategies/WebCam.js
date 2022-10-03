@@ -10,10 +10,7 @@ class WebCam extends MessageStrategy {
   constructor() {
     super();
     MessageStrategy.state['WebCam'] = {
-      'enabled': true,
-      'allowed_requesters': [
-        "353861938787@c.us"
-      ]
+      'enabled': true
     }
   }
 
@@ -25,13 +22,47 @@ class WebCam extends MessageStrategy {
   }
 
   provides() {
-    return ['WebCam', 'Webcam picture']
+    return ['WebCam', 'Webcam picture', 'Webcam video \d+'];
   }
 
-  takePicture(self) {
+  async takeVideo(self) {
+
+    if (MessageStrategy.strategies['Rbac'].hasAccess(self.message.sender.id, [5]) == false) {
+      self.client.reply(self.message.from, 'Not for langers like you', self.message.id, true);
+      return;
+    }
+
+    let sha1d = crypto.createHash('sha1').digest('hex');
+    let time = "10";
+    let video_time = /webcam video ([0-9]{1,2})/i;
+    let found = self.message.body.match(video_time);
+
+    if (found) {
+      time = found[1];
+    }
+
+    let cmd = "ffmpeg -y -f video4linux2 -s 1280x720 -pix_fmt yuyv422 -r 6 -t ";
+    cmd += time + " -i /dev/video0 " + sha1d + ".mp4";
+
+    MessageStrategy.typing(self.message);
+
+    exec(cmd, (error, stdout, stderr) => {
+      if (fs.existsSync(sha1d + ".mp4")) {
+        try {
+          MessageStrategy.typing(self.message);
+          self.client.sendFile(self.message.from, sha1d + ".mp4", "cam", "Webcam home video");
+          fs.unlinkSync(sha1d + ".mp4");
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    });
+  }
+
+  async takePicture(self) {
     try {
-      
-      if(MessageStrategy.state['WebCam']['allowed_requesters'].includes(self.message.sender.id) == false) {
+
+      if (MessageStrategy.strategies['Rbac'].hasAccess(self.message.sender.id, [5]) == false) {
         self.client.reply(self.message.from, 'Not for langers like you', self.message.id, true);
         return;
       }
@@ -67,9 +98,15 @@ class WebCam extends MessageStrategy {
 
     this.message = message;
 
-    if (this.message.body.toLowerCase() === 'webcam picture') {
+    if (this.message.body.toLowerCase() == 'webcam picture') {
       MessageStrategy.typing(this.message);
       this.takePicture(this);
+      return true;
+    }
+
+    if (this.message.body.toLowerCase().startsWith('webcam video')) {
+      MessageStrategy.typing(this.message);
+      this.takeVideo(this);
       return true;
     }
 

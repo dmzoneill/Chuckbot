@@ -33,6 +33,7 @@ class ChuckBot {
       logConsole: true,
       logConsoleErrors: true,
       popup: true,
+      useChrome: true,
       qrTimeout: 0,
       logging: [
         {

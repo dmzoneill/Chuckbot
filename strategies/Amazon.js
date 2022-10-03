@@ -1,16 +1,15 @@
 const MessageStrategy = require("../MessageStrategy.js")
 
-
 // ####################################
-// Lights  
+// Amazon
 // ####################################
 
-class Lights extends MessageStrategy {
+class Amazon extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
     super();
-    MessageStrategy.state['Lights'] = {
+    MessageStrategy.state['Amazon'] = {
       'enabled': true
     }
   }
@@ -18,29 +17,24 @@ class Lights extends MessageStrategy {
   describe(message, strategies) {
     this.message = message;
     MessageStrategy.typing(this.message);
-    let description = "Lights management"
+    let description = "Logs media to disk"
     MessageStrategy.client.sendText(this.message.from, description);
   }
 
   provides() {
-    return ['Lights']
+    return ['Amazon']
   }
 
   handleMessage(message) {
-    if (MessageStrategy.state['Lights']['enabled'] == false) return;
+    if (MessageStrategy.state['Amazon']['enabled'] == false) return;
 
     this.message = message;
-
-    if (this.message.body.toLowerCase() === 'Lights') {
-      //MessageStrategy.typing(this.message);   
-      //this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
 
     return false;
   }
 }
 
+
 module.exports = {
-  MessageStrategy: Lights
+  MessageStrategy: Amazon
 }

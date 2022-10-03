@@ -22,7 +22,7 @@ class Youtube extends MessageStrategy {
     }
   
     provides() {
-      return ['youtube']
+      return ['youtube .*']
     }
     
     handleMessage(message) {

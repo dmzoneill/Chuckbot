@@ -131,9 +131,9 @@ class Wikipedia extends MessageStrategy {
     (async () => {
       try {
         const events = await wiki.onThisDay();
-        const deaths = await wiki.onThisDay({ type: 'deaths', month: '2', day: '28' });
-        console.log(events); // returns all the events which happened today
-        console.log(deaths); // returns all deaths which happened on Feb 28
+        const deaths = await wiki.onThisDay({ type: 'deaths'});
+        self.postWikiPreview(self, events['selected'][0]['pages'][0]['content_urls']['mobile']['page']);
+        self.postWikiPreview(self, deaths['deaths'][0]['pages'][0]['content_urls']['mobile']['page']);
       } catch (error) {
         console.log(error);
         //=> Typeof wikiError

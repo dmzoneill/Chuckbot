@@ -19,6 +19,7 @@ const wiki = require('wikipedia');
 const yt = require('youtube-search-without-api-key');
 const youtubeThumbnail = require('youtube-thumbnail');
 const NodeWebcam = require('node-webcam');
+const { exec } = require("child_process");
 
 // directory path
 const strategies_dir = './strategies/'
@@ -37,12 +38,14 @@ class MessageStrategy {
   static watcher = null;
   static watched_events = {};
 
-  constructor() { }
+  constructor() {
+    
+  }
 
   describe(message, strategies) {
     this.message = message;
     MessageStrategy.typing(this.message);
-    let description = "Didn't provide describe from " + this.constructor.name
+    let description = "Didn't provide describe from " + this.constructor.name;
     MessageStrategy.client.sendText(this.message.from, description);
   }
 
@@ -53,7 +56,7 @@ class MessageStrategy {
 
     fs.watch(strategies_dir, (event, filename) => {
       if (filename) {
-        MessageStrategy.update_strategy(filename)
+        MessageStrategy.update_strategy(filename);
       }
     });
   }
@@ -85,19 +88,19 @@ class MessageStrategy {
   }
 
   get_contacts() {
-    return MessageStrategy.contacts
+    return MessageStrategy.contacts;
   }
 
   get_contacts_verbose() {
-    return MessageStrategy.contacts_verbose
+    return MessageStrategy.contacts_verbose;
   }
 
   get_groups() {
-    return MessageStrategy.groups
+    return MessageStrategy.groups;
   }
 
   get_groups_verbose() {
-    return MessageStrategy.groups_verbose
+    return MessageStrategy.groups_verbose;
   }
 
   static async get_chat_id(message) {
@@ -134,7 +137,6 @@ class MessageStrategy {
             return;
           }
           MessageStrategy.watched_events[strategies_dir + file] = stats.mtime;
-
           MessageStrategy.changed = true;
           delete require.cache[require.resolve(strategies_dir + file)];
           let instance = require(strategies_dir + file);
@@ -155,8 +157,9 @@ class MessageStrategy {
   static update_strategies() {
     MessageStrategy.strategies = {}
 
-    MessageStrategy.update_strategy("Feature.js");
     MessageStrategy.update_strategy("Spam.js");
+    MessageStrategy.update_strategy("Rbac.js");
+    MessageStrategy.update_strategy("Feature.js");
 
     fs.readdir(strategies_dir, (err, files) => {
       if (err) {
@@ -188,7 +191,6 @@ class MessageStrategy {
   }
 
   static doHandleMessage(chuck, message) {
-
     if (MessageStrategy.changed) {
       MessageStrategy.getStrategies(chuck);
     }
