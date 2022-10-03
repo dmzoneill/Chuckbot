@@ -25,7 +25,7 @@ class Crypto extends MessageStrategy {
   }
 
   provides() {
-    return ['coin', 'coin ([a-zA-Z0-9]+)', 'coin ([0-9a-z\-]+) ([17])']
+    return ['coin', 'coin ([a-zA-Z0-9]+)', 'coin ([0-9a-z\-]+) ([137])(d|m|y)']
   }
 
   get_coin_value(slug) {
@@ -119,7 +119,7 @@ class Crypto extends MessageStrategy {
     let parts = message.body.split(" ");
     let coin = parts[1];
     let period = parts.length > 2 ? parts[2] : "1";
-    period = (period == "1" || period == "7") ? period : "1";
+    period = (period == "1d" || period == "7d" || period == "1m" || period == "3m" || period == "1y") ? period : "1d";
 
     let slugkeys = Object.keys(Crypto.coinslugs);
     let slugvalues = Object.values(Crypto.coinslugs);
@@ -197,8 +197,16 @@ class Crypto extends MessageStrategy {
         await button.click();
       }
 
-      if (period == "7") {
-        const days = await page.waitForXPath("/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[2]");
+      let paths = {
+        "1d" : "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[1]",
+        "7d" : "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[2]",
+        "1m" : "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[3]",
+        "3m" : "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[4]",
+        "1y" : "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[5]"
+      }
+
+      if (period != "1d") {
+        const days = await page.waitForXPath(paths[period]);
         if (days) {
           await days.click();
         }
@@ -292,7 +300,7 @@ class Crypto extends MessageStrategy {
       return true;
     }
 
-    if (this.message.body.match(/^coin ([0-9a-z\-]+) ([17])$/i) != null) {
+    if (this.message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) != null) {
       this.get_graph(this, this.message);
       return true;
     }
