@@ -8,20 +8,16 @@ class Rbac extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-
-    if (Object.keys(MessageStrategy.state).includes('Rbac') == false) {
-      MessageStrategy.state['Rbac'] = {
-        'enabled': true,
-        'roles': {
-          5: ["353861938787"],
-          4: [],
-          3: [],
-          2: [],
-          1: []
-        }
+    super('Rbac', {
+      'enabled': true,
+      'roles': {
+        5: ["353861938787"],
+        4: [],
+        3: [],
+        2: [],
+        1: []
       }
-    }
+    });
   }
 
   hasAccess(user, roles) {

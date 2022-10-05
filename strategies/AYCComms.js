@@ -8,10 +8,9 @@ class AYCComms extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['AYCComms'] = {
+    super('AYCComms', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

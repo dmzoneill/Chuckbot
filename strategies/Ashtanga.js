@@ -15,10 +15,9 @@ class Ashtanga extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Ashtanga'] = {
+    super('Ashtanga', {
       'enabled': true
-    }
+    });
 
     this.yoga_keywords = [
       'primary series',

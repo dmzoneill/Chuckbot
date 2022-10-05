@@ -9,10 +9,9 @@ class PhilipsHue extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['PhilipsHue'] = {
+    super('PhilipsHue', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

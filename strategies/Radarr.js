@@ -8,10 +8,9 @@ class Radarr extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Radarr'] = {
+    super('Radarr', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

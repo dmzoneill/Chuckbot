@@ -8,10 +8,9 @@ class Currency extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Currency'] = {
+    super('Currency', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {
@@ -35,7 +34,7 @@ class Currency extends MessageStrategy {
       MessageStrategy.typing(self.message);
       (async () => {
         try {
-          self.client.sendText(self.message.from, await exchangeRates().latest().fetch());
+          //self.client.sendText(self.message.from, googleCurrencyScraper.);
         }
         catch (err) {
           self.client.sendText(self.message.from, err);

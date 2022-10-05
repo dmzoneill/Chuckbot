@@ -8,10 +8,9 @@ class Youtube extends MessageStrategy {
     static dummy = MessageStrategy.derived.add(this.name);
     
     constructor() {
-      super();
-      MessageStrategy.state['Youtube'] = {
+      super('Youtube', {
         'enabled': true
-      }
+      });
     }
   
     describe(message, strategies) {

@@ -8,10 +8,9 @@ class AYCHeaters extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['AYCHeaters'] = {
+    super('AYCHeaters', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

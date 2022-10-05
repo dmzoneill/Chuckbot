@@ -10,10 +10,9 @@ class Spam extends MessageStrategy {
   static banned = {}
 
   constructor() {
-    super();
-    MessageStrategy.state['Spam'] = {
+    super('Spam', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

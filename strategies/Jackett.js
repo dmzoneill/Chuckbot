@@ -8,10 +8,9 @@ class Jackett extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Jackett'] = {
+    super('Jackett', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

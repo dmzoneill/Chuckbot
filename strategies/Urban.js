@@ -8,10 +8,9 @@ class UrbanDictionary extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['UrbanDictionary'] = {
+    super('UrbanDictionary', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

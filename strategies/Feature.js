@@ -8,10 +8,9 @@ class Feature extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Feature'] = {
-      enabled: true
-    }
+    super('Feature', {
+      'enabled': true
+    });
   }
 
   describe(message, strategies) {

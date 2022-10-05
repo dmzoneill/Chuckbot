@@ -8,10 +8,9 @@ class Imdb extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Imdb'] = {
+    super('Imdb', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

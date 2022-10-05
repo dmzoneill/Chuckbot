@@ -8,10 +8,9 @@ class AYCPi extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['AYCPi'] = {
+    super('AYCPi', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

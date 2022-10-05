@@ -16,10 +16,9 @@ class Deluge extends MessageStrategy {
   // }
 
   constructor() {
-    super();
-    MessageStrategy.state['Deluge'] = {
+    super('Deluge', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

@@ -8,10 +8,9 @@ class Google extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Google'] = {
+    super('Google', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

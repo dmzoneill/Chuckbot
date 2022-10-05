@@ -8,10 +8,9 @@ class ChuckJokes extends MessageStrategy {
     static dummy = MessageStrategy.derived.add(this.name);
   
     constructor() {
-      super();
-      MessageStrategy.state['ChuckJokes'] = {
+      super('ChuckJokes', {
         'enabled': true
-      }
+      });
   
       this.chuck_keywords = [
         'joke', 

@@ -8,10 +8,9 @@ class Weather extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Weather'] = {
+    super('Weather', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

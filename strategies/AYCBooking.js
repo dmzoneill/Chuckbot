@@ -8,10 +8,9 @@ class AYCBooking extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['AYCBooking'] = {
+    super('AYCBooking', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

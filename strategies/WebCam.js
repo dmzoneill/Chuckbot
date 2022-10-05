@@ -8,10 +8,9 @@ class WebCam extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['WebCam'] = {
+    super('WebCam', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

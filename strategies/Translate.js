@@ -8,12 +8,10 @@ class Translate extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-
-    MessageStrategy.state['Translate'] = {
+    super('Translate', {
       'enabled': true,
       'user_defaults': {}
-    }
+    });
 
     this.supported = {
       'Afrikaans': 'af',

@@ -8,10 +8,9 @@ class Levenshteiner extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Levenshteiner'] = {
+    super('Levenshteiner', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

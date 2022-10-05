@@ -8,10 +8,9 @@ class Reddit extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Reddit'] = {
+    super('Reddit', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

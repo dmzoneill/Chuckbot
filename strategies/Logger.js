@@ -8,11 +8,10 @@ class Logger extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Logger'] = {
+    super('Logger', {
       'enabled': true,
-      'media_dir': "./media"
-    }
+      'media_dir': "./strategies/media"
+    });
   }
 
   describe(message, strategies) {

@@ -10,10 +10,9 @@ class Crypto extends MessageStrategy {
   static coins = null;
 
   constructor() {
-    super();
-    MessageStrategy.state['Crypto'] = {
+    super('Crypto', {
       'enabled': true
-    }
+    });
     this.get_coins(this);
   }
 
@@ -31,7 +30,7 @@ class Crypto extends MessageStrategy {
   get_coin_value(slug) {
     for (var i = 0; i < Crypto.coins.length; i++) {
       if (Crypto.coins[i]['slug'] == slug) {
-        return parseFloat(Crypto.coins[i]['quote']['EUR']['price']).toFixed(2)
+        return parseFloat(Crypto.coins[i]['quote']['EUR']['price']).toFixed(3)
       }
     }
     return "0";
@@ -72,42 +71,57 @@ class Crypto extends MessageStrategy {
 
     MessageStrategy.typing(self.message);
 
+    let getAmount = 50;
+    if(this.message.body.indexOf(" ") > -1) {
+      let parts = this.message.body.split(" ");
+      getAmount = parseInt(parts[1]);
+    }
+
     client.getTickers(
       {
         convert: 'EUR',
-        limit: 50
+        limit: getAmount
       }
-    ).then((value) => {
+    ).then(async (value) => {
       let coins = value['data'];
       Crypto.coins = coins;
 
       let msg = "```";
-      msg += "Coin    Price       24hr %\n\n";
+      msg += "Coin       Price       24hr %\n\n";
       for (var i = 0; i < coins.length; i++) {
         Crypto.coinslugs[coins[i]['symbol']] = coins[i]['slug'];
 
         var symbol = coins[i]['symbol'];
-        var symboltotal = 5 - symbol.length;
+        var symboltotal = 8 - symbol.length;
         var symbolpadding = ' '.repeat(symboltotal);
 
-        var price = parseFloat(coins[i]['quote']['EUR']['price']).toFixed(2);
+        var price = parseFloat(coins[i]['quote']['EUR']['price']).toFixed(3);
         var pricetotal = 10 - price.toString().length;
         var pricepadding = ' '.repeat(pricetotal);
 
-        var percent_change_1h = parseFloat(coins[i]['quote']['EUR']['percent_change_1h']).toFixed(2).toString();
+        var percent_change_1h = parseFloat(coins[i]['quote']['EUR']['percent_change_1h']).toFixed(3).toString();
         percent_change_1h = percent_change_1h.startsWith("-") ? percent_change_1h : "+" + percent_change_1h;
-        var percent_change_24h = parseFloat(coins[i]['quote']['EUR']['percent_change_24h']).toFixed(2).toString();
+        var percent_change_24h = parseFloat(coins[i]['quote']['EUR']['percent_change_24h']).toFixed(3).toString();
         percent_change_24h = percent_change_24h.startsWith("-") ? percent_change_24h : "+" + percent_change_24h;
         var change = "" + percent_change_1h + "%    " + percent_change_24h + "%";
 
         msg += symbol + symbolpadding + " : €" + price + pricepadding + percent_change_24h + "\n";
         if (i % 5 == 4) msg += "\n";
+        if (i % 25 == 24) { 
+          MessageStrategy.typing(self.message);
+          self.client.sendText(self.message.from, msg.trim() + "```");
+          await self.waitFor(500);
+          msg = "```";
+        }
       }
 
-      self.client.sendText(self.message.from, msg.trim() + "```");
+      if(msg.length > 3) {
+        self.client.sendText(self.message.from, msg.trim() + "```");
+      }
     }).catch(err => {
       console.log(err);
       self.client.sendText(self.message.from, err);
+      console.log(err.stack)
     });
   }
 
@@ -238,7 +252,7 @@ class Crypto extends MessageStrategy {
 
       if(period == "7") {
         coin_msg += "*" + coindetails.name + "* 🪙 ";
-        coin_msg += "*" + parseFloat(objfiat.percent_change_7d).toFixed(2).toString() + "%* (7d)";
+        coin_msg += "*" + parseFloat(objfiat.percent_change_7d).toFixed(3).toString() + "%* (7d)";
         coin_msg += objfiat.percent_change_7d > 0 ? "🔺\n" : "🔻\n";
         coin_msg += "\n";
         coin_msg += "```";
@@ -249,11 +263,11 @@ class Crypto extends MessageStrategy {
         coin_msg += "\n";
         coin_msg += "Price            : " + objcurrency + self.get_coin_value(coin) + "\n";
         coin_msg += "Market Cap       : " + objcurrency + Math.round(objfiat.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "\n";
-        coin_msg += "Market Dominance : " + parseFloat(objfiat.market_cap_dominance).toFixed(2).toString() + "%";
+        coin_msg += "Market Dominance : " + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + "%";
       }
       else {
         coin_msg += "*" + coindetails.name + "* 🪙 ";
-        coin_msg += "*" + parseFloat(objfiat.percent_change_24h).toFixed(2).toString() + "%* (24hr)";
+        coin_msg += "*" + parseFloat(objfiat.percent_change_24h).toFixed(3).toString() + "%* (24hr)";
         coin_msg += objfiat.percent_change_24h > 0 ? "🔺\n" : "🔻\n";
         coin_msg += "\n";
         coin_msg += "```";
@@ -265,7 +279,7 @@ class Crypto extends MessageStrategy {
         coin_msg += "Price            : " + objcurrency + self.get_coin_value(coin) + "\n";
         coin_msg += "Volume 24h       : " + Math.round(objfiat.volume_24h).toString() + "\n";
         coin_msg += "Market Cap       : " + objcurrency + Math.round(objfiat.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "\n";
-        coin_msg += "Market Dominance : " + parseFloat(objfiat.market_cap_dominance).toFixed(2).toString() + "%";
+        coin_msg += "Market Dominance : " + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + "%";
       }
       coin_msg += "```";
 
@@ -295,7 +309,12 @@ class Crypto extends MessageStrategy {
       return true;
     }
 
-    if (this.message.body.match(/^coin ([0-9a-z\-]+)$/i) != null) {
+    if (this.message.body.match(/^coin ([0-9]+)$/i) != null) {
+      this.cmp(this);
+      return true;
+    }
+
+    if (this.message.body.match(/^coin ([0-9a-zA-Z\-]+)$/i) != null) {
       this.get_graph(this, this.message);
       return true;
     }

@@ -8,10 +8,9 @@ class AYCHoover extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['AYCHoover'] = {
+    super('AYCHoover', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

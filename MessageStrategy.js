@@ -6,7 +6,6 @@ const request = require('sync-request');
 const crypto = require('crypto');
 const CoinMarketCap = require('coinmarketcap-api');
 const puppeteer = require('puppeteer');
-const { exchangeRates } = require('exchange-rates-api');
 const deluge = require('deluge');
 const resizeImg = require('resize-image-buffer');
 const axios = require('axios');
@@ -20,6 +19,7 @@ const yt = require('youtube-search-without-api-key');
 const youtubeThumbnail = require('youtube-thumbnail');
 const NodeWebcam = require('node-webcam');
 const { exec } = require("child_process");
+const jsdom = require("jsdom");
 
 // directory path
 const strategies_dir = './strategies/'
@@ -38,8 +38,10 @@ class MessageStrategy {
   static watcher = null;
   static watched_events = {};
 
-  constructor() {
-    
+  constructor(key, config) {
+    if(Object.keys(MessageStrategy.state).includes(key) == false) {
+      MessageStrategy.state[key] = config;
+    }
   }
 
   describe(message, strategies) {
@@ -85,6 +87,10 @@ class MessageStrategy {
 
   async call_update_active_chat_contacts() {
     MessageStrategy.update_active_chat_contacts()
+  }
+
+  async waitFor(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
   }
 
   get_contacts() {
@@ -157,6 +163,7 @@ class MessageStrategy {
   static update_strategies() {
     MessageStrategy.strategies = {}
 
+    MessageStrategy.update_strategy("State.js");
     MessageStrategy.update_strategy("Spam.js");
     MessageStrategy.update_strategy("Rbac.js");
     MessageStrategy.update_strategy("Feature.js");
@@ -206,6 +213,106 @@ class MessageStrategy {
     }
     catch (err) {
       console.log(err);
+    }
+  }
+
+  async getPageOGData(self, fullurl, wait = 500) {
+    try {
+
+      var config = {
+        headers: {
+          'Accept': '*/*',
+          'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+          'Access-Control-Request-Headers': 'content-type',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Origin': 'https://google.com/',
+          'Pragma': 'no-cache',
+          'Referer': 'https://google.com/',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+        }
+      };
+
+      MessageStrategy.typing(self.message);
+
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+      const page = await browser.newPage();
+      await page.goto(fullurl);
+      await page.setViewport({ width: 1366, height: 768 });
+
+      const bodyHandle = await page.$('body');
+      const { height } = await bodyHandle.boundingBox();
+
+      MessageStrategy.typing(self.message);
+
+      await bodyHandle.dispose();
+      const calculatedVh = page.viewport().height;
+      let vhIncrease = 0;
+      while (vhIncrease + calculatedVh < height) {
+        // Here we pass the calculated viewport height to the context
+        // of the page and we scroll by that amount
+        await page.evaluate(_calculatedVh => {
+          window.scrollBy(0, _calculatedVh);
+        }, calculatedVh);
+        await self.waitFor(wait);
+        vhIncrease = vhIncrease + calculatedVh;
+      }
+
+      MessageStrategy.typing(self.message);
+
+      // Setting the viewport to the full height might reveal extra elements
+      await page.setViewport({ width: 1366, height: calculatedVh });
+
+      // Wait for a little bit more
+      await self.waitFor(wait);
+
+      // Scroll back to the top of the page by using evaluate again.
+      await page.evaluate(_ => {
+        window.scrollTo(0, 0);
+      });
+
+      MessageStrategy.typing(self.message);
+
+      let description = await page.evaluate(() => {
+        let desc = document.head.querySelector('meta[property="og:description"]');
+        if (desc) {
+          return desc.getAttribute("content");
+        }
+        return null;
+      });
+
+      let image_url = await page.evaluate(() => {
+        let image = document.head.querySelector('meta[property="og:image"]');
+        if (image) {
+          return image.getAttribute("content")
+        }
+        return null;
+      });
+
+      let title = await page.evaluate(() => {
+        return document.head.querySelector('title').innerText;
+      });
+
+      if (image_url == null) {
+        return [null, null];
+      }
+      else {
+        let desc = description == null ? title : description;
+        MessageStrategy.typing(self.message);
+        const responseImage = await axios(image_url, { responseType: 'arraybuffer', headers: config['headers'] });
+        const image = await resizeImg(responseImage.data, { width: 200, format: "jpg" });
+        const buffer64 = Buffer.from(image, 'binary').toString('base64');
+        let data = "data:image/jpeg;base64," + buffer64;
+        MessageStrategy.typing(self.message);
+        return [desc, data];
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return [null, null];
     }
   }
 }

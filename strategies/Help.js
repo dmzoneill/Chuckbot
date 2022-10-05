@@ -8,10 +8,9 @@ class Help extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Help'] = {
+    super('Help', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {
@@ -33,6 +32,7 @@ class Help extends MessageStrategy {
     if (this.message.body.toLowerCase() === "help") {
       MessageStrategy.typing(this.message);
       let help = "";
+      let cnt = 0;
       Object.keys(strategies).forEach(key => {
         help += "*" + key + "*\n";
         help += "  | - help " + key + "\n";
@@ -40,8 +40,15 @@ class Help extends MessageStrategy {
           help += "  | - " + term + "\n";
         });
         help += "";
+        cnt += 1;
+        if(cnt % 6 == 0) {
+          MessageStrategy.client.sendText(this.message.from, help.trim());
+          help = "";
+        }
       });
-      MessageStrategy.client.sendText(this.message.from, help.trim());
+      if(help != ""){
+        MessageStrategy.client.sendText(this.message.from, help.trim());
+      }
       return true;
     }
 

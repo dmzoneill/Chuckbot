@@ -12,10 +12,9 @@ class Harass extends MessageStrategy {
   static cronjob = null;
 
   constructor() {
-    super();
-    MessageStrategy.state['Harass'] = {
+    super('Harass', {
       'enabled': true
-    }
+    });
     this.setup_cron();
   }
 

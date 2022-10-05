@@ -8,10 +8,9 @@ class Hi extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Hi'] = {
+    super('Hi', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {

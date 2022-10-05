@@ -8,10 +8,9 @@ class Sonarr extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
 
   constructor() {
-    super();
-    MessageStrategy.state['Sonarr'] = {
+    super('Sonarr', {
       'enabled': true
-    }
+    });
   }
 
   describe(message, strategies) {
