@@ -43,28 +43,25 @@ class Spam extends MessageStrategy {
 
     let keywords = [];
 
-    Object.keys(strategies).forEach(key => {
-      strategies[key].provides().forEach(term => {
-        keywords.push(term);
-      });
-    });
-
     // Object.keys(strategies).forEach(key => {
-    //   if (Array.isArray(strategies[key].provides())) {
-    //     strategies[key].provides().forEach(term => {
-    //       keywords.push(term);
-    //     });
-    //   } else {
-    //     let actions = strategies[key].provides();
-    //     let keys = Object.keys(actions);
-    //     for (let y = 0; y < keys.length; y++) {
-    //       let re = new RegExp(keys[y], 'i');
-    //       if (re.test(message.body)) {
-    //         keywords.push(term);
-    //       }
-    //     }
-    //   }
+    //   strategies[key].provides().forEach(term => {
+    //     keywords.push(term);
+    //   });
     // });
+
+    Object.keys(strategies).forEach(key => {
+      if (Array.isArray(strategies[key].provides())) {
+        strategies[key].provides().forEach(term => {
+          keywords.push(term.toLowerCase());
+        });
+      } else {
+        let actions = strategies[key].provides().provides;
+        let keys = Object.keys(actions);
+        for (let y = 0; y < keys.length; y++) {
+          keywords.push(term.toLowerCase());
+        }
+      }
+    });
 
     let keycheck = false;
 
@@ -75,8 +72,6 @@ class Spam extends MessageStrategy {
     }
 
     // for (let i = 0; i < keywords.length; i++) {
-    //   let re = new RegExp(keywords[i], 'i');
-
     //   if (this.message.body.toLowerCase().startsWith(keywords[i])) {
     //     keycheck = true;
     //   }

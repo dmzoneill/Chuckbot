@@ -37,21 +37,21 @@ class Help extends MessageStrategy {
         help += "*" + key + "*\n";
         help += "  | - help " + key + "\n";
 
-        strategies[key].provides().forEach(term => {
-          help += "  | - " + term + "\n";
-        });
+        // strategies[key].provides().forEach(term => {
+        //   help += "  | - " + term + "\n";
+        // });
 
-        // if(Array.isArray(strategies[key].provides())) {
-        //   strategies[key].provides().forEach(term => {
-        //     help += "  | - " + term + "\n";
-        //   });
-        // } else {
-        //   let actions = strategies[key].provides();
-        //   let keys = Object.keys(actions);
-        //   for (let y = 0; y < keys.length; y++) {
-        //     help += "  | - " + keys[y] + "\n";
-        //   }
-        // }
+        if(Array.isArray(strategies[key].provides())) {
+          strategies[key].provides().forEach(term => {
+            help += "  | - " + term + "\n";
+          });
+        } else {
+          let actions = strategies[key].provides().provides;
+          let keys = Object.keys(actions);
+          for (let y = 0; y < keys.length; y++) {
+            help += "  | - " + keys[y] + "\n";
+          }
+        }
 
         help += "";
         cnt += 1;

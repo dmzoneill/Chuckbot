@@ -38,6 +38,7 @@ class MessageStrategy {
   static changed = false;
   static watcher = null;
   static watched_events = {};
+  static access_paths = [];
 
   constructor(key, config) {
     if (Object.keys(MessageStrategy.state).includes(key) == false) {
@@ -57,7 +58,10 @@ class MessageStrategy {
   }
 
   register(action) {
-    console.log(action);
+    if(MessageStrategy.access_paths.includes(action) == false){
+      MessageStrategy.access_paths.push(action);
+      console.log(action);
+    }
   }
 
   static watch() {
@@ -314,27 +318,33 @@ class MessageStrategy {
     try {
       let keys = Object.keys(MessageStrategy.strategies);
       console.log(message.body);
-      for (let y = 0; y < keys.length; y++) {
-        let handler = MessageStrategy.strategies[keys[y]];
-        handler.handleMessage(message, MessageStrategy.strategies);
-      }
-
       // for (let y = 0; y < keys.length; y++) {
       //   let handler = MessageStrategy.strategies[keys[y]];
-      //   let actions = handler.provides();
-
-      //   if (Array.isArray(actions)) {
-      //     handler.handleMessage(message, MessageStrategy.strategies);
-      //   } else {
-      //     let keys = Object.keys(actions);
-      //     for (let y = 0; y < keys.length; y++) {
-      //       let re = new RegExp(keys[y], 'i');
-      //       if (re.test(message.body)) {
-      //         actions[keys[y]](handler, message, MessageStrategy.strategies);
-      //       }
-      //     }
-      //   }
+      //   handler.handleMessage(message, MessageStrategy.strategies);
       // }
+
+      for (let y = 0; y < keys.length; y++) {
+        let handler = MessageStrategy.strategies[keys[y]];
+        let module = handler.provides();
+
+        if (Array.isArray(module)) {
+          handler.handleMessage(message, MessageStrategy.strategies);
+        } else {
+          if(module.access(message, handler) == false) continue;
+          if(module.enabled() == false) continue;
+
+          handler.message = message;
+
+          let keys = Object.keys(module.provides);
+          for (let y = 0; y < keys.length; y++) {
+            if(module.provides[keys[y]].access(message, handler, module.provides[keys[y].action]) == false) continue;
+            if(module.provides[keys[y]].enabled() == false) continue;
+            if (module.provides[keys[y]].test(message)) {
+              module.provides[keys[y]].action();
+            }
+          }
+        }
+      }
     }
     catch (err) {
       console.log(err);
