@@ -23,7 +23,7 @@ class Spam extends MessageStrategy {
   }
 
   provides() {
-    return []
+    return ['']
   }
 
   handleMessage(message, strategies) {
@@ -46,8 +46,25 @@ class Spam extends MessageStrategy {
     Object.keys(strategies).forEach(key => {
       strategies[key].provides().forEach(term => {
         keywords.push(term);
-      })
+      });
     });
+
+    // Object.keys(strategies).forEach(key => {
+    //   if (Array.isArray(strategies[key].provides())) {
+    //     strategies[key].provides().forEach(term => {
+    //       keywords.push(term);
+    //     });
+    //   } else {
+    //     let actions = strategies[key].provides();
+    //     let keys = Object.keys(actions);
+    //     for (let y = 0; y < keys.length; y++) {
+    //       let re = new RegExp(keys[y], 'i');
+    //       if (re.test(message.body)) {
+    //         keywords.push(term);
+    //       }
+    //     }
+    //   }
+    // });
 
     let keycheck = false;
 
@@ -56,6 +73,17 @@ class Spam extends MessageStrategy {
         keycheck = true;
       }
     }
+
+    // for (let i = 0; i < keywords.length; i++) {
+    //   let re = new RegExp(keywords[i], 'i');
+
+    //   if (this.message.body.toLowerCase().startsWith(keywords[i])) {
+    //     keycheck = true;
+    //   }
+    //   else if (re.test(this.message.body.toLowerCase())) {
+    //     keycheck = true;
+    //   }
+    // }
 
     if (keycheck == false) {
       return false;

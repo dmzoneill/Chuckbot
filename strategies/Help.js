@@ -36,17 +36,31 @@ class Help extends MessageStrategy {
       Object.keys(strategies).forEach(key => {
         help += "*" + key + "*\n";
         help += "  | - help " + key + "\n";
+
         strategies[key].provides().forEach(term => {
           help += "  | - " + term + "\n";
         });
+
+        // if(Array.isArray(strategies[key].provides())) {
+        //   strategies[key].provides().forEach(term => {
+        //     help += "  | - " + term + "\n";
+        //   });
+        // } else {
+        //   let actions = strategies[key].provides();
+        //   let keys = Object.keys(actions);
+        //   for (let y = 0; y < keys.length; y++) {
+        //     help += "  | - " + keys[y] + "\n";
+        //   }
+        // }
+
         help += "";
         cnt += 1;
-        if(cnt % 6 == 0) {
+        if (cnt % 6 == 0) {
           MessageStrategy.client.sendText(this.message.from, help.trim());
           help = "";
         }
       });
-      if(help != ""){
+      if (help != "") {
         MessageStrategy.client.sendText(this.message.from, help.trim());
       }
       return true;
@@ -58,7 +72,7 @@ class Help extends MessageStrategy {
       let feature = parts[1].toLowerCase();
 
       Object.keys(strategies).forEach(key => {
-        if(key.toLowerCase() == feature) {
+        if (key.toLowerCase() == feature) {
           strategies[key].describe(this.message, strategies);
         }
       });

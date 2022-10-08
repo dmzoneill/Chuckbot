@@ -21,7 +21,9 @@ class UrbanDictionary extends MessageStrategy {
   }
 
   provides() {
-    return ['urban']
+    return [
+      'Urban'
+    ]; 
   }
 
   async postUrbanQuote(self) {
@@ -52,7 +54,6 @@ class UrbanDictionary extends MessageStrategy {
     return false;
   }
 }
-
 
 
 module.exports = {

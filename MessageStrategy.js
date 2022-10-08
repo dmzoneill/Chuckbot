@@ -21,6 +21,7 @@ const NodeWebcam = require('node-webcam');
 const { exec } = require("child_process");
 const jsdom = require("jsdom");
 
+
 // directory path
 const strategies_dir = './strategies/'
 
@@ -39,7 +40,7 @@ class MessageStrategy {
   static watched_events = {};
 
   constructor(key, config) {
-    if(Object.keys(MessageStrategy.state).includes(key) == false) {
+    if (Object.keys(MessageStrategy.state).includes(key) == false) {
       MessageStrategy.state[key] = config;
     }
   }
@@ -49,6 +50,14 @@ class MessageStrategy {
     MessageStrategy.typing(this.message);
     let description = "Didn't provide describe from " + this.constructor.name;
     MessageStrategy.client.sendText(this.message.from, description);
+  }
+
+  hasAccess(sender_id, prototype_name) {
+    return MessageStrategy.strategies['Rbac'].hasAccess(sender_id, prototype_name);
+  }
+
+  register(action) {
+    console.log(action);
   }
 
   static watch() {
@@ -197,25 +206,6 @@ class MessageStrategy {
     return MessageStrategy.strategies;
   }
 
-  static doHandleMessage(chuck, message) {
-    if (MessageStrategy.changed) {
-      MessageStrategy.getStrategies(chuck);
-    }
-
-    try {
-      let keys = Object.keys(MessageStrategy.strategies);
-      for (let y = 0; y < keys.length; y++) {
-        console.log(keys[y] + ": " + message.body);
-        if (MessageStrategy.strategies[keys[y]].handleMessage(message, MessageStrategy.strategies)) {
-          return;
-        }
-      }
-    }
-    catch (err) {
-      console.log(err);
-    }
-  }
-
   async getPageOGData(self, fullurl, wait = 500) {
     try {
 
@@ -313,6 +303,41 @@ class MessageStrategy {
     catch (err) {
       console.log(err);
       return [null, null];
+    }
+  }
+
+  static doHandleMessage(chuck, message) {
+    if (MessageStrategy.changed) {
+      MessageStrategy.getStrategies(chuck);
+    }
+
+    try {
+      let keys = Object.keys(MessageStrategy.strategies);
+      console.log(message.body);
+      for (let y = 0; y < keys.length; y++) {
+        let handler = MessageStrategy.strategies[keys[y]];
+        handler.handleMessage(message, MessageStrategy.strategies);
+      }
+
+      // for (let y = 0; y < keys.length; y++) {
+      //   let handler = MessageStrategy.strategies[keys[y]];
+      //   let actions = handler.provides();
+
+      //   if (Array.isArray(actions)) {
+      //     handler.handleMessage(message, MessageStrategy.strategies);
+      //   } else {
+      //     let keys = Object.keys(actions);
+      //     for (let y = 0; y < keys.length; y++) {
+      //       let re = new RegExp(keys[y], 'i');
+      //       if (re.test(message.body)) {
+      //         actions[keys[y]](handler, message, MessageStrategy.strategies);
+      //       }
+      //     }
+      //   }
+      // }
+    }
+    catch (err) {
+      console.log(err);
     }
   }
 }

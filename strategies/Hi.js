@@ -21,7 +21,28 @@ class Hi extends MessageStrategy {
   }
 
   provides() {
-    return ['hi']
+    return ['Hi'];
+    // return {
+    //   provides: {
+    //     'Hi': {
+    //       test: function(message) {
+    //         return message.body.toLowerCase() === 'hi';
+    //       },
+    //       access: function(message, strategy, action) {
+    //         return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name, action.name) == false;
+    //       },
+    //       help: function() {
+    //         return 'Just a simple test function the returns hello when you say hi';
+    //       },
+    //       action: this.test,
+    //     }
+    //   },
+    //   help: 'Provides a basic example of a strategy',
+    //   access: function(message, strategy) {
+    //     MessageStrategy.register(strategy.constructor.name);
+    //     return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name) == false;
+    //   }
+    // }
   }
 
   handleMessage(message) {
@@ -36,6 +57,10 @@ class Hi extends MessageStrategy {
     }
 
     return false;
+  }
+
+  Hi(message) {
+    console.log(message);
   }
 }
 

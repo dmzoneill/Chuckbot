@@ -29,6 +29,13 @@ class Feature extends MessageStrategy {
 
     if (this.message.body.indexOf(" ") == -1) return;
 
+    if (this.message.body.toLowerCase().startsWith('feature')) {
+      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
+        this.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
+        return;
+      }
+    }
+
     if (this.message.body.toLowerCase().startsWith("feature")) {
       let parts = this.message.body.split(" ");
 
@@ -43,11 +50,13 @@ class Feature extends MessageStrategy {
       if (parts[1] == "enable") {
         MessageStrategy.typing(this.message);
         MessageStrategy.state[parts[2]]['enabled'] = true;
+        this.client.reply(this.message.from, parts[2] + '   enabled', this.message.id, true);
       }
 
       if (parts[1] == "disable") {
         MessageStrategy.typing(this.message);
         MessageStrategy.state[parts[2]]['enabled'] = false;
+        this.client.reply(this.message.from, parts[2] + ' disabled', this.message.id, true);
       }
     }
   }

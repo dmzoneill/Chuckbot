@@ -45,11 +45,6 @@ class PhilipsHue extends MessageStrategy {
 
   do_sanitize_cmd(self, opts) {
 
-    if (MessageStrategy.strategies['Rbac'].hasAccess(self.message.sender.id, [5]) == false) {
-      self.client.reply(self.message.from, 'Not for langers like you', self.message.id, true);
-      return;
-    }
-
     let clean_opts = [];
     let dodgey = [
       "\\", "\"", "'", ";", ">", "<", "$", "&", "`",
@@ -160,6 +155,13 @@ class PhilipsHue extends MessageStrategy {
     if (MessageStrategy.state['PhilipsHue']['enabled'] == false) return;
 
     this.message = message;
+
+    if (this.message.body.toLowerCase().startsWith('hue')) {
+      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
+        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
+        return;
+      }
+    }
 
     if (this.message.body.toLowerCase().startsWith('hue')) {
       if (this.message.body.indexOf(" ")) {

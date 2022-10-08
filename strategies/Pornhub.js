@@ -21,7 +21,7 @@ class Pornhub extends MessageStrategy {
   }
 
   provides() {
-    return ['Pornhub']
+    return ['Pornhub (.*)']
   }
 
   async getPornhub(self) {

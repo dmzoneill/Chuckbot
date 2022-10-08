@@ -158,6 +158,15 @@ class Harass extends MessageStrategy {
 
     this.message = message;
 
+    if (this.message.body.toLowerCase().startsWith('harass')) {
+      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
+        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
+        return;
+      }
+    }
+
+    this.message = message;
+
     if (this.message.body.toLowerCase() === 'harass') {
       this.get_known_sluts();
       return true;

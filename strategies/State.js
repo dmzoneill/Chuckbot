@@ -77,9 +77,9 @@ class State extends MessageStrategy {
 
     this.message = message;
 
-    if (this.message.body.toLowerCase().startsWith('state ')) {
-      if (MessageStrategy.strategies['State'].hasAccess(self.message.sender.id, [5]) == false) {
-        self.client.reply(self.message.from, 'Not for langers like you', self.message.id, true);
+    if (this.message.body.toLowerCase().startsWith('state')) {
+      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
+        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
         return;
       }
     }

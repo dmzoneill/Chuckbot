@@ -26,11 +26,6 @@ class WebCam extends MessageStrategy {
 
   async takeVideo(self) {
 
-    if (MessageStrategy.strategies['Rbac'].hasAccess(self.message.sender.id, [5]) == false) {
-      self.client.reply(self.message.from, 'Not for langers like you', self.message.id, true);
-      return;
-    }
-
     let sha1d = crypto.createHash('sha1').digest('hex');
     let time = "10";
     let video_time = /webcam video ([0-9]{1,2})/i;
@@ -61,11 +56,6 @@ class WebCam extends MessageStrategy {
   async takePicture(self) {
     try {
 
-      if (MessageStrategy.strategies['Rbac'].hasAccess(self.message.sender.id, [5]) == false) {
-        self.client.reply(self.message.from, 'Not for langers like you', self.message.id, true);
-        return;
-      }
-
       var opts = {
         width: 1280,
         height: 720,
@@ -82,7 +72,8 @@ class WebCam extends MessageStrategy {
 
       NodeWebcam.capture("test_picture", opts, function (err, data) {
         try {
-          self.client.sendImage(self.message.chatId, data, 'filename.jpeg', '')
+          self.client.sendImage(self.message.chatId, data, 'filename.jpeg', '');
+          fs.unlinkSync("test_picture.jpg");
         } catch (err) {
           console.log(err);
         }
@@ -96,6 +87,13 @@ class WebCam extends MessageStrategy {
     if (MessageStrategy.state['WebCam']['enabled'] == false) return;
 
     this.message = message;
+
+    if (this.message.body.toLowerCase().startsWith('webcam')) {
+      if (MessageStrategy.hasAccess(this.message.sender.id, this.constructor.name) == false) {
+        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
+        return;
+      }
+    }
 
     if (this.message.body.toLowerCase() == 'webcam picture') {
       MessageStrategy.typing(this.message);

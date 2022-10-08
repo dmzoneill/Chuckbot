@@ -26,6 +26,8 @@ class Facebook extends MessageStrategy {
 
   async postFacebookPreview(self, fullurl) {
     try {
+      if(self.message.thumbnail != "") return;
+      
       let data = await self.getPageOGData(self, fullurl, 500);
 
       if (data[1] == null) {
