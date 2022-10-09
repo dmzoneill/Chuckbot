@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class WebCam extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('WebCam', {
@@ -13,23 +14,69 @@ class WebCam extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Takes a picture or video from local webcam"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['WebCam', 'Webcam picture', 'Webcam video \d+'];
+    WebCam.self = this;
+
+    return {
+      help: 'Takes actions using webcam',
+      provides: {
+        'webcam picture': {
+          test: function (message) {
+            return message.body.toLowerCase() == 'webcam picture';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Take a webcam picture';
+          },
+          action: function TakePicture(message) {
+            WebCam.self.TakePicture(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['WebCam']['enabled'];
+          }
+        },
+        'webcam video': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('webcam video');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Take a video';
+          },
+          action: function TakeVideo(message) {
+            WebCam.self.TakeVideo(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['WebCam']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['WebCam']['enabled'];
+      }
+    }
   }
 
-  async takeVideo(self) {
+  async TakeVideo(message) {
 
     let sha1d = crypto.createHash('sha1').digest('hex');
     let time = "10";
     let video_time = /webcam video ([0-9]{1,2})/i;
-    let found = self.message.body.match(video_time);
+    let found = message.body.match(video_time);
 
     if (found) {
       time = found[1];
@@ -38,13 +85,13 @@ class WebCam extends MessageStrategy {
     let cmd = "ffmpeg -y -f video4linux2 -s 1280x720 -pix_fmt yuyv422 -r 6 -t ";
     cmd += time + " -i /dev/video0 " + sha1d + ".mp4";
 
-    MessageStrategy.typing(self.message);
+    MessageStrategy.typing(message);
 
     exec(cmd, (error, stdout, stderr) => {
       if (fs.existsSync(sha1d + ".mp4")) {
         try {
-          MessageStrategy.typing(self.message);
-          self.client.sendFile(self.message.from, sha1d + ".mp4", "cam", "Webcam home video");
+          MessageStrategy.typing(message);
+          MessageStrategy.client.sendFile(message.from, sha1d + ".mp4", "cam", "Webcam home video");
           fs.unlinkSync(sha1d + ".mp4");
         } catch (err) {
           console.log(err);
@@ -53,7 +100,7 @@ class WebCam extends MessageStrategy {
     });
   }
 
-  async takePicture(self) {
+  async TakePicture(message) {
     try {
 
       var opts = {
@@ -72,7 +119,7 @@ class WebCam extends MessageStrategy {
 
       NodeWebcam.capture("test_picture", opts, function (err, data) {
         try {
-          self.client.sendImage(self.message.chatId, data, 'filename.jpeg', '');
+          MessageStrategy.client.sendImage(message.chatId, data, 'filename.jpeg', '');
           fs.unlinkSync("test_picture.jpg");
         } catch (err) {
           console.log(err);
@@ -81,33 +128,6 @@ class WebCam extends MessageStrategy {
     } catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['WebCam']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase().startsWith('webcam')) {
-      if (MessageStrategy.hasAccess(this.message.sender.id, this.constructor.name) == false) {
-        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
-        return;
-      }
-    }
-
-    if (this.message.body.toLowerCase() == 'webcam picture') {
-      MessageStrategy.typing(this.message);
-      this.takePicture(this);
-      return true;
-    }
-
-    if (this.message.body.toLowerCase().startsWith('webcam video')) {
-      MessageStrategy.typing(this.message);
-      this.takeVideo(this);
-      return true;
-    }
-
-    return false;
   }
 }
 

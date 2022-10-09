@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Help extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Help', {
@@ -13,74 +14,94 @@ class Help extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Print the list of commands provided by the features.  You can use the feature list to get the name of features and for a further message describing the feature.  e.g help Hi"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['help', 'help feature']
-  }
+    Help.self = this;
 
-  handleMessage(message, strategies) {
-    if (MessageStrategy.state['Help']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === "help") {
-      MessageStrategy.typing(this.message);
-      let help = "";
-      let cnt = 0;
-      Object.keys(strategies).forEach(key => {
-        help += "*" + key + "*\n";
-        help += "  | - help " + key + "\n";
-
-        // strategies[key].provides().forEach(term => {
-        //   help += "  | - " + term + "\n";
-        // });
-
-        if(Array.isArray(strategies[key].provides())) {
-          strategies[key].provides().forEach(term => {
-            help += "  | - " + term + "\n";
-          });
-        } else {
-          let actions = strategies[key].provides().provides;
-          let keys = Object.keys(actions);
-          for (let y = 0; y < keys.length; y++) {
-            help += "  | - " + keys[y] + "\n";
+    return {
+      help: 'Detects Help urls and provides thumbnail preview if not provided',
+      provides: {
+        'Help': {
+          test: function (message) {
+            return message.body.toLowerCase() === "help";
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Help.self.Help,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Help']['enabled'];
+          }
+        },
+        'HelpFeature': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith("help");
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Help.self.HelpFeature,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Help']['enabled'];
           }
         }
-
-        help += "";
-        cnt += 1;
-        if (cnt % 6 == 0) {
-          MessageStrategy.client.sendText(this.message.from, help.trim());
-          help = "";
-        }
-      });
-      if (help != "") {
-        MessageStrategy.client.sendText(this.message.from, help.trim());
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Help']['enabled'];
       }
-      return true;
     }
+  }
 
-    if (this.message.body.toLowerCase().startsWith("help")) {
-      MessageStrategy.typing(this.message);
-      let parts = this.message.body.split(" ");
-      let feature = parts[1].toLowerCase();
+  Help(message) {
+    MessageStrategy.typing(message);
+    let help = "";
+    let cnt = 0;
+    Object.keys(MessageStrategy.strategies).forEach(key => {
+      help += "*" + key + "*\n";
+      help += "  | - help " + key + "\n";
 
-      Object.keys(strategies).forEach(key => {
-        if (key.toLowerCase() == feature) {
-          strategies[key].describe(this.message, strategies);
-        }
-      });
+      let actions = MessageStrategy.strategies[key].provides().provides;
+      let keys = Object.keys(actions);
+      for (let y = 0; y < keys.length; y++) {
+        help += "  | - " + keys[y] + "\n";
+      }
 
-      return true;
+      help += "";
+      cnt += 1;
+      if (cnt % 6 == 0) {
+        MessageStrategy.client.sendText(message.from, help.trim());
+        help = "";
+      }
+    });
+    if (help != "") {
+      MessageStrategy.client.sendText(message.from, help.trim());
     }
+    return true;
+  }
 
-    return false;
+  HelpFeature(message) {
+    MessageStrategy.typing(message);
+    let parts = message.body.split(" ");
+    let feature = parts[1].toLowerCase();
+
+    Object.keys(MessageStrategy.strategies).forEach(key => {
+      if (key.toLowerCase() == feature) {
+        MessageStrategy.client.sendText(message.from, MessageStrategy.strategies[key].provides().help);
+      }
+    });
   }
 }
 

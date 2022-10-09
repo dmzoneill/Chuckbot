@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Imdb extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Imdb', {
@@ -13,33 +14,50 @@ class Imdb extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Provides url with preview to imdb movies"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['imdb (.*)']
+    Imdb.self = this;
+
+    return {
+      help: 'Provides the levenshtein distance between 2 strings',
+      provides: {
+        'imdb': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('imdb');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Imdb.self.Imdb,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Imdb']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Imdb']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Imdb']['enabled'] == false) return;
-
-    this.message = message;
-    var self = this;
-
-    if (this.message.body.toLowerCase().startsWith('imdb')) {
-      let search_term = this.message.body.substring(5);
+  Imdb(message) {
+    try {
+      let search_term = message.body.substring(5);
       nameToImdb(search_term, function (err, res, inf) {
-        MessageStrategy.typing(self.message);
-        self.client.sendLinkWithAutoPreview(self.message.from, "https://www.imdb.com/title/" + res + "/");
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendLinkWithAutoPreview(message.from, "https://www.imdb.com/title/" + res + "/");
       });
-      return true;
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err);
     }
-
-    return false;
   }
 }
 

@@ -7,6 +7,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class PhilipsHue extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('PhilipsHue', {
@@ -14,36 +15,79 @@ class PhilipsHue extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Philips Hue light management"
-    MessageStrategy.client.sendText(this.message.from, description);
+  provides() {
+    PhilipsHue.self = this;
+
+    return {
+      help: 'Philips Hue light management',
+      provides: {
+        'PhilipsHue': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('hue');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return [
+              'Hue',
+              'Hue lights',
+              'Hue ([0-9]+) (on|off|clear|reset|select|lselect|colorloop|[0-9a-zA-Z]{6})',
+              'Hue ([0-9]+) (hue|sat|bri)=[0-9]+',
+              'Hue ([0-9]+) ... (transitiontime=[0-9]+)',
+              'Hue groups',
+              'Hue group ([0-9]+) (on|off|clear|reset|select|lselect|colorloop|[0-9a-zA-Z]{6})',
+              'Hue group ([0-9]+) (hue|sat|bri)=[0-9]+',
+              'Hue group ([0-9]+) ... (transitiontime=[0-9]+)?',
+            ].join("\n")
+          },
+          action: PhilipsHue.self.ChangeLighting,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['PhilipsHue']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['PhilipsHue']['enabled'];
+      }
+    }
   }
 
-  do_cmd(self, opts) {
+  do_cmd(message, opts) {
     let cmd = "./node_modules/hueadm/bin/hueadm " + opts.join(" ");
     console.log(cmd)
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
-        self.client.reply(self.message.from, error.message, self.message.id, true);
+        MessageStrategy.client.reply(message.from, error.message, message.id, true);
         return;
       }
       if (stderr) {
         console.log(`stderr: ${stderr}`);
-        self.client.reply(self.message.from, stderr, self.message.id, true);
+        MessageStrategy.client.reply(message.from, stderr, message.id, true);
         return;
       }
       console.log(`stdout: ${stdout}`);
       let msg = "```";
       msg += stdout.replace(/\s*-\s*/gm, "\n").trim();
       msg += "```";
-      self.client.reply(self.message.from, msg, self.message.id, true);
+      MessageStrategy.client.reply(message.from, msg, message.id, true);
     });
   }
 
-  do_sanitize_cmd(self, opts) {
+  ChangeLighting(message) {
+
+    if (message.body.indexOf(" ") == 1) {
+      return;
+    }
+
+    let opts = message.body.split(" ");
 
     let clean_opts = [];
     let dodgey = [
@@ -65,13 +109,13 @@ class PhilipsHue extends MessageStrategy {
 
     // groups
     if (clean_opts[1] == "groups") {
-      this.do_cmd(self, [clean_opts[1]]);
+      PhilipsHue.self.do_cmd([clean_opts[1]]);
       return;
     }
 
     // groups
     if (clean_opts[1] == "lights") {
-      this.do_cmd(self, [clean_opts[1]]);
+      PhilipsHue.self.do_cmd([clean_opts[1]]);
       return;
     }
 
@@ -84,13 +128,13 @@ class PhilipsHue extends MessageStrategy {
 
     if (clean_opts[offset].match(/\d+/) == null) {
       console.log("No light or group number");
-      self.client.reply(self.message.from, "No light or group number", self.message.id, true);
+      MessageStrategy.client.reply(message.from, "No light or group number", message.id, true);
       return;
     }
 
     if (clean_opts[offset + 1].match(/(on|off|clear|reset|select|lselect|colorloop|#?[0-9a-zA-Z]{6})/) == null) {
       console.log("Action should be on, off, clear, reset, select, lselect, colorloop, [0-9a-zA-Z]{6}");
-      self.client.reply(self.message.from, "Action should be on, off, clear, reset", self.message.id, true);
+      MessageStrategy.client.reply(message.from, "Action should be on, off, clear, reset", message.id, true);
       return;
     }
 
@@ -100,7 +144,7 @@ class PhilipsHue extends MessageStrategy {
 
     if (clean_opts.length > 20) {
       console.log("Where are you off to?");
-      self.client.reply(self.message.from, "Where are you off to?", self.message.id, true);
+      MessageStrategy.client.reply(message.from, "Where are you off to?", message.id, true);
       return;
     }
 
@@ -121,7 +165,7 @@ class PhilipsHue extends MessageStrategy {
       }
       if (passed == false) {
         console.log("Additional option " + options[f] + " nonsense");
-        self.client.reply(self.message.from, "Additional option " + options[f] + " nonsense", self.message.id, true);
+        MessageStrategy.client.reply(message.from, "Additional option " + options[f] + " nonsense", message.id, true);
         return;
       }
     }
@@ -134,45 +178,7 @@ class PhilipsHue extends MessageStrategy {
 
     console.log(clean_opts);
 
-    this.do_cmd(self, clean_opts);
-  }
-
-  provides() {
-    return [
-      'Hue',
-      'Hue lights',
-      'Hue ([0-9]+) (on|off|clear|reset|select|lselect|colorloop|[0-9a-zA-Z]{6})',
-      'Hue ([0-9]+) (hue|sat|bri)=[0-9]+',
-      'Hue ([0-9]+) ... (transitiontime=[0-9]+)',
-      'Hue groups',
-      'Hue group ([0-9]+) (on|off|clear|reset|select|lselect|colorloop|[0-9a-zA-Z]{6})',
-      'Hue group ([0-9]+) (hue|sat|bri)=[0-9]+',
-      'Hue group ([0-9]+) ... (transitiontime=[0-9]+)?',
-    ]
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['PhilipsHue']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase().startsWith('hue')) {
-      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
-        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
-        return;
-      }
-    }
-
-    if (this.message.body.toLowerCase().startsWith('hue')) {
-      if (this.message.body.indexOf(" ")) {
-        MessageStrategy.typing(this.message);
-        let parts = this.message.body.split(" ");
-        this.do_sanitize_cmd(this, parts);
-        return true;
-      }
-    }
-
-    return false;
+    PhilipsHue.self.do_cmd(message, clean_opts);
   }
 }
 

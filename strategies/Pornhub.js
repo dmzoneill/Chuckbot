@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Pornhub extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Pornhub', {
@@ -13,18 +14,41 @@ class Pornhub extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Gets a random Pornhub video"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['Pornhub (.*)']
+    Pornhub.self = this;
+
+    return {
+      help: 'Gets a random Pornhub video',
+      provides: {
+        'Pornhub': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('pornhub');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Gets a video given a search term';
+          },
+          action: Pornhub.self.GetPornhubVideo,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Pornhub']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Pornhub']['enabled'];
+      }
+    }
   }
 
-  async getPornhub(self) {
+  async GetPornhubVideo(message) {
     try {
       var config = {
         headers: {
@@ -43,10 +67,10 @@ class Pornhub extends MessageStrategy {
         }
       };
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
 
-      let search = self.message.body.substring(7).trim();
+      let search = message.body.substring(7).trim();
 
       let dodgey = [
         "\\", "\"", "'", ";", ">", "<", "$", "&", "`",
@@ -65,19 +89,19 @@ class Pornhub extends MessageStrategy {
           let porn = JSON.parse(stdout);
           console.log(stdout);
 
-          MessageStrategy.typing(self.message);
+          MessageStrategy.typing(message);
           const responseImage = await axios(porn['thumb'], { responseType: 'arraybuffer', headers: config['headers'] });
 
-          MessageStrategy.typing(self.message);
+          MessageStrategy.typing(message);
 
           const image = await resizeImg(responseImage.data, { width: 400, format: "jpg" });
 
-          MessageStrategy.typing(self.message);
+          MessageStrategy.typing(message);
 
           const buffer64 = Buffer.from(image, 'binary').toString('base64');
           let data = "data:image/jpeg;base64," + buffer64;
 
-          self.client.sendImage(self.message.from, data, "meme.jpg", porn['title'] + "\n" + porn['url']);
+          MessageStrategy.client.sendImage(message.from, data, "meme.jpg", porn['title'] + "\n" + porn['url']);
           //self.client.sendLinkWithAutoPreview(self.message.from, porn['url'], json['url'], data);
         }
         catch (err) {
@@ -88,20 +112,6 @@ class Pornhub extends MessageStrategy {
     catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['Pornhub']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase().startsWith('pornhub')) {
-      MessageStrategy.typing(this.message);
-      this.getPornhub(this);
-      return true;
-    }
-
-    return false;
   }
 }
 

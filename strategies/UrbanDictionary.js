@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class UrbanDictionary extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('UrbanDictionary', {
@@ -13,45 +14,55 @@ class UrbanDictionary extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Provides a random urban dictionary slang word"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return [
-      'Urban'
-    ]; 
+    UrbanDictionary.self = this;
+
+    return {
+      help: 'Provides a random urban dictionary slang word',
+      provides: {
+        'UrbanDictionary': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('urban');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Gets the UrbanDictionary word';
+          },
+          action: function GetQuote(message) {
+            UrbanDictionary.self.GetQuote(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['UrbanDictionary']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['UrbanDictionary']['enabled'];
+      }
+    }
   }
 
-  async postUrbanQuote(self) {
+  async GetQuote(message) {
     ud.random().then((results) => {
       var workd = "*" + results[0]['word'];
       workd += "*\n\n";
       workd += "*Definition:* " + results[0]['definition'];
       workd += "\n\n";
       workd += "*Example:* " + results[0]['example'];
-      MessageStrategy.typing(self.message);
-      self.client.sendText(self.message.from, workd);
+      MessageStrategy.typing(message);
+      MessageStrategy.client.sendText(message.from, workd);
     }).catch((error) => {
       console.error(`random (promise) - error ${error.message}`)
     });
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['UrbanDictionary']['enabled'] == false) return;
-
-    this.message = message;
-    var self = this;
-
-    if (this.message.body.toLowerCase().startsWith('urban')) {
-      this.postUrbanQuote(self);
-      return true;
-    }
-
-    return false;
   }
 }
 

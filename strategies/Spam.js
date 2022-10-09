@@ -8,6 +8,7 @@ class Spam extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   static tracker = {}
   static banned = {}
+  static self = null;
 
   constructor() {
     super('Spam', {
@@ -15,26 +16,46 @@ class Spam extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Manages spam attempts on the bot"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['']
+    Spam.self = this;
+
+    return {
+      help: 'Manages spam attempts on the bot',
+      provides: {
+        'Spam': {
+          test: function (message) {
+            return Spam.self.Spam(message);
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Spam.self.Spam,
+          interactive: false,
+          enabled: function () {
+            return MessageStrategy.state['Spam']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Spam']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message, strategies) {
-    if (MessageStrategy.state['Spam']['enabled'] == false) return;
-
-    this.message = message;
-    let spammer = this.message.chatId + " - " + this.message.sender.id;
+  Spam(message) {
+    let spammer = message.chatId + " - " + message.sender.id;
 
     if (spammer in Spam.banned) {
       if (Spam.banned[spammer] + 1800 > Date.now() / 1000) {
-        MessageStrategy.client.sendText(this.message.sender.id, "Jesus loves you");
+        MessageStrategy.client.sendText(message.sender.id, "Jesus loves you");
         return true;
       }
       delete Spam.banned[spammer];
@@ -42,43 +63,20 @@ class Spam extends MessageStrategy {
     }
 
     let keywords = [];
-
-    // Object.keys(strategies).forEach(key => {
-    //   strategies[key].provides().forEach(term => {
-    //     keywords.push(term);
-    //   });
-    // });
-
-    Object.keys(strategies).forEach(key => {
-      if (Array.isArray(strategies[key].provides())) {
-        strategies[key].provides().forEach(term => {
-          keywords.push(term.toLowerCase());
-        });
-      } else {
-        let actions = strategies[key].provides().provides;
-        let keys = Object.keys(actions);
-        for (let y = 0; y < keys.length; y++) {
-          keywords.push(term.toLowerCase());
-        }
-      }
-    });
-
     let keycheck = false;
 
-    for (let i = 0; i < keywords.length; i++) {
-      if (this.message.body.toLowerCase().startsWith(keywords[i])) {
-        keycheck = true;
+    Object.keys(MessageStrategy.strategies).forEach(key => {
+      let actions = MessageStrategy.strategies[key].provides().provides;
+      let keys = Object.keys(actions);
+      for (let y = 0; y < keys.length; y++) {
+        if (actions[keys[y]].interactive) {
+          if (actions[keys[y]].test(message)) {
+            keycheck = true;
+          }
+        }
+        keywords.push(keys[y].toLowerCase());
       }
-    }
-
-    // for (let i = 0; i < keywords.length; i++) {
-    //   if (this.message.body.toLowerCase().startsWith(keywords[i])) {
-    //     keycheck = true;
-    //   }
-    //   else if (re.test(this.message.body.toLowerCase())) {
-    //     keycheck = true;
-    //   }
-    // }
+    });
 
     if (keycheck == false) {
       return false;
@@ -99,7 +97,7 @@ class Spam extends MessageStrategy {
       Spam.tracker[spammer].shift();
     }
 
-    if (Spam.tracker[spammer][0] + 10 > Spam.tracker[spammer][4]) {
+    if (Spam.tracker[spammer][0] + 15 > Spam.tracker[spammer][4]) {
       Spam.banned[spammer] = Date.now() / 1000;
       return true;
     }

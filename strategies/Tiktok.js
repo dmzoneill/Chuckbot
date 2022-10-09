@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class TikTok extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('TikTok', {
@@ -14,46 +15,57 @@ class TikTok extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Detects tiktok urls and provides thumbnail preview if not provided"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return []
+    TikTok.self = this;
+
+    return {
+      help: 'Detects tiktok urls and provides thumbnail preview if not provided',
+      provides: {
+        'TikTok': {
+          test: function (message) {
+            return message.body.match(new RegExp(/^https:\/\/.*tiktok.com\/.*/));
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Gets the TikTok for a given url';
+          },
+          action: function PostPreview(message) {
+            TikTok.self.PostPreview(message);
+            return true;
+          },
+          interactive: false,
+          enabled: function () {
+            return MessageStrategy.state['TikTok']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['TikTok']['enabled'];
+      }
+    }
   }
 
-  async postTiktokPreview(self, fullurl) {
+  async PostPreview(message) {
     try {
-      let data = await self.getPageOGData(self, fullurl, 500);
+      let data = await TikTok.self.getPageOGData(TikTok.self, message.body, 500);
 
       if (data[1] == null) {
-        self.client.reply(self.message.from, "Sorry no preview", self.message.id, true);
+        MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);
         return;
       }
 
-      self.client.sendLinkWithAutoPreview(self.message.from, fullurl, data[0], data[1]);
+      MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1]);
     }
     catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['TikTok']['enabled'] == false) return;
-
-    this.message = message;
-    var self = this;
-
-    if (message.body.match(new RegExp(/^https:\/\/.*tiktok.com\/.*/))) {
-      MessageStrategy.typing(this.message);
-      this.postTiktokPreview(self, this.message.body);
-      return true;
-    }
-
-    return false;
   }
 }
 

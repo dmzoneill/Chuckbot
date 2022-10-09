@@ -10,6 +10,7 @@ class Harass extends MessageStrategy {
   static cunts = []
   static sluts = []
   static cronjob = null;
+  static self = null;
 
   constructor() {
     super('Harass', {
@@ -19,7 +20,6 @@ class Harass extends MessageStrategy {
   }
 
   setup_cron() {
-    let self = this;
     if (Harass.cronjob != null) {
       Harass.cronjob.stop();
     }
@@ -28,11 +28,11 @@ class Harass extends MessageStrategy {
       '0 */2 * * * *',
       function () {
         for (let v = 0; v < Harass.cunts.length; v++) {
-          if (self.client) {
+          if (MessageStrategy.client) {
             let slut = Harass.cunts[v];
             if (slut != undefined) {
               let parts = slut.trim().indexOf(" ") ? slut.trim().split(" ") : [slut.trim()];
-              self.client.sendText(parts[0], self.get_joke());
+              MessageStrategy.client.sendText(parts[0], Harass.self.get_joke());
             }
           }
         }
@@ -45,15 +45,89 @@ class Harass extends MessageStrategy {
     Harass.cronjob.start();
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Harasses individual(s) with your mamma jokes"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['harass', 'harass (\d+)', 'harass stop ([0-9a-zA-Z]+)', 'harass list']
+    Harass.self = this;
+
+    return {
+      help: 'Harasses individual(s) with your mamma jokes',
+      provides: {
+        'Harass': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'harass';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Harass.self.HarassSluts,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Harass']['enabled'];
+          }
+        },
+        'HarassPerson': {
+          test: function (message) {
+            return message.body.match(/^harass ([0-9]{1,3})$/i);
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Harass.self.Harass,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Harass']['enabled'];
+          }
+        },
+        'StopHarass': {
+          test: function (message) {
+            return message.body.match(/^harass stop ([0-9a-z]+)$/i);
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Harass.self.StopHarass,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Harass']['enabled'];
+          }
+        },
+        'ListHarass': {
+          test: function (message) {
+            return message.body.match(/^harass list$/i);
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Harass.self.ListHarass,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Harass']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Harass']['enabled'];
+      }
+    }
   }
 
   get_joke() {
@@ -100,23 +174,23 @@ class Harass extends MessageStrategy {
     }
   }
 
-  async get_known_sluts() {
+  async get_known_sluts(message) {
     try {
-      await this.get_sluts();
-      MessageStrategy.typing(this.message);
+      await Harass.self.get_sluts();
+      MessageStrategy.typing(message);
       let msg = "";
       for (let y = 0; y < Harass.sluts.length; y++) {
         msg += (y + 1).toString() + " :" + Harass.sluts[y] + "\n";
       }
-      MessageStrategy.client.sendText(this.message.from, msg);
+      MessageStrategy.client.sendText(message.from, msg);
     } catch (err) {
       console.log(err);
     }
   }
 
-  async harass() {
+  async harass(message) {
     try {
-      let cunt = this.message.body.split(" ");
+      let cunt = message.body.split(" ");
       let the_cunt = parseInt(cunt[1].trim()) - 1;
       if (Harass.sluts.includes(the_cunt)) {
         return;
@@ -127,9 +201,9 @@ class Harass extends MessageStrategy {
     }
   }
 
-  async stopharass() {
+  async stopharass(message) {
     try {
-      let cunt = this.message.body.split(" ");
+      let cunt = message.body.split(" ");
       let the_cunt = cunt[2].trim();
       for (let y = 0; y < Harass.cunts.length; y++) {
         if (!Harass.cunts[y]) continue;
@@ -144,50 +218,29 @@ class Harass extends MessageStrategy {
     }
   }
 
-  async listharass() {
+  async listharass(message) {
     try {
-      MessageStrategy.typing(this.message);
-      MessageStrategy.client.sendText(this.message.from, Harass.cunts.join("\n"));
+      MessageStrategy.typing(message);
+      MessageStrategy.client.sendText(message.from, Harass.cunts.join("\n"));
     } catch (err) {
       console.log(err);
     }
   }
 
-  handleMessage(message, strategies) {
-    if (MessageStrategy.state['Harass']['enabled'] == false) return;
+  HarassSluts(message) {
+    Harass.self.get_known_sluts(message);
+  }
 
-    this.message = message;
+  Harass(message) {
+    Harass.self.harass(message);
+  }
 
-    if (this.message.body.toLowerCase().startsWith('harass')) {
-      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
-        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
-        return;
-      }
-    }
+  StopHarass(message) {
+    Harass.self.stopharass(message);
+  }
 
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'harass') {
-      this.get_known_sluts();
-      return true;
-    }
-
-    if (this.message.body.match(/^harass ([0-9]{1,3})$/i)) {
-      this.harass();
-      return true;
-    }
-
-    if (this.message.body.match(/^harass stop ([0-9a-z]+)$/i)) {
-      this.stopharass();
-      return true;
-    }
-
-    if (this.message.body.match(/^harass list$/i)) {
-      this.listharass();
-      return true;
-    }
-
-    return false;
+  ListHarass(message) {
+    Harass.self.listharass(message);
   }
 }
 

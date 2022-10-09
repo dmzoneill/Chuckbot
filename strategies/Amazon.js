@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Amazon extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Amazon', {
@@ -13,23 +14,45 @@ class Amazon extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Logs media to disk"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['Amazon']
+    Amazon.self = this;
+
+    return {
+      help: 'Amazon previews',
+      provides: {
+        'Amazon': {
+          test: function (message) {
+            return message.body.match(new RegExp(/^https:\/\/.*?\.amazon\..*?\/.*/));
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Checks amazon links and provide previews';
+          },
+          action: function Preview(message) {
+            Amazon.self.Preview(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Amazon']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Amazon']['enabled'];
+      }
+    }
   }
 
-  async postAmazonPreview(self) {
+  async Preview(message) {
     try {
-      console.log("1");
-
-      console.log(self.message.body);
-
       var config = {
         headers: {
           'Accept': '*/*',
@@ -51,15 +74,13 @@ class Amazon extends MessageStrategy {
       const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
       const page = await browser.newPage();
 
-      console.log("2");
-
-      await page.goto(self.message.body);
+      await page.goto(message.body);
       await page.setViewport({ width: 1366, height: 768 });
 
       const bodyHandle = await page.$('body');
       const { height } = await bodyHandle.boundingBox();
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
       await bodyHandle.dispose();
       const calculatedVh = page.viewport().height;
@@ -70,26 +91,24 @@ class Amazon extends MessageStrategy {
         await page.evaluate(_calculatedVh => {
           window.scrollBy(0, _calculatedVh);
         }, calculatedVh);
-        await self.waitFor(500);
+        await Amazon.self.waitFor(500);
         vhIncrease = vhIncrease + calculatedVh;
       }
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
       // Setting the viewport to the full height might reveal extra elements
       await page.setViewport({ width: 1366, height: calculatedVh });
 
       // Wait for a little bit more
-      await self.waitFor(500);
+      await Amazon.self.waitFor(500);
 
       // Scroll back to the top of the page by using evaluate again.
       await page.evaluate(_ => {
         window.scrollTo(0, 0);
       });
 
-      MessageStrategy.typing(self.message);
-
-      console.log("3");
+      MessageStrategy.typing(message);
 
       let title = await page.evaluate(() => {
         let desc = document.body.querySelector('#productTitle');
@@ -107,37 +126,22 @@ class Amazon extends MessageStrategy {
         return null;
       });
 
-      console.log(title);
-      console.log(image_url);
-
       if (image_url == null) {
         return [null, null];
       }
       else {
-        MessageStrategy.typing(self.message);
+        MessageStrategy.typing(message);
         const responseImage = await axios(image_url, { responseType: 'arraybuffer', headers: config['headers'] });
         const image = await resizeImg(responseImage.data, { width: 200, format: "jpg" });
         const buffer64 = Buffer.from(image, 'binary').toString('base64');
         let data = "data:image/jpeg;base64," + buffer64;
-        MessageStrategy.typing(self.message);
-        self.client.sendLinkWithAutoPreview(self.message.from, self.message.body, title, data);
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, title, data);
       }
     }
     catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['Amazon']['enabled'] == false) return;
-    this.message = message;
-
-    if (this.message.body.match(new RegExp(/^https:\/\/.*?\.amazon\..*?\/.*/))) {
-      this.postAmazonPreview(this);
-      return true;
-    }
-
-    return false;
   }
 }
 

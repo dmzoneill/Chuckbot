@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Rbac extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Rbac', {
@@ -13,9 +14,18 @@ class Rbac extends MessageStrategy {
       'roles': {
         "353861938787": [
           'State',
+          'StateShow',
+          'StateSave',
+          'StateLoad',        
           'Feature',
+          'FeatureList',
+          'FeatureEnable',
+          'FeatureDisable',        
           'Spam',
           'Rbac',
+          'RbacRolelist',
+          'RbacRoleAdd',
+          'RbacRoleRemove',        
           'AYCBooking',
           'AYCComms',
           'AYCHeaters',
@@ -27,7 +37,7 @@ class Rbac extends MessageStrategy {
           'Crypto',
           'Currency',
           'Deluge',
-          'Facebook',
+          'Rbac',
           'Google',
           'Harass',
           'Help',
@@ -39,6 +49,7 @@ class Rbac extends MessageStrategy {
           'Logger',
           'Meme',
           'PhilipsHue',
+          'PhilipsHueChangeLighting',        
           'Radarr',
           'Pornhub',
           'Reddit',
@@ -49,9 +60,12 @@ class Rbac extends MessageStrategy {
           'UrbanDictionary',
           'Weather',
           'WebCam',
+          'WebCamTakePicture',
+          'WebCamTakeVideo',        
           'Wikipedia',
           'Youtube',
-          'PulseAudio'
+          'PulseAudio',
+          'PulseAudioSetVolume'
         ]
       }
     });
@@ -60,75 +74,53 @@ class Rbac extends MessageStrategy {
   hasAccess(user, role) {
     user = user.substring(0, user.indexOf("@"));
 
-    if(Object.keys(MessageStrategy.state['Rbac']['roles']).includes(user) == false) {
+    if (Object.keys(MessageStrategy.state['Rbac']['roles']).includes(user) == false) {
       MessageStrategy.state['Rbac']['roles'][user] = [];
       return false;
     }
 
     if (MessageStrategy.state['Rbac']['roles'][user].includes(role)) {
       return true;
-    } 
-    
+    }
+
     return false;
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Manages Rbac";
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
-  provides() {
-    return [
-      'role list',
-      'role add role ([0-9]{10,15})',
-      'role remove role ([0-9]{10,15})'
-    ];
-  }
-
-  role_list(self) {
+  role_list(message) {
     try {
-      self.client.reply(self.message.from, JSON.stringify(MessageStrategy.state['Rbac']['roles'], null, 4), self.message.id, true);
+      MessageStrategy.client.reply(message.from, MessageStrategy.access_paths.join("\n").trim(), message.id, true);
     } catch (err) {
       console.log(err);
     }
   }
 
-  role_add(self) {
-    try {      
-      let parts = self.message.body.split(" ");
-      if(Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) {
+  role_add(message) {
+    try {
+      let parts = message.body.split(" ");
+      if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) {
         console.log("Unknown role: " + parts[2]);
       }
 
       if (MessageStrategy.state['Rbac']['roles'][parts[3]].includes(parts[2]) == false) {
         MessageStrategy.state['Rbac']['roles'][parts[3]].push(parts[2]);
-        self.role_list(self);
+        Rbac.self.role_list(message);
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-  role_remove(self) {
+  role_remove(message) {
     try {
-      let parts = self.message.body.split(" ");
-      if(Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) {
+      let parts = message.body.split(" ");
+      if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) {
         console.log("Unknown role: " + parts[2]);
       }
-
-      console.log("here");
-
       if (MessageStrategy.state['Rbac']['roles'][parts[3]].includes(parts[2])) {
-        console.log("here 1");
-
         const index = MessageStrategy.state['Rbac']['roles'][parts[3]].indexOf(parts[2]);
         if (index > -1) {
-          console.log("here 2");
-
           MessageStrategy.state['Rbac']['roles'][parts[3]].splice(index, 1);
-          self.role_list(self);
+          Rbac.self.role_list(message);
         }
       }
     } catch (err) {
@@ -136,38 +128,78 @@ class Rbac extends MessageStrategy {
     }
   }
 
-  handleMessage(message, strategies) {
-    if (MessageStrategy.state['Rbac']['enabled'] == false) return;
-    this.message = message;
+  provides() {
+    Rbac.self = this;
 
-    if (this.message.body.toLowerCase().startsWith('role')) {
-      console.log("here 5");
-      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
-        console.log("here 6");
-        self.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
-        return;
+    return {
+      help: 'Role binding and access control',
+      provides: {
+        'RoleList': {
+          test: function (message) {
+            return message.body.toLowerCase() == 'role list';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function Rolelist(message) {
+            Rbac.self.role_list(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
+        'RoleAdd': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('role add');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function RoleAdd(message) {
+            Rbac.self.role_add(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
+        'RoleRemove': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('role remove');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function RoleRemove(message) {
+            Rbac.self.role_remove(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Rbac']['enabled'];
       }
     }
-
-    if (this.message.body.toLowerCase() == 'role list') {
-      MessageStrategy.typing(this.message);
-      this.role_list(this);
-      return true;
-    }
-
-    if (this.message.body.toLowerCase().startsWith('role add')) {
-      MessageStrategy.typing(this.message);
-      this.role_add(this);
-      return true;
-    }
-
-    if (this.message.body.toLowerCase().startsWith('role remove')) {
-      MessageStrategy.typing(this.message);
-      this.role_remove(this);
-      return true;
-    }
-
-    return false;
   }
 }
 

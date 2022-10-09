@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Hi extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Hi', {
@@ -14,40 +15,43 @@ class Hi extends MessageStrategy {
   }
 
   provides() {
+    Hi.self = this;
+
     return {
+      help: 'Provides a basic example of a strategy',
       provides: {
         'Hi': {
-          test: function(message) {
+          test: function (message) {
             return message.body.toLowerCase() === 'hi';
           },
-          access: function(message, strategy, action) {
+          access: function (message, strategy, action) {
             MessageStrategy.register(strategy.constructor.name + action.name);
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name) == false;
+            return true;
           },
-          help: function() {
+          help: function () {
             return 'Just a simple test function the returns hello when you say hi';
           },
-          action: this.Hi,
-          enabled: function() {
+          action: Hi.self.Hello,
+          interactive: true,
+          enabled: function () {
             return MessageStrategy.state['Hi']['enabled'];
           }
         }
       },
-      help: 'Provides a basic example of a strategy',
-      access: function(message, strategy) {
+      access: function (message, strategy) {
         MessageStrategy.register(strategy.constructor.name);
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name) == false;
+        return true;
       },
-      enabled: function() {
+      enabled: function () {
         return MessageStrategy.state['Hi']['enabled'];
       }
     }
   }
 
-  Hi() {
-      MessageStrategy.typing(this.message);
-      this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
+  Hello(message) {
+    MessageStrategy.typing(message);
+    MessageStrategy.client.sendText(message.from, '👋 Hello!!!');
+    return true;
   }
 }
 

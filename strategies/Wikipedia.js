@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Wikipedia extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Wikipedia', {
@@ -13,77 +14,102 @@ class Wikipedia extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Search wikipedia for a given string and provides a link to the page"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['wiki (.*)', 'wiki today']
+    Wikipedia.self = this;
+
+    return {
+      help: 'Provides search and todays topics for wikipedia',
+      provides: {
+        'wiki today': {
+          test: function (message) {
+            return message.body.toLowerCase() == 'wiki today';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Show wikipedia pages for this day';
+          },
+          action: function OnThisDay(message) {
+            Wikipedia.self.OnThisDay(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Wikipedia']['enabled'];
+          }
+        },
+        'wiki .*': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('wiki');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Search wikipedia';
+          },
+          action: function Search(message) {
+            Wikipedia.self.Search(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Wikipedia']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Wikipedia']['enabled'];
+      }
+    }
   }
 
-  async postWikiPreview(self, fullurl) {
+  async postWikiPreview(fullurl) {
     try {
-      let data = await self.getPageOGData(self, fullurl, 500);
+      let data = await Wikipedia.self.getPageOGData(Wikipedia.self, fullurl, 500);
 
       if (data[1] == null) {
-        self.client.reply(self.message.from, "Sorry no preview", self.message.id, true);
+        MessageStrategy.client.reply(Wikipedia.self.message.from, "Sorry no preview", Wikipedia.self.message.id, true);
         return;
       }
 
-      self.client.sendLinkWithAutoPreview(self.message.from, fullurl, data[0], data[1]);
+      MessageStrategy.client.sendLinkWithAutoPreview(Wikipedia.self.message.from, fullurl, data[0], data[1]);
     }
     catch (err) {
       console.log(err);
     }
   }
 
-  async wikiOnThisDay(self) {
+  async OnThisDay(message) {
     try {
       const events = await wiki.onThisDay();
       const deaths = await wiki.onThisDay({ type: 'deaths' });
-      self.postWikiPreview(self, events['selected'][0]['pages'][0]['content_urls']['mobile']['page']);
-      await self.waitFor(2000);
-      self.postWikiPreview(self, deaths['deaths'][0]['pages'][0]['content_urls']['mobile']['page']);
+      Wikipedia.self.postWikiPreview(events['selected'][0]['pages'][0]['content_urls']['mobile']['page']);
+      await Wikipedia.self.waitFor(1000);
+      Wikipedia.self.postWikiPreview(deaths['deaths'][0]['pages'][0]['content_urls']['mobile']['page']);
     } catch (error) {
       console.log(error);
     }
   }
 
-  async wikiSearch(self) {
+  async Search(message) {
     try {
-      const page = await wiki.page(self.message.body.substring(4));
+      const page = await wiki.page(message.body.substring(4));
       if (Object.keys(page).includes('fullurl')) {
-        self.postWikiPreview(self, page['fullurl']);
+        Wikipedia.self.postWikiPreview(page['fullurl']);
       }
     } catch (error) {
-      MessageStrategy.typing(self.message);
-      MessageStrategy.client.sendText(self.message.from, "Ya i have no idea");
+      MessageStrategy.typing(message);
+      MessageStrategy.client.sendText(message.from, "Ya i have no idea");
       console.log(error);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['Wikipedia']['enabled'] == false) return;
-
-    this.message = message;
-    var self = this;
-
-    if (message.body.toLowerCase() == 'wiki today') {
-      MessageStrategy.typing(self.message);
-      this.wikiOnThisDay(self);
-      return true;
-    }
-
-    if (message.body.toLowerCase().startsWith('wiki')) {
-      MessageStrategy.typing(self.message);
-      this.wikiSearch(self);
-      return true;
-    }
-
-    return false;
   }
 }
 

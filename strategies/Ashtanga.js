@@ -1,10 +1,10 @@
 const MessageStrategy = require("../MessageStrategy.js")
 
-Array.prototype.myJoin = function(seperator,start,end){
-  if(!start) start = 0;
-  if(!end) end = this.length - 1;
+Array.prototype.myJoin = function (seperator, start, end) {
+  if (!start) start = 0;
+  if (!end) end = this.length - 1;
   end++;
-  return this.slice(start,end).join(seperator);
+  return this.slice(start, end).join(seperator);
 };
 
 // ####################################
@@ -134,11 +134,11 @@ class Ashtanga extends MessageStrategy {
 
   async print_sorted_with_files() {
     try {
-      this.yoga_keywords.sort();
+      Ashtanga.self.yoga_keywords.sort();
 
       const paths = await globby("strategies/poses/*.png");
 
-      this.yoga_keywords.forEach(async function (move) {
+      Ashtanga.self.yoga_keywords.forEach(async function (move) {
         let nearest_distance = 999;
         let nearest = "";
 
@@ -190,64 +190,143 @@ class Ashtanga extends MessageStrategy {
     return arr.myJoin(" ", pos, max_indice);
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Prints a picture of a yoga pose when detected and other functionality"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['yoga start', 'yoga stop', 'yoga list', 'yoga poses']
+    Ashtanga.self = this;
+
+    return {
+      help: 'Detects Ashtanga urls and provides thumbnail preview if not provided',
+      provides: {
+        'YogaStart': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'yoga start';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function YogaStart(message) {
+            MessageStrategy.typing(message);
+            MessageStrategy.client.sendText(message.from, 'First series');
+            Ashtanga.self.enabled = true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Ashtanga']['enabled'];
+          }
+        },
+        'YogaStop': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'yoga stop';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function YogaStart(message) {
+            MessageStrategy.typing(message);
+            MessageStrategy.client.sendText(message.from, 'Lets go to the gym');
+            Ashtanga.self.enabled = false;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Ashtanga']['enabled'];
+          }
+        },
+        'YogaList': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'yoga list';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function YogaList(message) {
+            MessageStrategy.typing(message);
+            Ashtanga.self.print_sorted_with_files();
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Ashtanga']['enabled'];
+          }
+        },
+        'YogaPoses': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'yoga poses';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: function YogaPoses(message) {
+            MessageStrategy.typing(message);
+            var msg = ""
+            Ashtanga.self.yoga_keywords.forEach(term => {
+              msg += term + "\n";
+            });
+            MessageStrategy.client.sendText(message.from, msg);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Ashtanga']['enabled'];
+          }
+        },
+        'YogaEnabled': {
+          test: function (message) {
+            return true;
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Ashtanga.self.YogaEnabled,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Ashtanga']['enabled'];
+          }
+        },
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Ashtanga']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Ashtanga']['enabled'] == false) return;
 
-    this.message = message;
-    var self = this;
-
-    if (this.message.body.toLowerCase() === 'yoga start') {
-      MessageStrategy.typing(self.message);
-      MessageStrategy.client.sendText(this.message.from, 'First series');
-      this.enabled = true;
-    }
-
-    if (message.body.toLowerCase() === 'yoga stop') {
-      MessageStrategy.typing(self.message);
-      MessageStrategy.client.sendText(message.from, 'Lets go to the gym');
-      this.enabled = true;
-    }
-
-    if (message.body.toLowerCase() === 'yoga list') {
-      MessageStrategy.typing(self.message);
-      this.print_sorted_with_files();
-    }
-
-    if (message.body.toLowerCase() === 'yoga poses') {
-      MessageStrategy.typing(self.message);
-      var msg = ""
-      this.yoga_keywords.forEach(term => {
-        msg += term + "\n";
-      });
-      MessageStrategy.client.sendText(message.from, msg);
-    }
-
-    if (this.enabled) {
+  YogaEnabled(message) {
+    if (Ashtanga.self.enabled) {
       let nearest_distance = 9999;
       let nearest = 9999;
 
-      this.yoga_keywords.forEach(async function (pose) {
+      Ashtanga.self.yoga_keywords.forEach(async function (pose) {
         try {
           let yoga_pose = pose.toLowerCase();
           // get the length of the pose 
           // use this length to match sentance in the message
           let yoga_pose_arr = yoga_pose.indexOf(' ') > -1 ? yoga_pose.split(' ') : [yoga_pose];
-          let target_string_arr = self.message.body.toLowerCase().indexOf(' ') > -1 ? self.message.body.toLowerCase().split(' ') : [self.message.body.toLowerCase()];
+          let target_string_arr = message.body.toLowerCase().indexOf(' ') > -1 ? message.body.toLowerCase().split(' ') : [message.body.toLowerCase()];
 
           for (let x = 0; x < target_string_arr.length; x++) {
             // create a string of the next yoga_pose_arr.lenght indices from the target string
-            let substring = self.get_next_indices(target_string_arr, x, yoga_pose_arr.length);
+            let substring = Ashtanga.self.get_next_indices(target_string_arr, x, yoga_pose_arr.length);
             // e.g: substring = "string of the next"
 
             let distance = levenshtein(yoga_pose, substring);
@@ -264,8 +343,8 @@ class Ashtanga extends MessageStrategy {
       let check_distance = nearest == "Navasana" ? 1 : 5;
 
       if (nearest_distance < check_distance) {
-        MessageStrategy.typing(self.message);
-        self.post_yoga_image(self.client, message, nearest);
+        MessageStrategy.typing(message);
+        Ashtanga.self.post_yoga_image(MessageStrategy.client, message, nearest);
         return true;
       }
     }

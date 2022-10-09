@@ -13,28 +13,41 @@ class AYCPi extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "AYCPi management"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['AYCPi']
+    AYCPi.self = this;
+
+    return {
+      help: 'Manages AYC RPi',
+      provides: {
+        'AYCPi': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'aycpi';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: AYCPi.self.AYCPi,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['AYCPi']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['AYCPi']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['AYCPi']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'AYCPi') {
-      //MessageStrategy.typing(this.message);   
-      //this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
-
+  AYCPi() {
     return false;
   }
 }

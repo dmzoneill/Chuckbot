@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Jackett extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Jackett', {
@@ -13,28 +14,41 @@ class Jackett extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Jackett search"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['jackett']
+    Jackett.self = this;
+
+    return {
+      help: 'Jackett seearch',
+      provides: {
+        'Jackett': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'jackett';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Jackett.self.Jackett,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Jackett']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Jackett']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Jackett']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'jackett') {
-      //MessageStrategy.typing(this.message);   
-      //this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
-
+  Jackett() {
     return false;
   }
 }

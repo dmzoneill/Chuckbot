@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Feature extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Feature', {
@@ -13,52 +14,97 @@ class Feature extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Feature provides the ability to mangage the state of features."
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['feature list', 'feature enable (.*)', 'feature disable (.*)']
+    Feature.self = this;
+
+    return {
+      help: 'Feature provides the ability to manage the state of features.',
+      provides: {
+        'list': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'feature list';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Feature.self.List,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Feature']['enabled'];
+          }
+        },
+        'enable': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith("feature enable");
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Feature.self.Enable,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Feature']['enabled'];
+          }
+        },
+        'disable': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith("feature disable");
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Feature.self.Disable,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Feature']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Feature']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message, strategies) {
-    this.message = message;
+  List(message) {
+    MessageStrategy.typing(message);
+    MessageStrategy.client.sendText(message.from, Object.keys(MessageStrategy.strategies).join("\n"));
+  }
 
-    if (this.message.body.indexOf(" ") == -1) return;
+  Enable(message) {
+    let parts = message.body.split(" ");
+    if (parts.length < 3) return;
+    if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) return;
 
-    if (this.message.body.toLowerCase().startsWith('feature')) {
-      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
-        this.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
-        return;
-      }
-    }
+    MessageStrategy.typing(message);
+    MessageStrategy.state[parts[2]]['enabled'] = true;
+    MessageStrategy.client.reply(message.from, parts[2] + '   enabled', message.id, true);
+  }
 
-    if (this.message.body.toLowerCase().startsWith("feature")) {
-      let parts = this.message.body.split(" ");
+  Disable(message) {
+    let parts = message.body.split(" ");
+    if (parts.length < 3) return;
+    if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) return;
 
-      if (parts[1] == "list") {
-        MessageStrategy.typing(this.message);
-        MessageStrategy.client.sendText(this.message.from, Object.keys(strategies).join("\n"));
-      }
-
-      if (parts.length < 3) return;
-      if (Object.keys(strategies).includes(parts[2]) == false) return;
-
-      if (parts[1] == "enable") {
-        MessageStrategy.typing(this.message);
-        MessageStrategy.state[parts[2]]['enabled'] = true;
-        this.client.reply(this.message.from, parts[2] + '   enabled', this.message.id, true);
-      }
-
-      if (parts[1] == "disable") {
-        MessageStrategy.typing(this.message);
-        MessageStrategy.state[parts[2]]['enabled'] = false;
-        this.client.reply(this.message.from, parts[2] + ' disabled', this.message.id, true);
-      }
-    }
+    MessageStrategy.typing(message);
+    MessageStrategy.state[parts[2]]['enabled'] = false;
+    MessageStrategy.client.reply(message.from, parts[2] + ' disabled', message.id, true);
   }
 }
 

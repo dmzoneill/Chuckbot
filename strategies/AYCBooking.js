@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class AYCBooking extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('AYCBooking', {
@@ -13,28 +14,41 @@ class AYCBooking extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "AYCBooking management"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['AYCBooking']
+    AYCBooking.self = this;
+
+    return {
+      help: 'Manages AYC bookings',
+      provides: {
+        'Booking': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'aycbooking';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: AYCBooking.self.AYCBooking,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['AYCBooking']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['AYCBooking']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['AYCBooking']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'AYCBooking') {
-      //MessageStrategy.typing(this.message);   
-      //this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
-
+  AYCBooking() {
     return false;
   }
 }

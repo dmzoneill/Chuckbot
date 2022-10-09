@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Meme extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Meme', {
@@ -13,18 +14,41 @@ class Meme extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Gets a random meme"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['Meme']
+    Meme.self = this;
+
+    return {
+      help: 'Gets a random meme',
+      provides: {
+        'Meme': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'meme';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Meme.self.GetMeme,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Meme']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Meme']['enabled'];
+      }
+    }
   }
 
-  async getMeme(self) {
+  async GetMeme(message) {
     try {
       var config = {
         headers: {
@@ -43,46 +67,32 @@ class Meme extends MessageStrategy {
         }
       };
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
       var meme = request('GET', 'https://meme-api.herokuapp.com/gimme/me_irl', {
         headers: config.headers
       });
       let json = JSON.parse(meme.getBody());
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
       const responseImage = await axios(json['url'], { responseType: 'arraybuffer', headers: config['headers'] });
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
-      const image = await resizeImg(responseImage.data, { width: 400, format: "jpg" });
+      const image = await resizeImg(responseImage.data, { width: 600, format: "jpg" });
 
-      MessageStrategy.typing(self.message);
+      MessageStrategy.typing(message);
 
       const buffer64 = Buffer.from(image, 'binary').toString('base64');
       let data = "data:image/jpeg;base64," + buffer64;
 
-      self.client.sendImage(self.message.from, data, "meme.jpg", json['postLink']);
+      MessageStrategy.client.sendImage(message.from, data, "meme.jpg", json['postLink']);
       //self.client.sendLinkWithAutoPreview(self.message.from, json['postLink'], json['url'], data);
     }
     catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['Meme']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'meme') {
-      MessageStrategy.typing(this.message);
-      this.getMeme(this);
-      return true;
-    }
-
-    return false;
   }
 }
 

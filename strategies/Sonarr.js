@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Sonarr extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Sonarr', {
@@ -13,28 +14,41 @@ class Sonarr extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Sonarr series management"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['Sonarr']
+    Sonarr.self = this;
+
+    return {
+      help: 'Manages sonarr',
+      provides: {
+        'Sonarr': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'sonarr';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Sonarr.self.Sonarr,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Sonarr']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Sonarr']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Sonarr']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'Sonarr') {
-      //MessageStrategy.typing(this.message);   
-      //this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
-
+  Sonarr(message) {    
     return false;
   }
 }

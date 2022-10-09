@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Weather extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Weather', {
@@ -13,46 +14,61 @@ class Weather extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Provides the weather report for a given region"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['weather ([a-zA-Z]+)']
+    Weather.self = this;
+
+    return {
+      help: 'Gets the weather for a given area',
+      provides: {
+        'Weather': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('weather');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Gets the weather for a given place';
+          },
+          action: function GetWeather(message) {
+            Weather.self.GetWeather(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Weather']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Weather']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Weather']['enabled'] == false) return;
+  GetWeather(message) {
+    let search_term = message.body.substring(7);
+    weather.find({ search: search_term, degreeType: 'C' }, function (err, result) {
+      if (err) console.log(err);
 
-    this.message = message;
-    var self = this;
-
-    if (this.message.body.toLowerCase().startsWith('weather')) {
-      let search_term = this.message.body.substring(7);
-      weather.find({ search: search_term, degreeType: 'C' }, function (err, result) {
-        if (err) console.log(err);
-
-        MessageStrategy.typing(self.message);
-        var report = result[0]["location"]["name"];
-        report += "\n";
-        report += "Current: ";
-        report += result[0]["current"]["skytext"] + " ";
-        report += result[0]["current"]["temperature"];
-        report += result[0]["location"]["degreetype"];
-        report += "\n";
-        report += "Feels like: ";
-        report += result[0]["current"]["feelslike"];
-        report += result[0]["location"]["degreetype"];
-        self.client.sendText(message.from, report);
-      });
-
-      return true;
-    }
-
-    return false;
+      MessageStrategy.typing(message);
+      var report = result[0]["location"]["name"];
+      report += "\n";
+      report += "Current: ";
+      report += result[0]["current"]["skytext"] + " ";
+      report += result[0]["current"]["temperature"];
+      report += result[0]["location"]["degreetype"];
+      report += "\n";
+      report += "Feels like: ";
+      report += result[0]["current"]["feelslike"];
+      report += result[0]["location"]["degreetype"];
+      MessageStrategy.client.sendText(message.from, report);
+    });
   }
 }
 

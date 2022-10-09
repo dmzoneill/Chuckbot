@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class AYCComms extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('AYCComms', {
@@ -13,28 +14,41 @@ class AYCComms extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "AYCComms management"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['AYCComms', 'AYCComms call (\d+) (.*)', 'AYCComms msg (\d+) (.*)']
+    AYCComms.self = this;
+
+    return {
+      help: 'Manages AYC Communications',
+      provides: {
+        'Comms': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'ayccomms';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: AYCComms.self.AYCComms,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['AYCComms']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['AYCComms']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['AYCComms']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'AYCComms') {
-      //MessageStrategy.typing(this.message);   
-      //this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
-
+  AYCComms() {
     return false;
   }
 }

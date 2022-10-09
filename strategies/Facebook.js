@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Facebook extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Facebook', {
@@ -13,47 +14,56 @@ class Facebook extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Detects facebook urls and provides thumbnail preview if not provided"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return []
+    Facebook.self = this;
+
+    return {
+      help: 'Detects facebook urls and provides thumbnail preview if not provided',
+      provides: {
+        'FacebookPreview': {
+          test: function (message) {
+            return message.body.match(new RegExp(/^https:\/\/.*?facebook.com\/.*/));
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Facebook.self.FacebookPreview,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Facebook']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Facebook']['enabled'];
+      }
+    }
   }
 
-  async postFacebookPreview(self, fullurl) {
+  async FacebookPreview(message) {
     try {
-      if(self.message.thumbnail != "") return;
-      
-      let data = await self.getPageOGData(self, fullurl, 500);
+      if (message.thumbnail != "") return;
+
+      let data = await Facebook.self.getPageOGData(Facebook.self, message.body.replace(/&amp;/g, "&"), 500);
 
       if (data[1] == null) {
-        self.client.reply(self.message.from, "Sorry no preview", self.message.id, true);
+        MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);
         return;
       }
 
-      self.client.sendLinkWithAutoPreview(self.message.from, fullurl, data[0], data[1]);
+      MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1]);
     }
     catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['Facebook']['enabled'] == false) return;
-
-    this.message = message;
-    var self = this;
-
-    if (message.body.match(new RegExp(/^https:\/\/.*?facebook.com\/.*/))) {
-      this.postFacebookPreview(self, message.body.replace(/&amp;/g, "&"));
-      return true;
-    }
-
-    return false;
   }
 }
 

@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Translate extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Translate', {
@@ -131,105 +132,179 @@ class Translate extends MessageStrategy {
     return MessageStrategy.state.Translate.user_defaults;
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Provides translations"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
-  provides() {
-    return ['translate en/pt', 'translate default en/pt', 'translate off']
-  }
-
-  sendSupported(self) {
+  sendSupported(message) {
     let msg = "```";
     let i = 1;
-    Object.keys(self.supported).forEach(key => {
+    Object.keys(Translate.self.supported).forEach(key => {
       let padding = " ".repeat(25 - key.length);
-      msg += key + padding + " : " + self.supported[key] + "\n";
+      msg += key + padding + " : " + Translate.self.supported[key] + "\n";
       msg += i % 5 == 0 ? "\n" : "";
       i += 1;
     });
     msg += "```";
-    self.client.sendText(self.message.from, msg);
+    MessageStrategy.client.sendText(message.from, msg);
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Translate']['enabled'] == false) return;
+  provides() {
+    Translate.self = this;
 
-    this.message = message;
-    var self = this;
-
-    if (this.message.body.toLowerCase().startsWith('translate default')) {
-      let parts = this.message.body.split(" ");
-      if (parts.length == 3) {
-        if (Object.values(this.supported).includes(parts[2]) == false) {
-          this.sendSupported(self);
-          return false;
+    return {
+      help: 'Does in chat translations',
+      provides: {
+        'Default': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('translate default');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Sets the default translation for the user';
+          },
+          action: function SetDefault(message) {
+            return Translate.self.SetDefault(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Translate']['enabled'];
+          }
+        },
+        'Off': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('translate off');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Disable automatic translation';
+          },
+          action: function SetOff(message) {
+            return Translate.self.SetOff(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Translate']['enabled'];
+          }
+        },
+        'Automatic': {
+          test: function (message) {
+            return Object.keys(MessageStrategy.state.Translate.user_defaults).includes(message.from);
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Automatic translation';
+          },
+          action: function Automatic(message) {
+            return Translate.self.Automatic(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Translate']['enabled'];
+          }
+        },
+        'Manual': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('translate');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'Manual translation';
+          },
+          action: function Manual(message) {
+            return Translate.self.Manual(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Translate']['enabled'];
+          }
         }
-        MessageStrategy.state.Translate.user_defaults[this.message.from] = parts[2];
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
         return true;
-      } else {
-        self.client.sendText(self.message.from, "Failed to provide default language")
+      },
+      enabled: function () {
+        return MessageStrategy.state['Translate']['enabled'];
+      }
+    }
+  }
+
+  SetDefault(message) {
+    let parts = message.body.split(" ");
+    if (parts.length == 3) {
+      if (Object.values(this.supported).includes(parts[2]) == false) {
+        Translate.self.sendSupported(message);
         return false;
       }
-    }
-
-    if (this.message.body.toLowerCase().startsWith('translate off')) {
-      if (Object.keys(MessageStrategy.state.Translate.user_defaults).includes(this.message.from)) {
-        delete MessageStrategy.state.Translate.user_defaults[this.message.from];
-      }
+      MessageStrategy.state.Translate.user_defaults[message.from] = parts[2];
       return true;
+    } else {
+      MessageStrategy.client.sendText(message.from, "Failed to provide default language")
+      return false;
+    }
+  }
+
+  SetOff(message) {
+    if (Object.keys(MessageStrategy.state.Translate.user_defaults).includes(message.from)) {
+      delete MessageStrategy.state.Translate.user_defaults[message.from];
+    }
+    return true;
+  }
+
+  Automatic(message) {
+    let target_lang = MessageStrategy.state.Translate.user_defaults[message.from];
+    let source_lang = "en";
+    translate(message.body, source_lang, target_lang, true, true).then(res => {
+      MessageStrategy.typing(message);
+      MessageStrategy.client.reply(message.from, res.translation, message.id, true);
+    }).catch(err => {
+      MessageStrategy.client.sendText(message.from, err);
+      MessageStrategy.client.sendText(message.from, err);
+    });
+    return true;
+  }
+
+  Manual(message) {
+    let parts = message.body.indexOf(" ") > -1 ? message.body.split(" ") : [message.body];
+    if (parts.length < 3) {
+      // translate provided without addittional arguments
+      return false;
     }
 
-    if (Object.keys(MessageStrategy.state.Translate.user_defaults).includes(this.message.from)) {
-      let target_lang = MessageStrategy.state.Translate.user_defaults[this.message.from];
-      let source_lang = "en";
-      translate(this.message.body, source_lang, target_lang, true, true).then(res => {
-        MessageStrategy.typing(self.message);
-        self.client.reply(self.message.from, res.translation, self.message.id, true);
-      }).catch(err => {
-        self.client.sendText(self.message.from, err);
-        self.client.sendText(self.message.from, err);
-      });
-      return true;
+    let target_lang = parts[1];
+    let source_lang = "en";
+    let start = "translate " + target_lang;
+    let msg = message.body.substring(start.trim().length);
+
+    if (target_lang.indexOf("/") > -1) {
+      let langparts = target_lang.split("/");
+      source_lang = langparts[0];
+      target_lang = langparts[1];
     }
 
-    if (this.message.body.toLowerCase().startsWith('translate')) {
-      let parts = this.message.body.indexOf(" ") > -1 ? this.message.body.split(" ") : [this.message.body];
-      if (parts.length < 3) {
-        // translate provided without addittional arguments
-        return false;
-      }
-
-      let target_lang = parts[1];
-      let source_lang = "en";
-      let start = "translate " + target_lang;
-      let msg = this.message.body.substring(start.trim().length);
-
-      if (target_lang.indexOf("/") > -1) {
-        let langparts = target_lang.split("/");
-        source_lang = langparts[0];
-        target_lang = langparts[1];
-      }
-
-      if (Object.values(this.supported).includes(target_lang) == false) {
-        this.sendSupported(self);
-        return false;
-      }
-
-      translate(msg, source_lang, target_lang, true, true).then(res => {
-        MessageStrategy.typing(self.message);
-        self.client.reply(self.message.from, res.translation, self.message.id, true);
-      }).catch(err => {
-        self.client.sendText(self.message.from, err);
-        self.client.sendText(self.message.from, err);
-      });
-
-      return true;
+    if (Object.values(Translate.self.supported).includes(target_lang) == false) {
+      Translate.self.sendSupported(message);
+      return false;
     }
-    return false;
+
+    translate(msg, source_lang, target_lang, true, true).then(res => {
+      MessageStrategy.typing(message);
+      MessageStrategy.client.reply(message.from, res.translation, message.id, true);
+    }).catch(err => {
+      MessageStrategy.client.sendText(message.from, err);
+      MessageStrategy.client.sendText(message.from, err);
+    });
+
+    return true;
   }
 }
 

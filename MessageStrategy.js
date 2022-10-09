@@ -46,21 +46,17 @@ class MessageStrategy {
     }
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Didn't provide describe from " + this.constructor.name;
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   hasAccess(sender_id, prototype_name) {
     return MessageStrategy.strategies['Rbac'].hasAccess(sender_id, prototype_name);
   }
 
-  register(action) {
-    if(MessageStrategy.access_paths.includes(action) == false){
+  static hasAccess(sender_id, prototype_name) {
+    return MessageStrategy.strategies['Rbac'].hasAccess(sender_id, prototype_name);
+  }
+
+  static register(action) {
+    if (MessageStrategy.access_paths.includes(action) == false) {
       MessageStrategy.access_paths.push(action);
-      console.log(action);
     }
   }
 
@@ -317,11 +313,6 @@ class MessageStrategy {
 
     try {
       let keys = Object.keys(MessageStrategy.strategies);
-      console.log(message.body);
-      // for (let y = 0; y < keys.length; y++) {
-      //   let handler = MessageStrategy.strategies[keys[y]];
-      //   handler.handleMessage(message, MessageStrategy.strategies);
-      // }
 
       for (let y = 0; y < keys.length; y++) {
         let handler = MessageStrategy.strategies[keys[y]];
@@ -330,17 +321,29 @@ class MessageStrategy {
         if (Array.isArray(module)) {
           handler.handleMessage(message, MessageStrategy.strategies);
         } else {
-          if(module.access(message, handler) == false) continue;
-          if(module.enabled() == false) continue;
+          if (module.access(message, handler) == false) continue;
+          if (module.enabled() == false) continue;
 
           handler.message = message;
 
-          let keys = Object.keys(module.provides);
-          for (let y = 0; y < keys.length; y++) {
-            if(module.provides[keys[y]].access(message, handler, module.provides[keys[y].action]) == false) continue;
-            if(module.provides[keys[y]].enabled() == false) continue;
-            if (module.provides[keys[y]].test(message)) {
-              module.provides[keys[y]].action();
+          let actions_keys = Object.keys(module.provides);
+          for (let x = 0; x < actions_keys.length; x++) {
+            let action_obj = module.provides[actions_keys[x]];
+            if (action_obj.test(message)) {
+              if (action_obj.access(message, handler, action_obj.action) == false) {
+                MessageStrategy.client.reply(message.from, "No access", message.id, true);
+                y = keys.length;
+                break;
+              }
+              if (action_obj.enabled() == false) {
+                MessageStrategy.client.reply(message.from, "Disabled", message.id, true);
+                y = keys.length;
+                break;
+              }
+              if (action_obj.action(message)) {
+                y = keys.length;
+                break;
+              }
             }
           }
         }

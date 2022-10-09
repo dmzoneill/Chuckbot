@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Logger extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('Logger', {
@@ -14,20 +15,85 @@ class Logger extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Logs media to disk"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['logger list', 'logger list mine', 'logger download mine \d+']
+    Logger.self = this;
+
+    return {
+      help: 'Logs media to disk',
+      provides: {
+        'Save': {
+          test: function (message) {
+            return true;
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return "";
+          },
+          action: function SaveMedia(message) {
+            Logger.self.SaveMedia(message);
+            return false;
+          },
+          interactive: false,
+          enabled: function () {
+            return MessageStrategy.state['Logger']['enabled'];
+          }
+        },
+        'ListMine': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith("logger list mine");
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'logger list mine';
+          },
+          action: function ListMine(message) {
+            Logger.self.ListMine(message);
+            return true;
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Logger']['enabled'];
+          }
+        },
+        'List': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith("logger list");
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'logger list';
+          },
+          action: function List(message) {
+            Logger.self.List(message, false);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Logger']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Logger']['enabled'];
+      }
+    }
   }
 
-  async saveMedia(self) {
+  async SaveMedia(message) {
     try {
-      if (self.message.type != "image" && self.message.type != "video") {
+      if (message.type != "image" && message.type != "video") {
         return;
       }
 
@@ -43,14 +109,15 @@ class Logger extends MessageStrategy {
         fs.mkdirSync(MessageStrategy.state['Logger']['media_dir']);
       }
 
-      let data_url = await self.client.decryptMedia(self.message);
+      let data_url = await MessageStrategy.client.decryptMedia(message);
       let buff = Buffer.from(data_url.substring(data_url.indexOf(',')), 'base64');
       let sha1d = crypto.createHash('sha1').digest('hex');
-      let filename = Date.now() + " - " + self.message.from + " - " + sha1d + "." + mime_types[self.message.mimetype];
+      let filename = Date.now() + " - " + message.from + " - " + sha1d + "." + mime_types[message.mimetype];
 
       fs.writeFile(MessageStrategy.state['Logger']['media_dir'] + "/" + filename, buff, function (err) {
         if (err) {
-          return console.log(err);
+          console.log(err);
+          return;
         }
       });
     }
@@ -63,7 +130,7 @@ class Logger extends MessageStrategy {
     let filtered = [];
 
     list.forEach(item => {
-      if(item.indexOf(filter) > -1) {
+      if (item.indexOf(filter) > -1) {
         filtered.push(item);
       }
     });
@@ -71,12 +138,16 @@ class Logger extends MessageStrategy {
     return filtered;
   }
 
-  async list(self, filter_mine) {
+  async ListMine(message) {
+    Logger.self.List(message, true);
+  }
+
+  async List(message, filter_mine) {
     fs.readdir(MessageStrategy.state['Logger']['media_dir'], (err, files) => {
-      if(err) return;
+      if (err) return;
 
       let full_msg = "";
-      let my_files = filter_mine ? self.my_files(files, self.message.from): files;
+      let my_files = filter_mine ? Logger.self.my_files(files, message.from) : files;
       let cnt = 1;
 
       my_files.forEach(file => {
@@ -88,26 +159,8 @@ class Logger extends MessageStrategy {
         cnt += 1;
       });
 
-      self.client.sendText(self.message.from, full_msg.trim());
+      MessageStrategy.client.sendText(message.from, full_msg.trim());
     });
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['Logger']['enabled'] == false) return;
-    this.message = message;
-    this.saveMedia(this);
-
-    if(this.message.body.toLowerCase().startsWith("logger list mine")) {
-      MessageStrategy.typing(this.message);
-      this.list(this, true);
-    }
-
-    if(this.message.body.toLowerCase().startsWith("logger list")) {
-      MessageStrategy.typing(this.message);
-      this.list(this);
-    }
-
-    return false;
   }
 }
 

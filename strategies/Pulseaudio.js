@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class PulseAudio extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
 
   constructor() {
     super('PulseAudio', {
@@ -13,22 +14,46 @@ class PulseAudio extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Controls basic PulseAudio settings"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['Volume \d', 'Volume (+|-)\d']
+    PulseAudio.self = this;
+
+    return {
+      help: 'Controls basic PulseAudio settings',
+      provides: {
+        'PulseAudio': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('volume');
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Manages the volume on the computer';
+          },
+          action: PulseAudio.self.SetVolume,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['PulseAudio']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['PulseAudio']['enabled'];
+      }
+    }
   }
 
-  async setPulseAudio(self) {
+  async SetVolume(message) {
     try {
-      if (self.message.body.indexOf(" ") == -1) {
+      if (message.body.indexOf(" ") == -1) {
         return;
       }
+
       let volume = 0;
       let incrementor = "";
       let change = "pactl -- set-sink-volume 0 ";
@@ -67,27 +92,6 @@ class PulseAudio extends MessageStrategy {
     catch (err) {
       console.log(err);
     }
-  }
-
-  handleMessage(message) {
-    if (MessageStrategy.state['PulseAudio']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase().startsWith('volume')) {
-      if (MessageStrategy.strategies['Rbac'].hasAccess(this.message.sender.id, this.constructor.name) == false) {
-        this.client.reply(this.message.from, 'Not for langers like you', this.message.id, true);
-        return;
-      }
-    }
-
-    if (this.message.body.toLowerCase().startsWith('volume')) {
-      MessageStrategy.typing(this.message);
-      this.setPulseAudio(this);
-      return true;
-    }
-
-    return false;
   }
 }
 

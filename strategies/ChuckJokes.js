@@ -1,3 +1,4 @@
+const { setupLogging } = require("@open-wa/wa-automate");
 const MessageStrategy = require("../MessageStrategy.js")
 
 // ####################################
@@ -5,104 +6,154 @@ const MessageStrategy = require("../MessageStrategy.js")
 // ####################################
 
 class ChuckJokes extends MessageStrategy {
-    static dummy = MessageStrategy.derived.add(this.name);
-  
-    constructor() {
-      super('ChuckJokes', {
-        'enabled': true
-      });
-  
-      this.chuck_keywords = [
-        'joke', 
-        'lol', 
-        'fyi', 
-        'prick', 
-        'dick', 
-        'lmao', 
-        'who', 
-        'cunt', 
-        'nice', 
-        'fuck', 
-        'haha', 
-        'feck', 
-        'cock', 
-        'langer', 
-        'arse', 
-        'slut', 
-        'bitch'
-      ];
-    }
-  
-    describe(message, strategies) {
-      this.message = message;
-      MessageStrategy.typing(this.message); 
-      let description = "Chuck will look for bads words and post a chuck norris joke"
-      MessageStrategy.client.sendText(this.message.from, description);
-    }
-  
-    provides() {
-      return ['chuck', 'chuck stfu']
-    }
-  
-    get_joke() {
-      var joke = request('GET', 'https://api.chucknorris.io/jokes/random', {
-        headers: {       
-           'Accept': 'text/plain'
-        }
-      });
-      return joke.getBody()
-    }
-    
-    handleMessage(message) { 
-      this.message = message;
-      var self = this;
-  
-      if(MessageStrategy.state['ChuckJokes']['enabled'] == false) {
-        return false;
-      }
-  
-      if(Object.keys(MessageStrategy.state['ChuckJokes']).includes("chats") == false) {
-        MessageStrategy.state['ChuckJokes']['chats'] = {};
-      }
-  
-      if(Object.keys(MessageStrategy.state['ChuckJokes']['chats']).includes(this.message.chatId) == false) {
-        MessageStrategy.state['ChuckJokes']['chats'][this.message.chatId] = {};
-        MessageStrategy.state['ChuckJokes']['chats'][this.message.chatId]['enabled'] = false;
-      }
-  
-      if(this.message.body.toLowerCase() === 'chuck stfu') {      
-        MessageStrategy.typing(self.message);   
-        MessageStrategy.client.sendText(message.from, 'Don\'t let anyone tell you you\'re not powerful.  You\'re the most powerful woman i know');
-        MessageStrategy.state['ChuckJokes']['chats'][this.message.chatId]['enabled'] = false;
-        return true;
-      }
-  
-      if(this.message.body.toLowerCase() === 'chuck') {  
-        MessageStrategy.typing(self.message);   
-        MessageStrategy.client.sendText(this.message.from, 'How many lesbians does it take to screw in a light bulb');
-        MessageStrategy.state['ChuckJokes']['chats'][this.message.chatId]['enabled'] = true;
-        return true;
-      }   
-  
-      if(MessageStrategy.state['ChuckJokes']['chats'][this.message.chatId]['enabled'] == false) {
-        return false;
-      }
-  
-      this.chuck_keywords.forEach(async function(word) {
-        try {
-          if (self.message.body.toLowerCase().indexOf(word) > -1) {  
-            MessageStrategy.typing(self.message);
-            self.client.sendText(self.message.from, self.get_joke());
+  static dummy = MessageStrategy.derived.add(this.name);
+
+  constructor() {
+    super('ChuckJokes', {
+      'enabled': true
+    });
+
+    this.chuck_keywords = [
+      'joke',
+      'lol',
+      'fyi',
+      'prick',
+      'dick',
+      'lmao',
+      'who',
+      'cunt',
+      'nice',
+      'fuck',
+      'haha',
+      'feck',
+      'cock',
+      'langer',
+      'arse',
+      'slut',
+      'bitch'
+    ];
+  }
+
+  provides() {
+    ChuckJokes.self = this;
+
+    return {
+      help: 'Chuck will look for bads words and post a chuck norris joke',
+      provides: {
+        'chuckstfu': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'chuck stfu';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
             return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: ChuckJokes.self.ChuckSTFU,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['ChuckJokes']['enabled'];
           }
-        } catch (err) {
-          console.log(err);
-        } 
-      });
+        },
+        'chuck': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'chuck';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: ChuckJokes.self.Chuck,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['ChuckJokes']['enabled'];
+          }
+        },
+        'dojoke': {
+          test: function (message) {
+            ChuckJokes.self.Setup(message);
+            return MessageStrategy.state['ChuckJokes']['chats'][message.chatId]['enabled'] == true;
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: ChuckJokes.self.DoJoke,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['ChuckJokes']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['ChuckJokes']['enabled'];
+      }
     }
   }
-  
-  
-  module.exports = {
-    MessageStrategy: ChuckJokes
+
+  get_joke() {
+    var joke = request('GET', 'https://api.chucknorris.io/jokes/random', {
+      headers: {
+        'Accept': 'text/plain'
+      }
+    });
+    return joke.getBody()
   }
+
+  Setup(message) {
+    if (Object.keys(MessageStrategy.state['ChuckJokes']).includes("chats") == false) {
+      MessageStrategy.state['ChuckJokes']['chats'] = {};
+    }
+
+    if (Object.keys(MessageStrategy.state['ChuckJokes']['chats']).includes(message.chatId) == false) {
+      MessageStrategy.state['ChuckJokes']['chats'][message.chatId] = {};
+      MessageStrategy.state['ChuckJokes']['chats'][message.chatId]['enabled'] = false;
+    }
+  }
+
+  ChuckSTFU(message) {
+    ChuckJokes.self.Setup(message);
+    MessageStrategy.typing(message);
+    MessageStrategy.client.sendText(message.from, 'Don\'t let anyone tell you you\'re not powerful.  You\'re the most powerful woman i know');
+    MessageStrategy.state['ChuckJokes']['chats'][message.chatId]['enabled'] = false;
+    return true;
+  }
+
+  Chuck(message) {
+    MessageStrategy.typing(message);
+    MessageStrategy.client.sendText(message.from, 'How many lesbians does it take to screw in a light bulb');
+    MessageStrategy.state['ChuckJokes']['chats'][message.chatId]['enabled'] = true;
+    return true;
+  }
+
+  DoJoke(message) {
+    ChuckJokes.self.chuck_keywords.forEach(async function (word) {
+      try {
+        if (message.body.toLowerCase().indexOf(word) > -1) {
+          MessageStrategy.typing(message);
+          MessageStrategy.client.sendText(message.from, ChuckJokes.self.get_joke());
+          return true;
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    });
+  }
+}
+
+
+module.exports = {
+  MessageStrategy: ChuckJokes
+}

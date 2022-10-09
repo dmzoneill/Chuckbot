@@ -6,6 +6,7 @@ const MessageStrategy = require("../MessageStrategy.js")
 
 class Deluge extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
   // static deluge = require('deluge')("http://192.168.0.30:8112/json", "1");
 
   // static callback = function(error, result) {
@@ -21,30 +22,41 @@ class Deluge extends MessageStrategy {
     });
   }
 
-  describe(message, strategies) {
-    this.message = message;
-    MessageStrategy.typing(this.message);
-    let description = "Deluge management"
-    MessageStrategy.client.sendText(this.message.from, description);
-  }
-
   provides() {
-    return ['Deluge']
+    Deluge.self = this;
+
+    return {
+      help: 'Manages deluge',
+      provides: {
+        'Help': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'deluge';
+          },
+          access: function (message, strategy, action) {
+            MessageStrategy.register(strategy.constructor.name + action.name);
+            return true;
+          },
+          help: function () {
+            return 'To do';
+          },
+          action: Deluge.self.Deluge,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Deluge']['enabled'];
+          }
+        }
+      },
+      access: function (message, strategy) {
+        MessageStrategy.register(strategy.constructor.name);
+        return true;
+      },
+      enabled: function () {
+        return MessageStrategy.state['Deluge']['enabled'];
+      }
+    }
   }
 
-  handleMessage(message) {
-    if (MessageStrategy.state['Deluge']['enabled'] == false) return;
-
-    this.message = message;
-
-    if (this.message.body.toLowerCase() === 'deluge') {
-      // MessageStrategy.typing(this.message); 
-      // Deluge.deluge.getHosts(Deluge.callback);
-      // deluge.connect(callback)
-      // this.client.sendText(this.message.from, '👋 Hello!!!');
-      return true;
-    }
-
+  Deluge() {
     return false;
   }
 }
