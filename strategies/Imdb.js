@@ -18,18 +18,17 @@ class Imdb extends MessageStrategy {
     Imdb.self = this;
 
     return {
-      help: 'Provides the levenshtein distance between 2 strings',
+      help: 'Provide information and links to IMDB titles',
       provides: {
-        'imdb': {
+        'imdb x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('imdb');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Gets a link to the IMDB page for a given title';
           },
           action: Imdb.self.Imdb,
           interactive: true,
@@ -39,8 +38,7 @@ class Imdb extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Imdb']['enabled'];

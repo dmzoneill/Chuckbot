@@ -20,13 +20,12 @@ class Youtube extends MessageStrategy {
     return {
       help: 'Provides previews and searches for youtube videos',
       provides: {
-        'youtube .*': {
+        'youtube x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('youtube');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Allows user to search for a youtube video given a string';
@@ -42,8 +41,7 @@ class Youtube extends MessageStrategy {
             return message.body.match(new RegExp(/^https:\/\/.*youtube.com\/.*/)) || message.body.match(new RegExp(/^https:\/\/youtu.be\/.*/));
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Add previews for youtube urls';
@@ -56,8 +54,7 @@ class Youtube extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Youtube']['enabled'];
@@ -97,7 +94,7 @@ class Youtube extends MessageStrategy {
 
       request.get(thumbnail_url['default']['url'], function (error, response, body) {
         try {
-          if (!error && response.statusCode == 200) {          
+          if (!error && response.statusCode == 200) {
 
             let data = "data:" + response.headers["content-type"] + ";base64," + Buffer.from(body).toString('base64');
             MessageStrategy.typing(message);

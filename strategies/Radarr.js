@@ -20,27 +20,25 @@ class Radarr extends MessageStrategy {
     return {
       help: 'Radarr search',
       provides: {
-        'Radarr': {
+        'radarr': {
           test: function (message) {
             return message.body.toLowerCase() === 'radarr';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'To do';
           },
           action: Radarr.self.Radarr,
-          interactive: true,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['Radarr']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Radarr']['enabled'];

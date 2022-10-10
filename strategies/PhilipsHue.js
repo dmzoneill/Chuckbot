@@ -21,12 +21,11 @@ class PhilipsHue extends MessageStrategy {
     return {
       help: 'Philips Hue light management',
       provides: {
-        'PhilipsHue': {
+        'hue x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('hue');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
@@ -50,8 +49,7 @@ class PhilipsHue extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['PhilipsHue']['enabled'];

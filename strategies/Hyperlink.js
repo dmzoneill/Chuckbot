@@ -25,22 +25,23 @@ class HyperLink extends MessageStrategy {
             return message.body.match(new RegExp(/^(http|https):\/\/.*/));
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'To do';
           },
-          action: HyperLink.self.HyperLink,
-          interactive: true,
+          action: function Preview(message) {
+            HyperLink.self.Preview(message);
+            return false;
+          },
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['HyperLink']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['HyperLink']['enabled'];
@@ -48,7 +49,7 @@ class HyperLink extends MessageStrategy {
     }
   }
 
-  async HyperLink(message) {
+  async Preview(message) {
     try {
       if (message.body.indexOf('tiktok') > -1) return;
       if (message.body.indexOf('yout') > -1) return;
@@ -57,17 +58,18 @@ class HyperLink extends MessageStrategy {
       if (message.body.indexOf('amazon') > -1) return;
 
       if ("thumbnail" in message) {
-        return;
+        return false;
       }
 
       let data = await HyperLink.self.getPageOGData(HyperLink.self, message.body, 500);
 
       if (data[1] == null) {
         MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);
-        return;
+        return false;
       }
 
       MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1]);
+      return true
     }
     catch (err) {
       console.log(err);

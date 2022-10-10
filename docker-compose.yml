@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+
+  chuck:
+    container_name: chuck
+    scale: 1
+    image: chuck:latest
+    restart: unless-stopped
+    network_mode: host
+    build:
+      context: .
+    volumes:
+      - ./:/chuck

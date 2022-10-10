@@ -291,76 +291,76 @@ class Crypto extends MessageStrategy {
     return {
       help: 'Stats and graphs for crypto',
       provides: {
-        'Coin': {
+        'coin': {
           test: function (message) {
             return message.body.toLowerCase() === 'coin';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows top 50 coins';
           },
           action: function Cmp(message) {
             Crypto.self.cmp(message);
+            return true;
           },
           interactive: true,
           enabled: function () {
             return MessageStrategy.state['Crypto']['enabled'];
           }
         },
-        'Coins': {
+        'coin 0-9': {
           test: function (message) {
             return message.body.match(/^coin ([0-9]+)$/i) != null;
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows X number of coins';
           },
           action: function Cmp(message) {
             Crypto.self.cmp(message);
+            return true;
           },
           interactive: true,
           enabled: function () {
             return MessageStrategy.state['Crypto']['enabled'];
           }
         },
-        'Graph': {
+        'coin name': {
           test: function (message) {
-            return message.body.match(/^coin ([0-9]+)$/i) != null;
+            return message.body.match(/^coin ([0-9a-z\-]+)$/i) != null;
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows graph for a given coin';
           },
           action: function GetGraph(message) {
             Crypto.self.get_graph(message);
+            return true;
           },
           interactive: true,
           enabled: function () {
             return MessageStrategy.state['Crypto']['enabled'];
           }
         },
-        'Graph dated': {
+        'coin name duration': {
           test: function (message) {
             return message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) != null;
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows graph for a given coin with a time frame 1d/7d/1m/3m/1y';
           },
           action: function GetGraphDated(message) {
             Crypto.self.get_graph(message);
+            return true;
           },
           interactive: true,
           enabled: function () {
@@ -369,8 +369,7 @@ class Crypto extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Crypto']['enabled'];

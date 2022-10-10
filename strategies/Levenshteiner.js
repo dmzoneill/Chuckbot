@@ -20,16 +20,15 @@ class Levenshteiner extends MessageStrategy {
     return {
       help: 'Provides the levenshtein distance between 2 strings',
       provides: {
-        'Levenshtein': {
+        'levenshtein x y': {
           test: function (message) {
             return message.body.toLowerCase().startsWith("levenshtein");
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'provide 2 strings to show the distance';
           },
           action: Levenshteiner.self.Levenshteiner,
           interactive: true,
@@ -39,8 +38,7 @@ class Levenshteiner extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Levenshteiner']['enabled'];

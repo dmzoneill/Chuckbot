@@ -25,8 +25,7 @@ class Wikipedia extends MessageStrategy {
             return message.body.toLowerCase() == 'wiki today';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Show wikipedia pages for this day';
@@ -40,13 +39,12 @@ class Wikipedia extends MessageStrategy {
             return MessageStrategy.state['Wikipedia']['enabled'];
           }
         },
-        'wiki .*': {
+        'wiki x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('wiki');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Search wikipedia';
@@ -62,8 +60,7 @@ class Wikipedia extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Wikipedia']['enabled'];

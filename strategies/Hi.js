@@ -25,8 +25,7 @@ class Hi extends MessageStrategy {
             return message.body.toLowerCase() === 'hi';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Just a simple test function the returns hello when you say hi';
@@ -39,8 +38,7 @@ class Hi extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Hi']['enabled'];

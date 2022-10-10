@@ -25,8 +25,7 @@ class Twitter extends MessageStrategy {
             return message.body.match(new RegExp(/^https:\/\/.*?twitter.com\/.*/));
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Gets the Twitter for a given place';
@@ -42,8 +41,7 @@ class Twitter extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Twitter']['enabled'];

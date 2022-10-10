@@ -20,27 +20,25 @@ class Facebook extends MessageStrategy {
     return {
       help: 'Detects facebook urls and provides thumbnail preview if not provided',
       provides: {
-        'FacebookPreview': {
+        'Preview': {
           test: function (message) {
             return message.body.match(new RegExp(/^https:\/\/.*?facebook.com\/.*/));
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Does the image preview lookup';
           },
-          action: Facebook.self.FacebookPreview,
-          interactive: true,
+          action: Facebook.self.Preview,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['Facebook']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Facebook']['enabled'];
@@ -48,7 +46,7 @@ class Facebook extends MessageStrategy {
     }
   }
 
-  async FacebookPreview(message) {
+  async Preview(message) {
     try {
       if (message.thumbnail != "") return;
 

@@ -40,16 +40,15 @@ class ChuckJokes extends MessageStrategy {
     return {
       help: 'Chuck will look for bads words and post a chuck norris joke',
       provides: {
-        'chuckstfu': {
+        'chuck stfu': {
           test: function (message) {
             return message.body.toLowerCase() === 'chuck stfu';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Disables chuck';
           },
           action: ChuckJokes.self.ChuckSTFU,
           interactive: true,
@@ -62,11 +61,10 @@ class ChuckJokes extends MessageStrategy {
             return message.body.toLowerCase() === 'chuck';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Enables chuck';
           },
           action: ChuckJokes.self.Chuck,
           interactive: true,
@@ -80,22 +78,20 @@ class ChuckJokes extends MessageStrategy {
             return MessageStrategy.state['ChuckJokes']['chats'][message.chatId]['enabled'] == true;
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Post the chuck quote';
           },
           action: ChuckJokes.self.DoJoke,
-          interactive: true,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['ChuckJokes']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['ChuckJokes']['enabled'];

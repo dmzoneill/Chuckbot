@@ -51,13 +51,10 @@ class MessageStrategy {
   }
 
   static hasAccess(sender_id, prototype_name) {
-    return MessageStrategy.strategies['Rbac'].hasAccess(sender_id, prototype_name);
-  }
-
-  static register(action) {
-    if (MessageStrategy.access_paths.includes(action) == false) {
-      MessageStrategy.access_paths.push(action);
+    if (MessageStrategy.access_paths.includes(prototype_name) == false) {
+      MessageStrategy.access_paths.push(prototype_name);
     }
+    return MessageStrategy.strategies['Rbac'].hasAccess(sender_id, prototype_name);
   }
 
   static watch() {
@@ -317,37 +314,42 @@ class MessageStrategy {
       for (let y = 0; y < keys.length; y++) {
         let handler = MessageStrategy.strategies[keys[y]];
         let module = handler.provides();
+        handler.message = message;
 
-        if (Array.isArray(module)) {
-          handler.handleMessage(message, MessageStrategy.strategies);
-        } else {
-          if (module.access(message, handler) == false) continue;
-          if (module.enabled() == false) continue;
-
-          handler.message = message;
-
-          let actions_keys = Object.keys(module.provides);
-          for (let x = 0; x < actions_keys.length; x++) {
-            let action_obj = module.provides[actions_keys[x]];
-            if (action_obj.test(message)) {
-              if (action_obj.access(message, handler, action_obj.action) == false) {
-                MessageStrategy.client.reply(message.from, "No access", message.id, true);
-                y = keys.length;
-                break;
-              }
-              if (action_obj.enabled() == false) {
-                MessageStrategy.client.reply(message.from, "Disabled", message.id, true);
-                y = keys.length;
-                break;
-              }
-              if (action_obj.action(message)) {
-                y = keys.length;
-                break;
-              }
+        let actions_keys = Object.keys(module.provides);
+        for (let x = 0; x < actions_keys.length; x++) {
+          let action_obj = module.provides[actions_keys[x]];
+          MessageStrategy.hasAccess(message.sender.id, keys[y] + action_obj.action.name);
+          if (action_obj.test(message)) {
+            if (action_obj.access(message, handler, action_obj.action) == false) {
+              MessageStrategy.client.reply(message.from, "Access denied to " + action_obj.action.name, message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (action_obj.enabled() == false) {
+              MessageStrategy.client.reply(message.from, "Access denied, " + action_obj.action.name + " is disabled", message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (module.access(message, handler) == false) {
+              MessageStrategy.client.reply(message.from, "Access denied to " + keys[y], message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (module.enabled() == false) {
+              MessageStrategy.client.reply(message.from, "Access denied, " + keys[y] + " is disabled", message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (action_obj.action(message)) {
+              y = keys.length;
+              break;
             }
           }
         }
       }
+
+      MessageStrategy.strategies['State'].Save(message);
     }
     catch (err) {
       console.log(err);

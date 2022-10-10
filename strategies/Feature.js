@@ -18,18 +18,17 @@ class Feature extends MessageStrategy {
     Feature.self = this;
 
     return {
-      help: 'Feature provides the ability to manage the state of features.',
+      help: 'Feature provides the ability to manage the state of features',
       provides: {
-        'list': {
+        'feature list': {
           test: function (message) {
             return message.body.toLowerCase() === 'feature list';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows the list of available features';
           },
           action: Feature.self.List,
           interactive: true,
@@ -37,16 +36,15 @@ class Feature extends MessageStrategy {
             return MessageStrategy.state['Feature']['enabled'];
           }
         },
-        'enable': {
+        'feature enable x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith("feature enable");
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Enables a feature';
           },
           action: Feature.self.Enable,
           interactive: true,
@@ -54,16 +52,15 @@ class Feature extends MessageStrategy {
             return MessageStrategy.state['Feature']['enabled'];
           }
         },
-        'disable': {
+        'feature disable x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith("feature disable");
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Disables a feature';
           },
           action: Feature.self.Disable,
           interactive: true,
@@ -73,8 +70,7 @@ class Feature extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Feature']['enabled'];

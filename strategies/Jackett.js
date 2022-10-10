@@ -25,22 +25,20 @@ class Jackett extends MessageStrategy {
             return message.body.toLowerCase() === 'jackett';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'To do';
           },
           action: Jackett.self.Jackett,
-          interactive: true,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['Jackett']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Jackett']['enabled'];

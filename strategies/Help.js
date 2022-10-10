@@ -18,37 +18,41 @@ class Help extends MessageStrategy {
     Help.self = this;
 
     return {
-      help: 'Detects Help urls and provides thumbnail preview if not provided',
+      help: 'Welcome to help!',
       provides: {
-        'Help': {
+        'help': {
           test: function (message) {
             return message.body.toLowerCase() === "help";
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows you the help menu';
           },
-          action: Help.self.Help,
+          action: function HelpMenu(message) {
+            Help.self.HelpMenu(message);
+            return true;
+          },
           interactive: true,
           enabled: function () {
             return MessageStrategy.state['Help']['enabled'];
           }
         },
-        'HelpFeature': {
+        'help x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith("help");
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Shows the help for a given feature';
           },
-          action: Help.self.HelpFeature,
+          action: function HelpFeature(message) {
+            Help.self.HelpFeature(message);
+            return true;
+          },
           interactive: true,
           enabled: function () {
             return MessageStrategy.state['Help']['enabled'];
@@ -56,8 +60,7 @@ class Help extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Help']['enabled'];
@@ -65,18 +68,22 @@ class Help extends MessageStrategy {
     }
   }
 
-  Help(message) {
+  HelpMenu(message) {
     MessageStrategy.typing(message);
     let help = "";
     let cnt = 0;
-    Object.keys(MessageStrategy.strategies).forEach(key => {
+    Object.keys(MessageStrategy.strategies).sort().forEach(key => {
       help += "*" + key + "*\n";
-      help += "  | - help " + key + "\n";
+      help += "  | - help " + key.toLowerCase() + "\n";
 
       let actions = MessageStrategy.strategies[key].provides().provides;
       let keys = Object.keys(actions);
       for (let y = 0; y < keys.length; y++) {
-        help += "  | - " + keys[y] + "\n";
+        if (actions[keys[y]].interactive) {
+          if (actions[keys[y]].access(message, MessageStrategy.strategies[key], actions[keys[y]].action)) {
+            help += "  | - " + keys[y] + "\n";
+          }
+        }
       }
 
       help += "";
@@ -99,7 +106,19 @@ class Help extends MessageStrategy {
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
       if (key.toLowerCase() == feature) {
-        MessageStrategy.client.sendText(message.from, MessageStrategy.strategies[key].provides().help);
+        let full_help = MessageStrategy.strategies[key].provides().help + "\n\n";
+
+        let actions = MessageStrategy.strategies[key].provides().provides;
+        let keys = Object.keys(actions);
+        for (let y = 0; y < keys.length; y++) {
+          if (actions[keys[y]].interactive) {
+            if (actions[keys[y]].access(message, MessageStrategy.strategies[key], actions[keys[y]].action)) {
+              full_help += keys[y] + " - " + actions[keys[y]].help() + "\n";
+            }
+          }
+        }
+
+        MessageStrategy.client.sendText(message.from, full_help);
       }
     });
   }

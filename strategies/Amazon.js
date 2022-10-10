@@ -18,15 +18,14 @@ class Amazon extends MessageStrategy {
     Amazon.self = this;
 
     return {
-      help: 'Amazon previews',
+      help: 'Shows previews for Amazon products',
       provides: {
-        'Amazon': {
+        'Preview': {
           test: function (message) {
             return message.body.match(new RegExp(/^https:\/\/.*?\.amazon\..*?\/.*/));
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Checks amazon links and provide previews';
@@ -35,15 +34,14 @@ class Amazon extends MessageStrategy {
             Amazon.self.Preview(message);
             return true;
           },
-          interactive: true,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['Amazon']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Amazon']['enabled'];

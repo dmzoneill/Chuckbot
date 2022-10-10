@@ -20,16 +20,15 @@ class Meme extends MessageStrategy {
     return {
       help: 'Gets a random meme',
       provides: {
-        'Meme': {
+        'meme': {
           test: function (message) {
             return message.body.toLowerCase() === 'meme';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'gets the meme and posts it to the chat';
           },
           action: Meme.self.GetMeme,
           interactive: true,
@@ -39,8 +38,7 @@ class Meme extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Meme']['enabled'];
@@ -69,7 +67,16 @@ class Meme extends MessageStrategy {
 
       MessageStrategy.typing(message);
 
-      var meme = request('GET', 'https://meme-api.herokuapp.com/gimme/me_irl', {
+      let topics = [
+        'me_irl',
+        'WackyTicTacs',
+        'memes',
+        'AdviceAnimals',
+        'funny'
+      ];
+      let randomIndex = Math.floor(Math.random() * topics.length);
+
+      var meme = request('GET', 'https://meme-api.herokuapp.com/gimme/' + topics[randomIndex], {
         headers: config.headers
       });
       let json = JSON.parse(meme.getBody());

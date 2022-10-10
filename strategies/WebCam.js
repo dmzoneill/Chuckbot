@@ -25,7 +25,6 @@ class WebCam extends MessageStrategy {
             return message.body.toLowerCase() == 'webcam picture';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
@@ -45,7 +44,6 @@ class WebCam extends MessageStrategy {
             return message.body.toLowerCase().startsWith('webcam video');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
@@ -62,8 +60,7 @@ class WebCam extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['WebCam']['enabled'];

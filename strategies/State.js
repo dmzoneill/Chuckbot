@@ -21,12 +21,11 @@ class State extends MessageStrategy {
     return {
       help: 'Manages the state of chuck',
       provides: {
-        'Show': {
+        'state show': {
           test: function (message) {
             return message.body.toLowerCase() === 'state show';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
@@ -38,12 +37,11 @@ class State extends MessageStrategy {
             return MessageStrategy.state['State']['enabled'];
           }
         },
-        'Save': {
+        'state save': {
           test: function (message) {
             return message.body.toLowerCase() === 'state save';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
@@ -55,12 +53,11 @@ class State extends MessageStrategy {
             return MessageStrategy.state['State']['enabled'];
           }
         },
-        'Load': {
+        'state load': {
           test: function (message) {
             return message.body.toLowerCase() === 'state load';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
@@ -74,7 +71,6 @@ class State extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
         return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
@@ -83,15 +79,16 @@ class State extends MessageStrategy {
     }
   }
 
-  Show() {
+  Show(message) {
     try {
       console.log(JSON.stringify(MessageStrategy.state, null, 2));
+      MessageStrategy.client.sendText(message.from, JSON.stringify(MessageStrategy.state, null, 2));
     } catch (err) {
       console.log(err);
     }
   }
 
-  Save() {
+  Save(message) {
     try {
       let state_json = JSON.stringify(MessageStrategy.state);
 
@@ -100,6 +97,7 @@ class State extends MessageStrategy {
           if (err) {
             return console.log(err);
           }
+          MessageStrategy.client.sendText(message.from, "The file was saved!");
           console.log("The file was saved!");
         } catch (err) {
           console.log(err);
@@ -110,7 +108,7 @@ class State extends MessageStrategy {
     }
   }
 
-  Load() {
+  Load(message) {
     try {
       fs.readFile('state.json', 'utf8', function (err, data) {
         if (err) {
@@ -120,6 +118,9 @@ class State extends MessageStrategy {
           let obj = JSON.parse(data);
           if (obj != null) {
             MessageStrategy.state = obj;
+            if (message) {
+              MessageStrategy.client.sendText(message.from, "State loaded");
+            }
           }
         } catch (err) {
           console.log(err);

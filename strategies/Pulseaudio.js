@@ -20,16 +20,20 @@ class PulseAudio extends MessageStrategy {
     return {
       help: 'Controls basic PulseAudio settings',
       provides: {
-        'PulseAudio': {
+        'volume x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('volume');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'Manages the volume on the computer';
+            return [
+              'Manages the volume on the computer',
+              'volume 45',
+              'volume +10',
+              'volume -15'
+            ].join("\n");
           },
           action: PulseAudio.self.SetVolume,
           interactive: true,
@@ -39,8 +43,7 @@ class PulseAudio extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['PulseAudio']['enabled'];

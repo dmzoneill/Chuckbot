@@ -20,13 +20,12 @@ class Pornhub extends MessageStrategy {
     return {
       help: 'Gets a random Pornhub video',
       provides: {
-        'Pornhub': {
+        'pornhub x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('pornhub');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Gets a video given a search term';
@@ -39,8 +38,7 @@ class Pornhub extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Pornhub']['enabled'];

@@ -21,13 +21,12 @@ class Logger extends MessageStrategy {
     return {
       help: 'Logs media to disk',
       provides: {
-        'Save': {
+        'logger save': {
           test: function (message) {
             return true;
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return "";
@@ -41,16 +40,15 @@ class Logger extends MessageStrategy {
             return MessageStrategy.state['Logger']['enabled'];
           }
         },
-        'ListMine': {
+        'logger list mine': {
           test: function (message) {
             return message.body.toLowerCase().startsWith("logger list mine");
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'logger list mine';
+            return 'List resources that were posted by you';
           },
           action: function ListMine(message) {
             Logger.self.ListMine(message);
@@ -61,16 +59,15 @@ class Logger extends MessageStrategy {
             return MessageStrategy.state['Logger']['enabled'];
           }
         },
-        'List': {
+        'logger list': {
           test: function (message) {
             return message.body.toLowerCase().startsWith("logger list");
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'logger list';
+            return 'Shows all the logged resources';
           },
           action: function List(message) {
             Logger.self.List(message, false);
@@ -82,8 +79,7 @@ class Logger extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Logger']['enabled'];

@@ -20,13 +20,12 @@ class UrbanDictionary extends MessageStrategy {
     return {
       help: 'Provides a random urban dictionary slang word',
       provides: {
-        'UrbanDictionary': {
+        'urban': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('urban');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Gets the UrbanDictionary word';
@@ -42,8 +41,7 @@ class UrbanDictionary extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['UrbanDictionary']['enabled'];

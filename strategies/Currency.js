@@ -18,18 +18,17 @@ class Currency extends MessageStrategy {
     Currency.self = this;
 
     return {
-      help: 'Tries to provide currency exchange rates',
+      help: 'Provides currency exchange rates',
       provides: {
-        'Currency': {
+        'currency': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('fiat');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'prints currency exchange rates';
           },
           action: Currency.self.Currency,
           interactive: true,
@@ -39,8 +38,7 @@ class Currency extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Currency']['enabled'];

@@ -20,16 +20,15 @@ class Google extends MessageStrategy {
     return {
       help: 'Provides google url for those too lazy to type it into google',
       provides: {
-        'GoogleSearch': {
+        'google x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('google');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Does the googling for you';
           },
           action: Google.self.GoogleSearch,
           interactive: true,
@@ -39,8 +38,7 @@ class Google extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Google']['enabled'];

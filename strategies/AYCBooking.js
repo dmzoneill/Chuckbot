@@ -25,22 +25,20 @@ class AYCBooking extends MessageStrategy {
             return message.body.toLowerCase() === 'aycbooking';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'To do';
           },
           action: AYCBooking.self.AYCBooking,
-          interactive: true,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['AYCBooking']['enabled'];
           }
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['AYCBooking']['enabled'];

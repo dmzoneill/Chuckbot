@@ -51,16 +51,15 @@ class Harass extends MessageStrategy {
     return {
       help: 'Harasses individual(s) with your mamma jokes',
       provides: {
-        'Harass': {
+        'harass': {
           test: function (message) {
             return message.body.toLowerCase() === 'harass';
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Show a list of possible victims';
           },
           action: Harass.self.HarassSluts,
           interactive: true,
@@ -68,16 +67,15 @@ class Harass extends MessageStrategy {
             return MessageStrategy.state['Harass']['enabled'];
           }
         },
-        'HarassPerson': {
+        'harass x': {
           test: function (message) {
             return message.body.match(/^harass ([0-9]{1,3})$/i);
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Harass a given person provided by a number';
           },
           action: Harass.self.Harass,
           interactive: true,
@@ -85,16 +83,15 @@ class Harass extends MessageStrategy {
             return MessageStrategy.state['Harass']['enabled'];
           }
         },
-        'StopHarass': {
+        'harass stop x': {
           test: function (message) {
             return message.body.match(/^harass stop ([0-9a-z]+)$/i);
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Stop harass a given person provided by a number';
           },
           action: Harass.self.StopHarass,
           interactive: true,
@@ -102,16 +99,15 @@ class Harass extends MessageStrategy {
             return MessageStrategy.state['Harass']['enabled'];
           }
         },
-        'ListHarass': {
+        'harass list': {
           test: function (message) {
             return message.body.match(/^harass list$/i);
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Print the list of people being harassed';
           },
           action: Harass.self.ListHarass,
           interactive: true,
@@ -121,8 +117,7 @@ class Harass extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Harass']['enabled'];

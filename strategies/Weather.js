@@ -20,13 +20,12 @@ class Weather extends MessageStrategy {
     return {
       help: 'Gets the weather for a given area',
       provides: {
-        'Weather': {
+        'weather x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('weather');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Gets the weather for a given place';
@@ -42,8 +41,7 @@ class Weather extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Weather']['enabled'];

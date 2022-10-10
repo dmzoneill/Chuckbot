@@ -151,13 +151,12 @@ class Translate extends MessageStrategy {
     return {
       help: 'Does in chat translations',
       provides: {
-        'Default': {
+        'translate default x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('translate default');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Sets the default translation for the user';
@@ -170,13 +169,12 @@ class Translate extends MessageStrategy {
             return MessageStrategy.state['Translate']['enabled'];
           }
         },
-        'Off': {
+        'translate off': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('translate off');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Disable automatic translation';
@@ -189,13 +187,12 @@ class Translate extends MessageStrategy {
             return MessageStrategy.state['Translate']['enabled'];
           }
         },
-        'Automatic': {
+        'translate automatic': {
           test: function (message) {
             return Object.keys(MessageStrategy.state.Translate.user_defaults).includes(message.from);
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Automatic translation';
@@ -203,18 +200,17 @@ class Translate extends MessageStrategy {
           action: function Automatic(message) {
             return Translate.self.Automatic(message);
           },
-          interactive: true,
+          interactive: false,
           enabled: function () {
             return MessageStrategy.state['Translate']['enabled'];
           }
         },
-        'Manual': {
+        'translate de x': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('translate');
           },
           access: function (message, strategy, action) {
-            MessageStrategy.register(strategy.constructor.name + action.name);
-            return true;
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
             return 'Manual translation';
@@ -229,8 +225,7 @@ class Translate extends MessageStrategy {
         }
       },
       access: function (message, strategy) {
-        MessageStrategy.register(strategy.constructor.name);
-        return true;
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
       },
       enabled: function () {
         return MessageStrategy.state['Translate']['enabled'];
