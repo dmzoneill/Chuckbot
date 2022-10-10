@@ -97,7 +97,9 @@ class State extends MessageStrategy {
           if (err) {
             return console.log(err);
           }
-          MessageStrategy.client.sendText(message.from, "The file was saved!");
+          if (message.isGroupMsg == false) {
+            MessageStrategy.client.sendText(message.from, "The file was saved!");
+          }
           console.log("The file was saved!");
         } catch (err) {
           console.log(err);
