@@ -100,6 +100,42 @@ class Rbac extends MessageStrategy {
     return {
       help: 'Role binding and access control',
       provides: {
+        'role mine': {
+          test: function (message) {
+            return message.body.toLowerCase() == 'role mine';
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Show my allowed roles';
+          },
+          action: function RoleMine(message) {
+            return Rbac.self.role_mine(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
+        'role \d+': {
+          test: function (message) {
+            return message.body.toLowerCase().match(new RegExp('role \d+'));
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Show roles of given person';
+          },
+          action: function RolePerson(message) {
+            return Rbac.self.role_person(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
         'role list': {
           test: function (message) {
             return message.body.toLowerCase() == 'role list';
@@ -111,7 +147,25 @@ class Rbac extends MessageStrategy {
             return 'Show all roles available';
           },
           action: function Rolelist(message) {
-            Rbac.self.role_list(message);
+            return Rbac.self.role_list(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
+        'restricted list': {
+          test: function (message) {
+            return message.body.toLowerCase() == 'restricted list';
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Show restricted roles available';
+          },
+          action: function Restrictedlist(message) {
+            Rbac.self.restricted_role_list(message);
           },
           interactive: true,
           enabled: function () {
@@ -136,6 +190,24 @@ class Rbac extends MessageStrategy {
             return MessageStrategy.state['Rbac']['enabled'];
           }
         },
+        'restricted add x': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('restricted add');
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Adds a restricted role to the restricted list';
+          },
+          action: function RestrictedAdd(message) {
+            Rbac.self.restricted_role_add(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
         'role remove x y': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('role remove');
@@ -148,6 +220,24 @@ class Rbac extends MessageStrategy {
           },
           action: function RoleRemove(message) {
             Rbac.self.role_remove(message);
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['Rbac']['enabled'];
+          }
+        },
+        'restricted remove x': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('restricted remove');
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Removes a role from the restricted list';
+          },
+          action: function RestrictedRemove(message) {
+            Rbac.self.restricted_role_remove(message);
           },
           interactive: true,
           enabled: function () {
@@ -206,11 +296,49 @@ class Rbac extends MessageStrategy {
     }
   }
 
+  role_mine(message) {
+    try {
+      let number = message.from.split("@")[0];
+      MessageStrategy.client.reply(message.from, MessageStrategy.state['Rbac']['roles'][number].sort().join("\n").trim(), message.id, true);
+      return true;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  role_person(message) {
+    try {
+      let person = message.body.split(" ")[1];
+      if(MessageStrategy.contacts.indexOf(person) == -1) {
+        MessageStrategy.client.reply(message.from, "No such person " + person, message.id, true);
+        return;
+      }
+      MessageStrategy.client.reply(message.from, MessageStrategy.state['Rbac']['roles'][person].sort().join("\n").trim(), message.id, true);
+      return true;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  restricted_role_list(message) {
+    try {
+      MessageStrategy.client.reply(message.from, MessageStrategy.state['Rbac']['restricted_roles'].sort().join("\n").trim(), message.id, true);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   role_add(message) {
     try {
       let parts = message.body.split(" ");
-      if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) {
-        console.log("Unknown role: " + parts[2]);
+      if (MessageStrategy.access_paths.sort().indexOf(parts[2]) == -1) {
+        MessageStrategy.client.reply(message.from, "Unknown role: " + parts[2], message.id, true);
+        return;
+      }
+
+      if(MessageStrategy.contacts.indexOf(parts[3]) == -1) {
+        MessageStrategy.client.reply(message.from, "No such person " + parts[3], message.id, true);
+        return;
       }
 
       if (MessageStrategy.state['Rbac']['roles'][parts[3]].includes(parts[2]) == false) {
@@ -218,9 +346,25 @@ class Rbac extends MessageStrategy {
         const index = MessageStrategy.state['Rbac']['removed_roles'][parts[3]].indexOf(parts[2]);
         if (index > -1) {
           MessageStrategy.state['Rbac']['removed_roles'][parts[3]].splice(index, 1);
-          Rbac.self.role_list(message);
         }
-        Rbac.self.role_list(message);
+        MessageStrategy.client.reply(message.from, MessageStrategy.state['Rbac']['roles'][parts[3]].sort().join("\n").trim(), message.id, true);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  restricted_role_add(message) {
+    try {
+      let parts = message.body.split(" ");
+      if (MessageStrategy.access_paths.indexOf(parts[2]) == -1) {
+        MessageStrategy.client.reply(message.from, "Unknown role: " + parts[2], message.id, true);
+        return;
+      }
+
+      if (MessageStrategy.state['Rbac']['restricted_roles'].indexOf(parts[2]) == -1) {
+        MessageStrategy.state['Rbac']['restricted_roles'].push(parts[2]);
+        Rbac.self.restricted_role_list(message);
       }
     } catch (err) {
       console.log(err);
@@ -230,15 +374,41 @@ class Rbac extends MessageStrategy {
   role_remove(message) {
     try {
       let parts = message.body.split(" ");
-      if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) {
-        console.log("Unknown role: " + parts[2]);
+      if (MessageStrategy.access_paths.sort().indexOf(parts[2]) == -1) {
+        MessageStrategy.client.reply(message.from, "Unknown role: " + parts[2], message.id, true);
+        return;
       }
+
+      if(MessageStrategy.contacts.indexOf(parts[3]) == -1) {
+        MessageStrategy.client.reply(message.from, "No such person " + parts[3], message.id, true);
+        return;
+      }
+
       if (MessageStrategy.state['Rbac']['roles'][parts[3]].includes(parts[2])) {
         const index = MessageStrategy.state['Rbac']['roles'][parts[3]].indexOf(parts[2]);
         if (index > -1) {
           MessageStrategy.state['Rbac']['roles'][parts[3]].splice(index, 1);
           MessageStrategy.state['Rbac']['removed_roles'][parts[3]].push(parts[2]);
-          Rbac.self.role_list(message);
+          MessageStrategy.client.reply(message.from, MessageStrategy.state['Rbac']['roles'][parts[3]].sort().join("\n").trim(), message.id, true);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  restricted_role_remove(message) {
+    try {
+      let parts = message.body.split(" ");
+      if (MessageStrategy.access_paths.indexOf(parts[2]) == -1) {
+        MessageStrategy.client.reply(message.from, "Unknown role: " + parts[2], message.id, true);
+        return;
+      }
+      if (MessageStrategy.state['Rbac']['restricted_roles'].indexOf(parts[2]) > -1) {
+        const index = MessageStrategy.state['Rbac']['restricted_roles'].indexOf(parts[2]);
+        if (index > -1) {
+          MessageStrategy.state['Rbac']['rolerestricted_roless'].splice(index, 1);
+          Rbac.self.restricted_role_list(message);
         }
       }
     } catch (err) {

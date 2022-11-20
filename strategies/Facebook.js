@@ -50,7 +50,7 @@ class Facebook extends MessageStrategy {
     try {
       if (message.thumbnail != "") return;
 
-      let data = await Facebook.self.getPageOGData(Facebook.self, message.body.replace(/&amp;/g, "&"), 500);
+      let data = await Facebook.self.get_page_og_data(Facebook.self, message.body.replace(/&amp;/g, "&"), 500);
 
       if (data[1] == null) {
         MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);

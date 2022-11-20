@@ -52,7 +52,7 @@ class TikTok extends MessageStrategy {
 
   async PostPreview(message) {
     try {
-      let data = await TikTok.self.getPageOGData(TikTok.self, message.body, 500);
+      let data = await TikTok.self.get_page_og_data(TikTok.self, message.body, 500);
 
       if (data[1] == null) {
         MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);

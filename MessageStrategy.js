@@ -16,18 +16,14 @@ const ud = require('urban-dictionary');
 const weather = require('weather-js');
 const wiki = require('wikipedia');
 const yt = require('youtube-search-without-api-key');
-const youtubeThumbnail = require('youtube-thumbnail');
 const NodeWebcam = require('node-webcam');
 const { exec } = require("child_process");
 const jsdom = require("jsdom");
+const YAML = require('yaml');
 
-
-// directory path
 const strategies_dir = './strategies/'
 
-
 class MessageStrategy {
-  static client = null;
   static derived = new Set();
   static state = {};
   static strategies = {}
@@ -35,19 +31,107 @@ class MessageStrategy {
   static contacts_verbose = [];
   static groups = [];
   static groups_verbose = [];
-  static changed = false;
   static watcher = null;
   static watched_events = {};
   static access_paths = [];
+  static last_event = null;
+  static self = null;
+  static contact_update_counter = 10;
+  static browser_config = {
+    headers: {
+      'Accept': '*/*',
+      'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+      'Access-Control-Request-Headers': 'content-type',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Origin': 'https://google.com/',
+      'Pragma': 'no-cache',
+      'Referer': 'https://google.com/',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-site',
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+    }
+  };
+  static client = {
+    client: null,
+    log: function () {
+      // let output = new Error().stack.toString().match(/at \w+\.\w+/)[0].split('.')[1].padEnd(20, ' ');
+      // for (let u = 0; u < arguments.length; u++) {
+      //   try {
+      //     output += arguments[u].toString().padEnd(40, ' ')
+      //   } catch(err) {
+
+      //   }
+      // }
+      // console.log(output);
+    },
+    sendText: function sendText() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1]);
+      return this.client.sendText(args[0], args[1]);
+    },
+    sendImage: function sendImage() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1], args[2], args[3]);
+      return this.client.sendImage(args[0], args[1], args[2], args[3]);
+    },
+    sendLinkWithAutoPreview: function sendLinkWithAutoPreview() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1], args[2], args[3]);
+      return this.client.sendLinkWithAutoPreview(args[0], args[1], args[2], args[3]);
+    },
+    reply: function reply() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1], args[2], args[3]);
+      return this.client.reply(args[0], args[1], args[2], args[3]);
+    },
+    getAllChats: function getAllChats() {
+      let args = Array.from(arguments);
+      return this.client.getAllChats();
+    },
+    getAllGroups: function getAllGroups() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1]);
+      return this.client.getAllGroups(args[0], args[1]);
+    },
+    getGroupMembers: function getGroupMembers() {
+      let args = Array.from(arguments);
+      this.log(args[0]);
+      return this.client.getGroupMembers(args[0]);
+    },
+    sendYoutubeLink: function sendYoutubeLink() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1], args[2], args[3]);
+      return this.client.sendYoutubeLink(args[0], args[1], args[2], args[3]);
+    },
+    decryptMedia: function decryptMedia() {
+      let args = Array.from(arguments);
+      this.log(args[0]);
+      return this.client.decryptMedia(args[0]);
+    },
+    sendFile: function sendFile() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1], args[2], args[3]);
+      return this.client.sendFile(args[0], args[1], args[2], args[3]);
+    },
+    sendSeen: function sendSeen() {
+      let args = Array.from(arguments);
+      this.log(args[0]);
+      return this.client.sendSeen(args[0]);
+    },
+    simulateTyping: function simulateTyping() {
+      let args = Array.from(arguments);
+      this.log(args[0], args[1]);
+      return this.client.simulateTyping(args[0], args[1]);
+    }
+  };
 
   constructor(key, config) {
+    MessageStrategy.self = this;
     if (Object.keys(MessageStrategy.state).includes(key) == false) {
       MessageStrategy.state[key] = config;
     }
-  }
-
-  hasAccess(sender_id, prototype_name) {
-    return MessageStrategy.strategies['Rbac'].hasAccess(sender_id, prototype_name);
   }
 
   static hasAccess(sender_id, prototype_name) {
@@ -74,6 +158,9 @@ class MessageStrategy {
     let all_chats = await MessageStrategy.client.getAllChats();
 
     for (let h = 0; h < all_chats.length; h++) {
+      if (MessageStrategy.contacts.indexOf(all_chats[h].contact.id) > -1) {
+        continue;
+      }
       MessageStrategy.contacts.push(all_chats[h].contact.id);
       MessageStrategy.contacts_verbose.push(all_chats[h].contact.id + " " + all_chats[h].contact.name);
     }
@@ -85,38 +172,18 @@ class MessageStrategy {
       MessageStrategy.groups_verbose.push(all_groups[h].id + " " + all_groups[h].name);
       let members = await MessageStrategy.client.getGroupMembers(all_groups[h].id);
       for (let k = 0; k < members.length; k++) {
-        if (MessageStrategy.contacts.includes(members[k].id.trim())) continue;
+
+        if (MessageStrategy.contacts.indexOf(members[k].id.trim()) > -1) continue;
         MessageStrategy.contacts.push(members[k].id.trim());
       }
     }
   }
 
-  async call_update_active_chat_contacts() {
-    MessageStrategy.update_active_chat_contacts()
-  }
-
-  async waitFor(ms) {
-    return new Promise(resolve => setTimeout(() => resolve(), ms));
-  }
-
-  get_contacts() {
-    return MessageStrategy.contacts;
-  }
-
-  get_contacts_verbose() {
-    return MessageStrategy.contacts_verbose;
-  }
-
-  get_groups() {
-    return MessageStrategy.groups;
-  }
-
-  get_groups_verbose() {
-    return MessageStrategy.groups_verbose;
-  }
-
   static async get_chat_id(message) {
-    if ("chatId" in message) {
+    if (message == null) {
+      return;
+    }
+    if (Object.keys(message).indexOf('chatId') > -1) {
       return message.chatId;
     }
     else {
@@ -132,10 +199,6 @@ class MessageStrategy {
     } catch (err) {
       console.log(err);
     }
-  }
-
-  static getChanged() {
-    return MessageStrategy.changed;
   }
 
   static update_strategy(file) {
@@ -167,7 +230,10 @@ class MessageStrategy {
   }
 
   static update_strategies() {
-    MessageStrategy.strategies = {}
+    if (Object.keys(MessageStrategy.strategies).length == 0) {
+      MessageStrategy.strategies = {}
+      MessageStrategy.watch();
+    }
 
     MessageStrategy.update_strategy("State.js");
     MessageStrategy.update_strategy("Spam.js");
@@ -186,43 +252,106 @@ class MessageStrategy {
     })
   }
 
-  static getStrategies(client) {
-    if (Object.keys(MessageStrategy.strategies).length == 0) {
-      MessageStrategy.update_strategies();
-      MessageStrategy.watch();
+  static doHandleMessage(message) {
+    try {
+      let keys = Object.keys(MessageStrategy.strategies);
+      let is_chuck_event = Object.keys(message).indexOf('isChuck') == -1 ? false : true;
+
+      for (let y = 0; y < keys.length; y++) {
+        let handler = MessageStrategy.strategies[keys[y]];
+
+        if (is_chuck_event) {
+          handler.handleEvent(message);
+          continue;
+        }
+
+        let module = handler.provides(message);
+        if (Object.keys(module).indexOf('provides') == -1) {
+          continue;
+        }
+        handler.message = message;
+
+        let actions_keys = Object.keys(module.provides);
+        for (let x = 0; x < actions_keys.length; x++) {
+          let action_obj = module.provides[actions_keys[x]];
+          //console.log(module.provides[actions_keys[x]]);
+          MessageStrategy.hasAccess(message.sender.id, keys[y] + action_obj.action.name);
+          if (action_obj.test(message)) {
+            if (action_obj.access(message, handler, action_obj.action) == false) {
+              MessageStrategy.client.reply(message.from, "Access denied to " + action_obj.action.name, message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (action_obj.enabled() == false) {
+              MessageStrategy.client.reply(message.from, "Access denied, " + action_obj.action.name + " is disabled", message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (module.access(message, handler) == false) {
+              MessageStrategy.client.reply(message.from, "Access denied to " + keys[y], message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (module.enabled() == false) {
+              MessageStrategy.client.reply(message.from, "Access denied, " + keys[y] + " is disabled", message.id, true);
+              y = keys.length;
+              break;
+            }
+            if (action_obj.action(message)) {
+              y = keys.length;
+              break;
+            }
+          }
+        }
+      }
+
+      if (is_chuck_event) {
+        return;
+      }
+
+      MessageStrategy.strategies['State'].Save(message);
+
+      MessageStrategy.client.sendSeen(message.chatId);
+      if (MessageStrategy.contact_update_counter == 0 || MessageStrategy.contacts.length == 0) {
+        MessageStrategy.self.call_update_active_chat_contacts();
+        MessageStrategy.contact_update_counter = 10;
+      }
+      MessageStrategy.contact_update_counter -= 1;
     }
-
-    MessageStrategy.client = client;
-
-    MessageStrategy.derived.forEach(key => {
-      MessageStrategy.strategies[key].client = client;
-    });
-
-    MessageStrategy.changed = false;
-
-    return MessageStrategy.strategies;
+    catch (err) {
+      console.log(err);
+    }
   }
 
-  async getPageOGData(self, fullurl, wait = 500) {
+  static async get_image(url, img_width = 480) {
+    const responseImage = await axios(url, { responseType: 'arraybuffer', headers: MessageStrategy.browser_config['headers'] });
+    const image = await resizeImg(responseImage.data, { width: img_width, format: "jpg" });
+    const buffer64 = Buffer.from(image, 'binary').toString('base64');
+    return "data:image/jpeg;base64," + buffer64;
+  }
+
+  handleEvent(message) {
+    let sha1 = crypto.createHash('sha1').update(JSON.stringify(message)).digest('hex');
+    if (MessageStrategy.last_event == null) {
+      MessageStrategy.last_event = sha1;
+      console.log(message);
+    }
+    if (MessageStrategy.last_event != sha1) {
+      MessageStrategy.last_event = sha1;
+      console.log(message);
+    }
+  }
+
+  async call_update_active_chat_contacts() {
+    MessageStrategy.update_active_chat_contacts();
+  }
+
+  async waitFor(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
+  }
+
+  async get_page(self, fullurl, wait = 500) {
     try {
-
-      var config = {
-        headers: {
-          'Accept': '*/*',
-          'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
-          'Access-Control-Request-Headers': 'content-type',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'Origin': 'https://google.com/',
-          'Pragma': 'no-cache',
-          'Referer': 'https://google.com/',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
-        }
-      };
-
       MessageStrategy.typing(self.message);
 
       const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
@@ -263,6 +392,19 @@ class MessageStrategy {
 
       MessageStrategy.typing(self.message);
 
+      return page;
+    }
+    catch (err) {
+      console.log(err);
+      return null;
+    }
+  }
+
+  async get_page_og_data(self, fullurl, wait = 500) {
+    try {
+
+      let page = await self.get_page(self, fullurl, wait);
+
       let description = await page.evaluate(() => {
         let desc = document.head.querySelector('meta[property="og:description"]');
         if (desc) {
@@ -289,12 +431,7 @@ class MessageStrategy {
       else {
         let desc = description == null ? title : description;
         MessageStrategy.typing(self.message);
-        const responseImage = await axios(image_url, { responseType: 'arraybuffer', headers: config['headers'] });
-        const image = await resizeImg(responseImage.data, { width: 200, format: "jpg" });
-        const buffer64 = Buffer.from(image, 'binary').toString('base64');
-        let data = "data:image/jpeg;base64," + buffer64;
-        MessageStrategy.typing(self.message);
-        return [desc, data];
+        return [desc, await MessageStrategy.get_image(image_url)];
       }
     }
     catch (err) {
@@ -303,57 +440,43 @@ class MessageStrategy {
     }
   }
 
-  static doHandleMessage(chuck, message) {
-    if (MessageStrategy.changed) {
-      MessageStrategy.getStrategies(chuck);
-    }
-
+  async get_page_title(url, wait = 250) {
     try {
-      let keys = Object.keys(MessageStrategy.strategies);
 
-      for (let y = 0; y < keys.length; y++) {
-        let handler = MessageStrategy.strategies[keys[y]];
-        let module = handler.provides();
-        handler.message = message;
+      let page = await MessageStrategy.get_page(url, wait);
 
-        let actions_keys = Object.keys(module.provides);
-        for (let x = 0; x < actions_keys.length; x++) {
-          let action_obj = module.provides[actions_keys[x]];
-          MessageStrategy.hasAccess(message.sender.id, keys[y] + action_obj.action.name);
-          if (action_obj.test(message)) {
-            if (action_obj.access(message, handler, action_obj.action) == false) {
-              MessageStrategy.client.reply(message.from, "Access denied to " + action_obj.action.name, message.id, true);
-              y = keys.length;
-              break;
-            }
-            if (action_obj.enabled() == false) {
-              MessageStrategy.client.reply(message.from, "Access denied, " + action_obj.action.name + " is disabled", message.id, true);
-              y = keys.length;
-              break;
-            }
-            if (module.access(message, handler) == false) {
-              MessageStrategy.client.reply(message.from, "Access denied to " + keys[y], message.id, true);
-              y = keys.length;
-              break;
-            }
-            if (module.enabled() == false) {
-              MessageStrategy.client.reply(message.from, "Access denied, " + keys[y] + " is disabled", message.id, true);
-              y = keys.length;
-              break;
-            }
-            if (action_obj.action(message)) {
-              y = keys.length;
-              break;
-            }
-          }
+      let description = await page.evaluate(() => {
+        let desc = document.head.querySelector('meta[property="og:description"]');
+        if (desc) {
+          return desc.getAttribute("content");
         }
-      }
+        return null;
+      });
 
-      MessageStrategy.strategies['State'].Save(message);
-    }
-    catch (err) {
+      let title = await page.evaluate(() => {
+        return document.head.querySelector('title').innerText;
+      });
+
+      return description == null ? title : description;
+    } catch (err) {
       console.log(err);
     }
+  }
+
+  get_contacts() {
+    return MessageStrategy.contacts;
+  }
+
+  get_contacts_verbose() {
+    return MessageStrategy.contacts_verbose;
+  }
+
+  get_groups() {
+    return MessageStrategy.groups;
+  }
+
+  get_groups_verbose() {
+    return MessageStrategy.groups_verbose;
   }
 }
 

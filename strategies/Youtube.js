@@ -62,71 +62,76 @@ class Youtube extends MessageStrategy {
     }
   }
 
-  Preview(message) {
-    let getVideo = false;
+  async Preview(message) {
+    try {
+      let getVideo = false;
 
-    Youtube.self.waitFor(2000);
+      MessageStrategy.typing(message);
+      Youtube.self.waitFor(500);
 
-    if (Object.keys(message).includes('thumbnail') == false) {
-      getVideo = true;
-    }
-
-    if (Object.keys(message).includes('thumbnail')) {
-      if (message.thumbnail.length == 'undefined') {
+      if (Object.keys(message).includes('thumbnail') == false) {
         getVideo = true;
       }
-    }
 
-    if (Object.keys(message).includes('thumbnail')) {
-      if (getVideo == false) {
-        if (message.thumbnail.length == 0) {
+      if (Object.keys(message).includes('thumbnail')) {
+        if (message.thumbnail.length == 'undefined') {
           getVideo = true;
         }
       }
-    }
 
-    if (getVideo) {
-      var request = require('request').defaults({ encoding: null });
-      var thumbnail_url = youtubeThumbnail(message.body);
-
-      if (!('default' in thumbnail_url)) return;
-      if (!('url' in thumbnail_url['default'])) return;
-
-      request.get(thumbnail_url['default']['url'], function (error, response, body) {
-        try {
-          if (!error && response.statusCode == 200) {
-
-            let data = "data:" + response.headers["content-type"] + ";base64," + Buffer.from(body).toString('base64');
-            MessageStrategy.typing(message);
-            Youtube.self.waitFor(500);
-            Youtube.self.waitFor(500);
-            MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', data);
-            return false;
+      if (Object.keys(message).includes('thumbnail')) {
+        if (getVideo == false) {
+          if (message.thumbnail.length == 0) {
+            getVideo = true;
           }
         }
-        catch (err) {
-          MessageStrategy.typing(message);
-          this.client.sendText(this.message.from, err);
+      }
+
+      // https://www.youtube.com/watch?v=7fncJdVjy5U
+      // https://youtu.be/xxxxxxxxx
+      // http://youtube.com/shorts/xxxxxxxxxx
+
+      let parts = message.body.split("/");
+      let video_id = "";
+      if (parts[3].indexOf("v=") > -1) {
+        let sub_parts = parts[3].split("v=");
+        video_id = sub_parts[1];
+      } else if (parts[3] == "shorts") {
+        video_id = parts[4];
+      }
+      else {
+        video_id = parts[3];
+      }
+
+      if (getVideo) {
+        MessageStrategy.typing(message);
+        var youtube_image = await MessageStrategy.get_image("https://img.youtube.com/vi/" + video_id + "/hqdefault.jpg");
+
+        if (youtube_image == null) {
+          return;
         }
-      });
+
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', youtube_image);
+      }
+    } catch (err) {
+      console.log(err);
     }
   }
 
-  Search(message) {
+  async Search(message) {
     let search_term = message.body.substring(7);
 
-    (async () => {
-      try {
-        const results = await yt.search(search_term);
-        if (results.length == 0) {
-          return false;
-        }
-        MessageStrategy.typing(message);
-        MessageStrategy.client.sendYoutubeLink(message.from, results[0].url);
-      } catch (err) {
-        console.log(err);
+    try {
+      const results = await yt.search(search_term);
+      if (results.length == 0) {
+        return false;
       }
-    })();
+      MessageStrategy.typing(message);
+      MessageStrategy.client.sendYoutubeLink(message.from, results[0].url);
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 

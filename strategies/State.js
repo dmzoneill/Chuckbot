@@ -92,12 +92,17 @@ class State extends MessageStrategy {
     try {
       let state_json = JSON.stringify(MessageStrategy.state);
 
+      if (state_json == undefined) return;
+      if (state_json == null) return;
+      if (state_json == "") return;
+      if (state_json.length < 1500) return;
+
       fs.writeFile('state.json', state_json, function (err) {
         try {
           if (err) {
             return console.log(err);
           }
-          if (message.isGroupMsg == false) {
+          if (message.body.startsWith("state")) {
             MessageStrategy.client.sendText(message.from, "The file was saved!");
           }
           console.log("The file was saved!");

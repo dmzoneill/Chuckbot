@@ -61,7 +61,7 @@ class HyperLink extends MessageStrategy {
         return false;
       }
 
-      let data = await HyperLink.self.getPageOGData(HyperLink.self, message.body, 500);
+      let data = await HyperLink.self.get_page_og_data(HyperLink.self, message.body, 500);
 
       if (data[1] == null) {
         MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);

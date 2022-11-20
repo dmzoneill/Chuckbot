@@ -7,6 +7,7 @@ Hardest shit since sliced pan
 ### Get setup
 ```
 make up
+make local
 ```
 
 Using the phone number you supplied to the setup.

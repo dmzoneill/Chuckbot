@@ -64,7 +64,11 @@ class Spam extends MessageStrategy {
     let keycheck = false;
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
-      let actions = MessageStrategy.strategies[key].provides().provides;
+      let provides = MessageStrategy.strategies[key].provides();
+      if (Object.keys(provides).indexOf('provides') == -1) {
+        return;
+      }
+      let actions = provides.provides;
       let keys = Object.keys(actions);
       for (let y = 0; y < keys.length; y++) {
         if (actions[keys[y]].interactive) {

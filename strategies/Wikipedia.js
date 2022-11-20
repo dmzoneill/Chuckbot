@@ -70,7 +70,7 @@ class Wikipedia extends MessageStrategy {
 
   async postWikiPreview(fullurl) {
     try {
-      let data = await Wikipedia.self.getPageOGData(Wikipedia.self, fullurl, 500);
+      let data = await Wikipedia.self.get_page_og_data(Wikipedia.self, fullurl, 500);
 
       if (data[1] == null) {
         MessageStrategy.client.reply(Wikipedia.self.message.from, "Sorry no preview", Wikipedia.self.message.id, true);

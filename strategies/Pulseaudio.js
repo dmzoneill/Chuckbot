@@ -61,7 +61,7 @@ class PulseAudio extends MessageStrategy {
       let incrementor = "";
       let change = "pactl -- set-sink-volume 0 ";
 
-      let parts = self.message.body.split(" ");
+      let parts = message.body.split(" ");
       let value = parts[1].trim();
 
       if (value.startsWith('+') || value.startsWith('-')) {

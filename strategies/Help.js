@@ -73,24 +73,36 @@ class Help extends MessageStrategy {
     let help = "";
     let cnt = 0;
     Object.keys(MessageStrategy.strategies).sort().forEach(key => {
-      help += "*" + key + "*\n";
-      help += "  | - help " + key.toLowerCase() + "\n";
+      try {
+        help += "*" + key + "*\n";
+        help += "  | - help " + key.toLowerCase() + "\n";
 
-      let actions = MessageStrategy.strategies[key].provides().provides;
-      let keys = Object.keys(actions);
-      for (let y = 0; y < keys.length; y++) {
-        if (actions[keys[y]].interactive) {
-          if (actions[keys[y]].access(message, MessageStrategy.strategies[key], actions[keys[y]].action)) {
-            help += "  | - " + keys[y] + "\n";
+        let actions = MessageStrategy.strategies[key].provides();
+        if(actions == undefined || actions == undefined) {
+          console.log(key + " undefined");
+        }
+        let provides = actions.provides;
+        if(provides == undefined || provides == undefined) {
+          console.log(key + " undefined");
+        }
+        
+        let keys = Object.keys(provides);
+        for (let y = 0; y < keys.length; y++) {
+          if (provides[keys[y]].interactive) {
+            if (provides[keys[y]].access(message, MessageStrategy.strategies[key], provides[keys[y]].action)) {
+              help += "  | - " + keys[y] + "\n";
+            }
           }
         }
-      }
 
-      help += "";
-      cnt += 1;
-      if (cnt % 6 == 0) {
-        MessageStrategy.client.sendText(message.from, help.trim());
-        help = "";
+        help += "";
+        cnt += 1;
+        if (cnt % 6 == 0) {
+          MessageStrategy.client.sendText(message.from, help.trim());
+          help = "";
+        }
+      } catch (err) {
+        console.log(err);
       }
     });
     if (help != "") {

@@ -51,24 +51,6 @@ class Amazon extends MessageStrategy {
 
   async Preview(message) {
     try {
-      var config = {
-        headers: {
-          'Accept': '*/*',
-          'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
-          'Access-Control-Request-Headers': 'content-type',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'Origin': 'https://google.com/',
-          'Pragma': 'no-cache',
-          'Referer': 'https://google.com/',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
-        }
-      };
-
-
       const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
       const page = await browser.newPage();
 
@@ -129,7 +111,7 @@ class Amazon extends MessageStrategy {
       }
       else {
         MessageStrategy.typing(message);
-        const responseImage = await axios(image_url, { responseType: 'arraybuffer', headers: config['headers'] });
+        const responseImage = await axios(image_url, { responseType: 'arraybuffer', headers: MessageStrategy.browser_config['headers'] });
         const image = await resizeImg(responseImage.data, { width: 200, format: "jpg" });
         const buffer64 = Buffer.from(image, 'binary').toString('base64');
         let data = "data:image/jpeg;base64," + buffer64;

@@ -17,3 +17,6 @@ local:
 
 clean:
 	- docker rm -f chuck
+
+test:
+	- npm run test

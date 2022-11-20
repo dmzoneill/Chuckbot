@@ -13,7 +13,7 @@ class ChuckBot {
   constructor() {
     fs.watch(ChuckBot.source_dir, (event, filename) => {
       if (filename == ChuckBot.message_strategy_file.substring(2) || filename == ChuckBot.web_file.substring(2)) {
-        if(ChuckBot.last_update.valueOf() == Date.now()) {
+        if (ChuckBot.last_update.valueOf() == Date.now()) {
           return;
         }
         ChuckBot.update_strategies();
@@ -32,7 +32,7 @@ class ChuckBot {
       hostNotificationLang: 'IE_EN',
       logConsole: true,
       logConsoleErrors: true,
-      popup: false,
+      popup: true,
       useChrome: true,
       qrTimeout: 0,
       logging: [
@@ -48,15 +48,57 @@ class ChuckBot {
     ChuckBot.update_strategies();
     ChuckBot.update_web();
 
+    let event_message = {
+      'id': 'chuck',
+      'from': 'chuck',
+      'sender': {
+        'id': 'chuck'
+      },
+      'isChuck': true,
+      'body': 'event',
+      'event_type': null,
+      'event': null
+    }
+
     client.onMessage(async message => {
-      ChuckBot.Strategies.doHandleMessage(ChuckBot.chuck, message);
+      ChuckBot.Strategies.doHandleMessage(message);
+    });
+
+    client.onGlobalParticipantsChanged(async event => {
+      let message = event_message;
+      message['event_type'] = 'onParticipantsChanged';
+      message['event'] = event;
+      ChuckBot.Strategies.doHandleMessage(message);
+    });
+
+    client.onAck(async event => {
+      let message = event_message;
+      message['event_type'] = 'onAck';
+      message['event'] = event;
+      ChuckBot.Strategies.doHandleMessage(message);
+    });
+
+    client.onAddedToGroup(async event => {
+      let message = event_message;
+      message['event_type'] = 'onAddedToGroup';
+      message['event'] = event;
+      console.log("on added");
+      ChuckBot.Strategies.doHandleMessage(message);
+    });
+
+    client.onMessageDeleted(async event => {
+      let message = event_message;
+      message['event_type'] = 'onMessageDeleted';
+      message['event'] = event;
+      ChuckBot.Strategies.doHandleMessage(message);
     });
   }
 
   static async update_strategies() {
     delete require.cache[require.resolve(ChuckBot.message_strategy_file)];
     ChuckBot.Strategies = require(ChuckBot.message_strategy_file);
-    ChuckBot.Strategies.getStrategies(ChuckBot.chuck);
+    ChuckBot.Strategies.client.client = ChuckBot.chuck;
+    ChuckBot.Strategies.update_strategies();
   }
 
   static async update_web() {

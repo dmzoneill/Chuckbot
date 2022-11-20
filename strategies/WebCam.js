@@ -79,8 +79,15 @@ class WebCam extends MessageStrategy {
       time = found[1];
     }
 
-    let cmd = "ffmpeg -y -f video4linux2 -s 1280x720 -pix_fmt yuyv422 -r 6 -t ";
-    cmd += time + " -i /dev/video0 " + sha1d + ".mp4";
+    // ffmpeg -video_size hd1080 -framerate 30 -i /dev/video0 -t 00:00:20 
+    // -acodec aac -vcodec libx265 -fps_mode vfr -crf 18  -vb 2M -r 30 record.mkv
+
+
+    let cmd = "ffmpeg -f pulse";
+    cmd += " -i alsa_input.usb-046d_C922_Pro_Stream_Webcam_F98F927F-02.analog-stereo";
+    cmd += " -ac 2 -f v4l2 -input_format mjpeg -video_size hd720";
+    cmd += " -framerate 60 -i /dev/video0 -t " + time + " -acodec aac";
+    cmd += " -vcodec libx265 -fps_mode vfr -crf 18 -vb 2M -r 30 " + sha1d + ".mp4";
 
     MessageStrategy.typing(message);
 
@@ -88,7 +95,7 @@ class WebCam extends MessageStrategy {
       if (fs.existsSync(sha1d + ".mp4")) {
         try {
           MessageStrategy.typing(message);
-          MessageStrategy.client.sendFile(message.from, sha1d + ".mp4", "cam", "Webcam home video");
+          MessageStrategy.client.sendFile(message.from, sha1d + ".mp4", new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + " webcam video", "Webcam home video");
           fs.unlinkSync(sha1d + ".mp4");
         } catch (err) {
           console.log(err);
