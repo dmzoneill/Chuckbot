@@ -2,7 +2,7 @@
 
 Hardest shit since sliced pan
 
-![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/logo.png?raw=true)
+![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/logo.png?raw=true)![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/chat.png?raw=true)
 
 ### Get setup
 ```
@@ -180,10 +180,85 @@ Wikipedia 
 | - wiki today  
 | - wiki x
 
+WorldCup 
+| - help worldcup 
+| - wc today  
+| - wc tomorrow 
+| - wc current 
+| - wc matches
+| - wc matches [a-h]
+| - wc matches [a-hA-Z.{4,15}]
+| - wc groups
+| - wc groups [a-h]
+
 Youtube  
 | - help youtube  
 | - youtube x
 
 ```
 
+Add your own module/strategy
 
+```
+# include base class
+const MessageStrategy = require("../MessageStrategy.js")
+
+
+class MyMod extends MessageStrategy {
+  static dummy = MessageStrategy.derived.add(this.name);
+  static self = null;
+
+  constructor() {
+    super('MyMod', {
+      'enabled': true
+    });
+  }
+
+  provides() {
+    MyMod.self = this;
+
+    return {
+      help: 'Manages MyMod',
+      provides: {
+        'Door': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'door';
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Info for your help entry';
+          },
+          action: MyMod.self.MyModFunc,
+          interactive: false,
+          enabled: function () {
+            return MessageStrategy.state['MyMod']['enabled'];
+          }
+        },
+        'as many of these as you need': {
+          .....
+        },
+        'as many of these as you need': {
+          .....
+        }
+      },
+      access: function (message, strategy) {
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+      },
+      enabled: function () {
+        return MessageStrategy.state['MyMod']['enabled'];
+      }
+    }
+  }
+
+  MyModFunc() {
+    return false;
+  }
+}
+
+module.exports = {
+  MessageStrategy: MyMod
+}
+
+```
