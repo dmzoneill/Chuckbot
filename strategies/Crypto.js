@@ -214,7 +214,11 @@ class Crypto extends MessageStrategy {
 
       MessageStrategy.typing(message);
 
-      await page.waitForXPath('/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[9]/div/div[2]')
+      const doItLate = await page.waitForXPath('/html/body/div[3]/div/div/div/div/button[2]');
+      await doItLate.click();
+
+      // await page.waitForXPath('/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[9]/div/div[2]')
+      await page.waitForXPath('//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div')
       let xpath = '//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]';
       await page.waitForXPath(xpath);
       // wait for the selector to load

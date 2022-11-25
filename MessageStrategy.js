@@ -330,6 +330,18 @@ class MessageStrategy {
     return "data:image/jpeg;base64," + buffer64;
   }
 
+  static async fs_get_image(path, img_width = 480) {
+    try {
+      let image = fs.readFileSync(path);
+      image = await resizeImg(image, { width: img_width, format: "jpg" });
+      const buffer64 = Buffer.from(image, 'binary').toString('base64');
+      return "data:image/jpeg;base64," + buffer64;
+    }
+    catch (err) {
+      console.log(err);
+    }
+  }
+
   handleEvent(message) {
     let sha1 = crypto.createHash('sha1').update(JSON.stringify(message)).digest('hex');
     if (MessageStrategy.last_event == null) {

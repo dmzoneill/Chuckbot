@@ -32,7 +32,7 @@ class ChuckBot {
       hostNotificationLang: 'IE_EN',
       logConsole: true,
       logConsoleErrors: true,
-      popup: true,
+      popup: false,
       useChrome: true,
       qrTimeout: 0,
       logging: [
