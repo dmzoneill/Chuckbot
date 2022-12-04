@@ -86,6 +86,8 @@ class Feature extends MessageStrategy {
   Enable(message) {
     let parts = message.body.split(" ");
     if (parts.length < 3) return;
+    console.log(parts[2]);
+    console.log(Object.keys(MessageStrategy.strategies));
     if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) return;
 
     MessageStrategy.typing(message);
@@ -96,6 +98,8 @@ class Feature extends MessageStrategy {
   Disable(message) {
     let parts = message.body.split(" ");
     if (parts.length < 3) return;
+    console.log(parts[2]);
+    console.log(Object.keys(MessageStrategy.strategies));
     if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) return;
 
     MessageStrategy.typing(message);

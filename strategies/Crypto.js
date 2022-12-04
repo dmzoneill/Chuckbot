@@ -198,17 +198,21 @@ class Crypto extends MessageStrategy {
       }
 
       let paths = {
-        "1d": "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[1]",
-        "7d": "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[2]",
-        "1m": "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[3]",
-        "3m": "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[4]",
-        "1y": "/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[5]"
+        "1d": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[1]',
+        "7d": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[2]',
+        "1m": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[3]',
+        "3m": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[4]',
+        "1y": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[5]'
       }
 
       if (period != "1d") {
+        console.log("Clicking time period");
+        await Crypto.self.waitFor(1500);
         const days = await page.waitForXPath(paths[period]);
         if (days) {
+          console.log("Clicked")
           await days.click();
+          await Crypto.self.waitFor(1500);
         }
       }
 

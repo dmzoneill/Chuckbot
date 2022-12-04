@@ -309,7 +309,7 @@ class Rbac extends MessageStrategy {
   role_person(message) {
     try {
       let person = message.body.split(" ")[1];
-      if(MessageStrategy.contacts.indexOf(person) == -1) {
+      if (MessageStrategy.contacts.indexOf(person + "@c.us") == -1) {
         MessageStrategy.client.reply(message.from, "No such person " + person, message.id, true);
         return;
       }
@@ -336,9 +336,19 @@ class Rbac extends MessageStrategy {
         return;
       }
 
-      if(MessageStrategy.contacts.indexOf(parts[3]) == -1) {
+      if (MessageStrategy.contacts.indexOf(parts[3] + "@c.us") == -1) {
         MessageStrategy.client.reply(message.from, "No such person " + parts[3], message.id, true);
         return;
+      }
+
+      let addkeys = Object.keys(MessageStrategy.state['Rbac']['roles']);
+      if (addkeys.indexOf(parts[3]) == -1) {
+        MessageStrategy.state['Rbac']['roles'][parts[3]] = [];
+      }
+
+      let removekeys = Object.keys(MessageStrategy.state['Rbac']['removed_roles']);
+      if (removekeys.indexOf(parts[3]) == -1) {
+        MessageStrategy.state['Rbac']['removed_roles'][parts[3]] = [];
       }
 
       if (MessageStrategy.state['Rbac']['roles'][parts[3]].includes(parts[2]) == false) {
@@ -379,9 +389,13 @@ class Rbac extends MessageStrategy {
         return;
       }
 
-      if(MessageStrategy.contacts.indexOf(parts[3]) == -1) {
+      if (MessageStrategy.contacts.indexOf(parts[3] + "@c.us") == -1) {
         MessageStrategy.client.reply(message.from, "No such person " + parts[3], message.id, true);
         return;
+      }
+
+      if (Object.keys(MessageStrategy.state['Rbac']['roles']).indexOf(parts[3]) == -1) {
+        MessageStrategy.state['Rbac']['roles'][parts[3]] = [];
       }
 
       if (MessageStrategy.state['Rbac']['roles'][parts[3]].includes(parts[2])) {
@@ -407,7 +421,7 @@ class Rbac extends MessageStrategy {
       if (MessageStrategy.state['Rbac']['restricted_roles'].indexOf(parts[2]) > -1) {
         const index = MessageStrategy.state['Rbac']['restricted_roles'].indexOf(parts[2]);
         if (index > -1) {
-          MessageStrategy.state['Rbac']['rolerestricted_roless'].splice(index, 1);
+          MessageStrategy.state['Rbac']['restricted_roles'].splice(index, 1);
           Rbac.self.restricted_role_list(message);
         }
       }

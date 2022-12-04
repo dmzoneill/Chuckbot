@@ -9,274 +9,7 @@ class WorldCup extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name);
   static self = null;
   static endpoint = "http://api.cup2022.ir/api/v1";
-  static token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzdmMjNkOGY5YzMyYjNmNjM2NjQ3MDQiLCJpYXQiOjE2NjkzNzk3MDYsImV4cCI6MTY2OTQ2NjEwNn0.Pq4IeSzzSmPcofOyqDAW3N660Zg1E-BnFciWjbNNS0s";
-  static flags = {
-    "AscensionIsland": "🇦🇨",
-    "Andorra": "🇦🇩",
-    "UnitedArabEmirates": "🇦🇪",
-    "Afghanistan": "🇦🇫",
-    "Antigua&Barbuda": "🇦🇬",
-    "Anguilla": "🇦🇮",
-    "Albania": "🇦🇱",
-    "Armenia": "🇦🇲",
-    "Angola": "🇦🇴",
-    "Antarctica": "🇦🇶",
-    "Argentina": "🇦🇷",
-    "AmericanSamoa": "🇦🇸",
-    "Austria": "🇦🇹",
-    "Australia": "🇦🇺",
-    "Aruba": "🇦🇼",
-    "ÅlandIslands": "🇦🇽",
-    "Azerbaijan": "🇦🇿",
-    "Bosnia&Herzegovina": "🇧🇦",
-    "Barbados": "🇧🇧",
-    "Bangladesh": "🇧🇩",
-    "Belgium": "🇧🇪",
-    "BurkinaFaso": "🇧🇫",
-    "Bulgaria": "🇧🇬",
-    "Bahrain": "🇧🇭",
-    "Burundi": "🇧🇮",
-    "Benin": "🇧🇯",
-    "St.Barthélemy": "🇧🇱",
-    "Bermuda": "🇧🇲",
-    "Brunei": "🇧🇳",
-    "Bolivia": "🇧🇴",
-    "CaribbeanNetherlands": "🇧🇶",
-    "Brazil": "🇧🇷",
-    "Bahamas": "🇧🇸",
-    "Bhutan": "🇧🇹",
-    "BouvetIsland": "🇧🇻",
-    "Botswana": "🇧🇼",
-    "Belarus": "🇧🇾",
-    "Belize": "🇧🇿",
-    "Canada": "🇨🇦",
-    "Cocos(Keeling)Islands": "🇨🇨",
-    "Congo-Kinshasa": "🇨🇩",
-    "CentralAfricanRepublic": "🇨🇫",
-    "Congo-Brazzaville": "🇨🇬",
-    "Switzerland": "🇨🇭",
-    "Côted’Ivoire": "🇨🇮",
-    "CookIslands": "🇨🇰",
-    "Chile": "🇨🇱",
-    "Cameroon": "🇨🇲",
-    "China": "🇨🇳",
-    "Colombia": "🇨🇴",
-    "ClippertonIsland": "🇨🇵",
-    "Costa Rica": "🇨🇷",
-    "Cuba": "🇨🇺",
-    "CapeVerde": "🇨🇻",
-    "Curaçao": "🇨🇼",
-    "ChristmasIsland": "🇨🇽",
-    "Cyprus": "🇨🇾",
-    "Czechia": "🇨🇿",
-    "Germany": "🇩🇪",
-    "DiegoGarcia": "🇩🇬",
-    "Djibouti": "🇩🇯",
-    "Denmark": "🇩🇰",
-    "Dominica": "🇩🇲",
-    "DominicanRepublic": "🇩🇴",
-    "Algeria": "🇩🇿",
-    "Ceuta&Melilla": "🇪🇦",
-    "Ecuador": "🇪🇨",
-    "Estonia": "🇪🇪",
-    "Egypt": "🇪🇬",
-    "WesternSahara": "🇪🇭",
-    "Eritrea": "🇪🇷",
-    "Spain": "🇪🇸",
-    "Ethiopia": "🇪🇹",
-    "EuropeanUnion": "🇪🇺",
-    "Finland": "🇫🇮",
-    "Fiji": "🇫🇯",
-    "FalklandIslands": "🇫🇰",
-    "Micronesia": "🇫🇲",
-    "FaroeIslands": "🇫🇴",
-    "France": "🇫🇷",
-    "Gabon": "🇬🇦",
-    "UnitedKingdom": "🇬🇧",
-    "Grenada": "🇬🇩",
-    "Georgia": "🇬🇪",
-    "FrenchGuiana": "🇬🇫",
-    "Guernsey": "🇬🇬",
-    "Ghana": "🇬🇭",
-    "Gibraltar": "🇬🇮",
-    "Greenland": "🇬🇱",
-    "Gambia": "🇬🇲",
-    "Guinea": "🇬🇳",
-    "Guadeloupe": "🇬🇵",
-    "EquatorialGuinea": "🇬🇶",
-    "Greece": "🇬🇷",
-    "SouthGeorgia&": "🇬🇸",
-    "Guatemala": "🇬🇹",
-    "Guam": "🇬🇺",
-    "Guinea-Bissau": "🇬🇼",
-    "Guyana": "🇬🇾",
-    "HongKongSAR": "🇭🇰",
-    "Heard&McDonald": "🇭🇲",
-    "Honduras": "🇭🇳",
-    "Croatia": "🇭🇷",
-    "Haiti": "🇭🇹",
-    "Hungary": "🇭🇺",
-    "CanaryIslands": "🇮🇨",
-    "Indonesia": "🇮🇩",
-    "Ireland": "🇮🇪",
-    "Israel": "🇮🇱",
-    "IsleofMan": "🇮🇲",
-    "India": "🇮🇳",
-    "BritishIndianOcean": "🇮🇴",
-    "Iraq": "🇮🇶",
-    "Iran": "🇮🇷",
-    "Iceland": "🇮🇸",
-    "Italy": "🇮🇹",
-    "Jersey": "🇯🇪",
-    "Jamaica": "🇯🇲",
-    "Jordan": "🇯🇴",
-    "Japan": "🇯🇵",
-    "Kenya": "🇰🇪",
-    "Kyrgyzstan": "🇰🇬",
-    "Cambodia": "🇰🇭",
-    "Kiribati": "🇰🇮",
-    "Comoros": "🇰🇲",
-    "St.Kitts&": "🇰🇳",
-    "NorthKorea": "🇰🇵",
-    "Korea Republic": "🇰🇷",
-    "South Korea": "🇰🇷",
-    "Kuwait": "🇰🇼",
-    "CaymanIslands": "🇰🇾",
-    "Kazakhstan": "🇰🇿",
-    "Laos": "🇱🇦",
-    "Lebanon": "🇱🇧",
-    "St.Lucia": "🇱🇨",
-    "Liechtenstein": "🇱🇮",
-    "SriLanka": "🇱🇰",
-    "Liberia": "🇱🇷",
-    "Lesotho": "🇱🇸",
-    "Lithuania": "🇱🇹",
-    "Luxembourg": "🇱🇺",
-    "Latvia": "🇱🇻",
-    "Libya": "🇱🇾",
-    "Morocco": "🇲🇦",
-    "Monaco": "🇲🇨",
-    "Moldova": "🇲🇩",
-    "Montenegro": "🇲🇪",
-    "St.Martin": "🇲🇫",
-    "Madagascar": "🇲🇬",
-    "MarshallIslands": "🇲🇭",
-    "NorthMacedonia": "🇲🇰",
-    "Mali": "🇲🇱",
-    "Myanmar(Burma)": "🇲🇲",
-    "Mongolia": "🇲🇳",
-    "MacaoSarChina": "🇲🇴",
-    "NorthernMarianaIslands": "🇲🇵",
-    "Martinique": "🇲🇶",
-    "Mauritania": "🇲🇷",
-    "Montserrat": "🇲🇸",
-    "Malta": "🇲🇹",
-    "Mauritius": "🇲🇺",
-    "Maldives": "🇲🇻",
-    "Malawi": "🇲🇼",
-    "Mexico": "🇲🇽",
-    "Malaysia": "🇲🇾",
-    "Mozambique": "🇲🇿",
-    "Namibia": "🇳🇦",
-    "NewCaledonia": "🇳🇨",
-    "Niger": "🇳🇪",
-    "NorfolkIsland": "🇳🇫",
-    "Nigeria": "🇳🇬",
-    "Nicaragua": "🇳🇮",
-    "Netherlands": "🇳🇱",
-    "Nederlands": "🇳🇱",
-    "Norway": "🇳🇴",
-    "Nepal": "🇳🇵",
-    "Nauru": "🇳🇷",
-    "Niue": "🇳🇺",
-    "NewZealand": "🇳🇿",
-    "Oman": "🇴🇲",
-    "Panama": "🇵🇦",
-    "Peru": "🇵🇪",
-    "FrenchPolynesia": "🇵🇫",
-    "PapuaNewGuinea": "🇵🇬",
-    "Philippines": "🇵🇭",
-    "Pakistan": "🇵🇰",
-    "Poland": "🇵🇱",
-    "St.Pierre&": "🇵🇲",
-    "PitcairnIslands": "🇵🇳",
-    "PuertoRico": "🇵🇷",
-    "PalestinianTerritories": "🇵🇸",
-    "Portugal": "🇵🇹",
-    "Palau": "🇵🇼",
-    "Paraguay": "🇵🇾",
-    "Qatar": "🇶🇦",
-    "Réunion": "🇷🇪",
-    "Romania": "🇷🇴",
-    "Serbia": "🇷🇸",
-    "Russia": "🇷🇺",
-    "Rwanda": "🇷🇼",
-    "Saudi Arabia": "🇸🇦",
-    "SolomonIslands": "🇸🇧",
-    "Seychelles": "🇸🇨",
-    "Sudan": "🇸🇩",
-    "Sweden": "🇸🇪",
-    "Singapore": "🇸🇬",
-    "St.Helena": "🇸🇭",
-    "Slovenia": "🇸🇮",
-    "Svalbard&Jan": "🇸🇯",
-    "Slovakia": "🇸🇰",
-    "SierraLeone": "🇸🇱",
-    "SanMarino": "🇸🇲",
-    "Senegal": "🇸🇳",
-    "Somalia": "🇸🇴",
-    "Suriname": "🇸🇷",
-    "SouthSudan": "🇸🇸",
-    "SãoTomé&": "🇸🇹",
-    "ElSalvador": "🇸🇻",
-    "SintMaarten": "🇸🇽",
-    "Syria": "🇸🇾",
-    "Eswatini": "🇸🇿",
-    "TristanDaCunha": "🇹🇦",
-    "Turks&Caicos": "🇹🇨",
-    "Chad": "🇹🇩",
-    "FrenchSouthernTerritories": "🇹🇫",
-    "Togo": "🇹🇬",
-    "Thailand": "🇹🇭",
-    "Tajikistan": "🇹🇯",
-    "Tokelau": "🇹🇰",
-    "Timor-Leste": "🇹🇱",
-    "Turkmenistan": "🇹🇲",
-    "Tunisia": "🇹🇳",
-    "Tonga": "🇹🇴",
-    "Turkey": "🇹🇷",
-    "Trinidad&Tobago": "🇹🇹",
-    "Tuvalu": "🇹🇻",
-    "Taiwan": "🇹🇼",
-    "Tanzania": "🇹🇿",
-    "Ukraine": "🇺🇦",
-    "Uganda": "🇺🇬",
-    "U.S.OutlyingIslands": "🇺🇲",
-    "UnitedNations": "🇺🇳",
-    "United States": "🇺🇸",
-    "Uruguay": "🇺🇾",
-    "Uzbekistan": "🇺🇿",
-    "VaticanCity": "🇻🇦",
-    "St.Vincent&": "🇻🇨",
-    "Venezuela": "🇻🇪",
-    "BritishVirginIslands": "🇻🇬",
-    "U.S.VirginIslands": "🇻🇮",
-    "Vietnam": "🇻🇳",
-    "Vanuatu": "🇻🇺",
-    "Wallis&Futuna": "🇼🇫",
-    "Samoa": "🇼🇸",
-    "Kosovo": "🇽🇰",
-    "Yemen": "🇾🇪",
-    "Mayotte": "🇾🇹",
-    "SouthAfrica": "🇿🇦",
-    "Zambia": "🇿🇲",
-    "Zimbabwe": "🇿🇼",
-    "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-    "Scotland": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-    "Wales": "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
-    "forTexas(US-TX)": "🏴󠁵󠁳󠁴󠁸󠁿"
-  }
-
+  static token = "";
   static country_codes = {};
   static countries = {};
   static group_mapping = {};
@@ -285,12 +18,15 @@ class WorldCup extends MessageStrategy {
   static json_teams = {};
   static json_groups = {};
   static json_matches = {};
+  static headers = {};
 
 
   constructor() {
     super('WorldCup', {
       'enabled': true
     });
+
+    WorldCup.Login({ from: '', sender: { id: '' } });
   }
 
   provides() {
@@ -301,7 +37,7 @@ class WorldCup extends MessageStrategy {
       provides: {
         'wc update': {
           test: function (message) {
-            return true;
+            return message.body.toLowerCase() === 'wc update';
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
@@ -476,6 +212,40 @@ class WorldCup extends MessageStrategy {
     return false;
   }
 
+  static async Login(message) {
+    try {
+      let file_data = JSON.parse(fs.readFileSync('strategies/config/worldcup.json', 'utf8'));
+
+      let page = await MessageStrategy.axiosHttpRequest(
+        message,
+        "POST",
+        WorldCup.endpoint + "/user/login",
+        {
+          'Content-Type': 'application/json'
+        },
+        200,
+        true,
+        "data",
+        true,
+        file_data
+      );
+
+      if (page == undefined) {
+        console.log("Unable to obtain token");
+        return;
+      }
+
+      WorldCup.token = page['token'];
+      WorldCup.headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + WorldCup.token
+      }
+      await WorldCup.Update(message);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   static async getGroup(letter) {
     for (let y = 0; y < WorldCup.json_groups.length; y++) {
       if (WorldCup.json_groups[y].group == letter.toUpperCase()) {
@@ -500,25 +270,19 @@ class WorldCup extends MessageStrategy {
     return false;
   }
 
-  static async apiRequest(url) {
-    try {
-      let page = request('GET', url, {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ' + WorldCup.token
-        }
-      });
-      let data = page.getBody('utf8');
-      return JSON.parse(data)['data'];
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   static async updateMatches(message) {
     try {
+      console.log("Update matches");
       MessageStrategy.typing(message);
-      WorldCup.json_matches = await WorldCup.apiRequest(WorldCup.endpoint + "/match");
+      WorldCup.json_matches = await MessageStrategy.axiosHttpRequest(
+        message,
+        "GET",
+        WorldCup.endpoint + "/match",
+        WorldCup.headers,
+        200,
+        true, "data",
+        true
+      );
       console.log(WorldCup.json_matches);
       WorldCup.updateGroups();
     }
@@ -529,8 +293,23 @@ class WorldCup extends MessageStrategy {
 
   static async updateGroups(message) {
     try {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendText(message.from, "API down, check back later");
+        WorldCup.Login(message);
+        return;
+      }
+      console.log("Update groups");
       MessageStrategy.typing(message);
-      WorldCup.json_groups = await WorldCup.apiRequest(WorldCup.endpoint + "/standings");
+      WorldCup.json_groups = await MessageStrategy.axiosHttpRequest(
+        message,
+        "GET",
+        WorldCup.endpoint + "/standings",
+        WorldCup.headers,
+        200,
+        true, "data",
+        true
+      );
       console.log(WorldCup.json_groups);
       WorldCup.updateTeams();
     }
@@ -541,9 +320,30 @@ class WorldCup extends MessageStrategy {
 
   static async updateTeams(message) {
     try {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendText(message.from, "API down, check back later");
+        WorldCup.Login(message);
+        return;
+      }
+      console.log("Update teams");
       MessageStrategy.typing(message);
-      WorldCup.json_teams = await WorldCup.apiRequest(WorldCup.endpoint + "/team");
+      WorldCup.json_teams = await MessageStrategy.axiosHttpRequest(
+        message,
+        'GET',
+        WorldCup.endpoint + "/team",
+        WorldCup.headers,
+        200,
+        true, "data",
+        true
+      )
       console.log(WorldCup.json_teams);
+
+      if (WorldCup.json_teams == undefined) {
+        console.log("Empty teams");
+        return;
+      }
+
       for (let y = 0; y < WorldCup.json_teams.length; y++) {
         WorldCup.country_codes[WorldCup.json_teams[y]['fifa_code']] = WorldCup.json_teams[y]['name_en'];
         WorldCup.countries[WorldCup.json_teams[y]['name_en']] = WorldCup.json_teams[y]['fifa_code'];
@@ -557,7 +357,20 @@ class WorldCup extends MessageStrategy {
 
   static async parseTeamGroups(message) {
     try {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendText(message.from, "API down, check back later");
+        WorldCup.Login(message);
+        return;
+      }
+      console.log("Parse groups");
       MessageStrategy.typing(message);
+
+      if (WorldCup.json_groups.length == undefined) {
+        console.log("Empty groups");
+        return;
+      }
+
       for (let y = 0; y < WorldCup.json_groups.length; y++) {
         for (let x = 0; x < WorldCup.json_groups[y]['teams'].length; x++) {
           let letter = WorldCup.json_groups[y]['group'];
@@ -576,6 +389,12 @@ class WorldCup extends MessageStrategy {
 
   static async Top(message) {
     try {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendText(message.from, "API down, check back later");
+        WorldCup.Login(message);
+        return;
+      }
       await WorldCup.Update(message);
 
       let limit = 10;
@@ -589,6 +408,11 @@ class WorldCup extends MessageStrategy {
       let top_players = {};
       let top_countries = {};
       let top_country_mapping = {};
+
+      if (WorldCup.json_groups == undefined) {
+        console.log("Empty matches");
+        return;
+      }
 
       for (let y = 0; y < WorldCup.json_matches.length; y++) {
         let match = WorldCup.json_matches[y];
@@ -621,7 +445,7 @@ class WorldCup extends MessageStrategy {
         }
 
         for (let y = 0; y < home_scorers.length; y++) {
-          top_country_mapping[home_scorers[y].trim()] = WorldCup.flags[match['home_team_en'].trim()];
+          top_country_mapping[home_scorers[y].trim()] = MessageStrategy.flags[match['home_team_en'].trim()];
 
           if (Object.keys(top_players).indexOf(home_scorers[y]) > -1) {
             top_players[home_scorers[y].trim()] += 1
@@ -637,7 +461,7 @@ class WorldCup extends MessageStrategy {
         }
 
         for (let y = 0; y < away_scorers.length; y++) {
-          top_country_mapping[away_scorers[y].trim()] = WorldCup.flags[match['away_team_en'].trim()];
+          top_country_mapping[away_scorers[y].trim()] = MessageStrategy.flags[match['away_team_en'].trim()];
 
           if (Object.keys(top_players).indexOf(away_scorers[y]) > -1) {
             top_players[away_scorers[y].trim()] += 1
@@ -667,7 +491,8 @@ class WorldCup extends MessageStrategy {
       MessageStrategy.client.sendText(message.from, "Top scorers (player)");
 
       for (let u = 0; u < limit; u++) {
-        msg += top_country_mapping[sortable_players[u][0]] + " " + sortable_players[u][0] + ' '.repeat(20 - sortable_players[u][0].length) + " " + sortable_players[u][1] + "\n";
+        let rpeat = 25 - sortable_players[u][0].length > 0 ? 25 - sortable_players[u][0].length : 0;
+        msg += top_country_mapping[sortable_players[u][0]] + " " + sortable_players[u][0] + ' '.repeat(rpeat) + " " + sortable_players[u][1] + "\n";
 
         if (u % 10 == 9) {
           MessageStrategy.typing(message);
@@ -693,7 +518,8 @@ class WorldCup extends MessageStrategy {
       MessageStrategy.client.sendText(message.from, "Top scorers (country)");
 
       for (let u = 0; u < limit; u++) {
-        msg += WorldCup.flags[sortable_countries[u][0]] + " " + sortable_countries[u][0] + ' '.repeat(20 - sortable_countries[u][0].length) + " " + sortable_countries[u][1] + "\n";
+        let rpeat = 25 - sortable_countries[u][0].length > 0 ? 25 - sortable_countries[u][0].length : 0;
+        msg += MessageStrategy.flags[sortable_countries[u][0]] + " " + sortable_countries[u][0] + ' '.repeat(rpeat) + " " + sortable_countries[u][1] + "\n";
 
         if (u % 10 == 9) {
           MessageStrategy.typing(message);
@@ -714,6 +540,12 @@ class WorldCup extends MessageStrategy {
 
   static async ShowMatches(message, letter = null, today = false, tomorrow = false, current = false) {
     try {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendText(message.from, "API down, check back later");
+        WorldCup.Login(message);
+        return;
+      }
       console.log("Show Matches");
 
       let lastDate = null;
@@ -721,6 +553,11 @@ class WorldCup extends MessageStrategy {
       let appended = 0;
 
       await WorldCup.Update(message);
+
+      if (WorldCup.json_matches == undefined) {
+        console.log("Empty matches");
+        return;
+      }
 
       console.log("Matches: " + WorldCup.json_matches.length.toString());
 
@@ -804,7 +641,7 @@ class WorldCup extends MessageStrategy {
           lastDate = dateString;
         }
 
-        if (m.getFullYear() <= d.getFullYear() && m.getMonth() <= d.getMonth() && m.getDate() < d.getDate() && d.getHours() <= m.getHours() + 2) {
+        if (m.getFullYear() <= d.getFullYear() && m.getMonth() <= d.getMonth() && m.getDate() < d.getDate()) {
           console.log("Previous days scores");
           home_goals = match['home_score'] == null ? "0" : match['home_score'];
           home_goals = " (" + home_goals + ")";
@@ -822,10 +659,17 @@ class WorldCup extends MessageStrategy {
           }
         }
 
-        let left_space = 7 - (home + home_goals).length;
+        home = home == "--" ? "TBC" : home;
+        away = away == "--" ? "TBC" : away;
+
+        let left_space = away == "TBC" ? 10 : 7;
+        left_space = left_space - (home + home_goals).length;
         left_space = left_space <= 0 ? "" : " ".repeat(left_space);
-        let l_flag = WorldCup.flags[match['home_team_en']];
-        let r_flag = WorldCup.flags[match['away_team_en']];
+        let l_flag = MessageStrategy.flags[match['home_team_en']];
+        let r_flag = MessageStrategy.flags[match['away_team_en']];
+
+        l_flag = l_flag == undefined ? "" : l_flag;
+        r_flag = r_flag == undefined ? "" : r_flag;
         let theLine = left_space + home + " " + l_flag + home_goals + " · " + away_goals + " " + r_flag + " " + away;
 
         let scorerLines = "";
@@ -834,7 +678,7 @@ class WorldCup extends MessageStrategy {
             let l_scorers = match['home_scorers'][0].split(',');
             scorerLines += " ".repeat(11) + l_flag + "\n";
             for (let t = 0; t < l_scorers.length; t++) {
-              left_space = 18 - l_scorers[t].length;
+              left_space = 18 - l_scorers[t].length > 0 ? 18 - l_scorers[t].length : 0;
               scorerLines += " ".repeat(left_space) + l_scorers[t] + "\n";
             }
           }
@@ -843,7 +687,7 @@ class WorldCup extends MessageStrategy {
             let r_scorers = match['away_scorers'][0].split(',');
             scorerLines += " ".repeat(11) + r_flag + "\n";
             for (let t = 0; t < r_scorers.length; t++) {
-              left_space = 18 - r_scorers[t].length;
+              left_space = 18 - r_scorers[t].length > 0 ? 18 - r_scorers[t].length : 0;
               scorerLines += " ".repeat(left_space) + r_scorers[t] + "\n";
             }
           }
@@ -902,6 +746,12 @@ class WorldCup extends MessageStrategy {
 
   static async ShowGroup(message, letter) {
     try {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+        MessageStrategy.typing(message);
+        MessageStrategy.client.sendText(message.from, "API down, check back later");
+        WorldCup.Login(message);
+        return;
+      }
       await WorldCup.Update(message);
 
       let group_header = "Group " + letter + "\n";
@@ -930,7 +780,7 @@ class WorldCup extends MessageStrategy {
 
         let line = "";
         line += short_name + " ";
-        line += WorldCup.flags[name];
+        line += MessageStrategy.flags[name];
         line += ' '.repeat(padding);
         padding = 2 - thegroup['mp'].toString().length;
         line += thegroup['mp'] + ' '.repeat(padding);

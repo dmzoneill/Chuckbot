@@ -72,33 +72,40 @@ class Help extends MessageStrategy {
     MessageStrategy.typing(message);
     let help = "";
     let cnt = 0;
+
+    if (message.from.indexOf("@c.us") == -1) {
+      MessageStrategy.client.reply(message.from, "Messaging you directly, check your messages", message.id, true);
+    }
+
     Object.keys(MessageStrategy.strategies).sort().forEach(key => {
       try {
         help += "*" + key + "*\n";
         help += "  | - help " + key.toLowerCase() + "\n";
 
         let actions = MessageStrategy.strategies[key].provides();
-        if(actions == undefined || actions == undefined) {
+        if (actions == undefined || actions == undefined) {
           console.log(key + " undefined");
         }
         let provides = actions.provides;
-        if(provides == undefined || provides == undefined) {
+        if (provides == undefined || provides == undefined) {
           console.log(key + " undefined");
         }
-        
+
         let keys = Object.keys(provides);
         for (let y = 0; y < keys.length; y++) {
           if (provides[keys[y]].interactive) {
-            if (provides[keys[y]].access(message, MessageStrategy.strategies[key], provides[keys[y]].action)) {
-              help += "  | - " + keys[y] + "\n";
-            }
+            // if (provides[keys[y]].access(message, MessageStrategy.strategies[key], provides[keys[y]].action)) {
+            //   help += "  | - " + keys[y] + "\n";
+            // }
+
+            help += "  | - " + keys[y] + "\n";
           }
         }
 
         help += "";
         cnt += 1;
         if (cnt % 6 == 0) {
-          MessageStrategy.client.sendText(message.from, help.trim());
+          MessageStrategy.client.sendText(message.sender.id, help.trim());
           help = "";
         }
       } catch (err) {
@@ -106,7 +113,7 @@ class Help extends MessageStrategy {
       }
     });
     if (help != "") {
-      MessageStrategy.client.sendText(message.from, help.trim());
+      MessageStrategy.client.sendText(message.sender.id, help.trim());
     }
     return true;
   }
@@ -115,6 +122,10 @@ class Help extends MessageStrategy {
     MessageStrategy.typing(message);
     let parts = message.body.split(" ");
     let feature = parts[1].toLowerCase();
+
+    if (message.from.indexOf("@c.us") == -1) {
+      MessageStrategy.client.reply(message.from, "Messaging you directly, check your messages", message.id, true);
+    }
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
       if (key.toLowerCase() == feature) {
@@ -130,7 +141,7 @@ class Help extends MessageStrategy {
           }
         }
 
-        MessageStrategy.client.sendText(message.from, full_help);
+        MessageStrategy.client.sendText(message.sender.id, full_help);
       }
     });
   }

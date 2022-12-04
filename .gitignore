@@ -1,4 +1,3 @@
-**/media/**
 **/sample/**
 **/node_modules/**
 **/_IGNORE_COVID_HELPER/**
@@ -9,4 +8,8 @@
 **.data.json
 **.node-persist**
 **_IGNORE_**
+**/strategies/http_cache_folder/**
+**/strategies/media/**
+**/strategies/config/**
+
 # end managed by open-wa

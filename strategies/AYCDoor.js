@@ -20,18 +20,18 @@ class AYCDoor extends MessageStrategy {
     return {
       help: 'Manages AYC Door',
       provides: {
-        'Door': {
+        'ayc open door': {
           test: function (message) {
-            return message.body.toLowerCase() === 'door';
+            return message.body.toLowerCase() === 'ayc open door';
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
           },
           help: function () {
-            return 'To do';
+            return 'Open the door';
           },
-          action: AYCDoor.self.AYCDoor,
-          interactive: false,
+          action: AYCDoor.self.OpenDoor,
+          interactive: true,
           enabled: function () {
             return MessageStrategy.state['AYCDoor']['enabled'];
           }
@@ -47,8 +47,19 @@ class AYCDoor extends MessageStrategy {
   }
 
   AYCDoor() {
-    return false;
+    return false    
   }
+
+  OpenDoor(message) {
+    try {
+      console.log("Opening door")
+      let result = request('GET', "http://192.168.0.30:9101/door/index.php?opendoor=true", {});
+      MessageStrategy.typing(message);
+      MessageStrategy.client.sendText(message.from, result.getBody());
+    } catch (err) {
+      console.log(err);
+    }
+  };
 }
 
 
