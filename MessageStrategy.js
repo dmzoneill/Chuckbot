@@ -56,6 +56,7 @@ class MessageStrategy {
     }
   };
   static flags = {
+    "World": "🌎",
     "Ascension Island": "🇦🇨",
     "Andorra": "🇦🇩",
     "United Arab Emirates": "🇦🇪",

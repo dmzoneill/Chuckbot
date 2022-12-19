@@ -1,3 +1,4 @@
+const { filter } = require("domutils");
 const { contact_update_counter } = require("../MessageStrategy.js");
 const MessageStrategy = require("../MessageStrategy.js");
 
@@ -19,6 +20,9 @@ class WorldCup extends MessageStrategy {
   static json_groups = {};
   static json_matches = {};
   static headers = {};
+  static l16Order = [];
+  static qOrder = [];
+  static sOrder = [];
 
 
   constructor() {
@@ -193,6 +197,70 @@ class WorldCup extends MessageStrategy {
             return 'Shows top';
           },
           action: WorldCup.Top,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['WorldCup']['enabled'];
+          }
+        },
+        'wc 16': {
+          test: function (message) {
+            return message.body.toLowerCase().match(/^wc 16$/i);
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Show last 16';
+          },
+          action: WorldCup.Last16,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['WorldCup']['enabled'];
+          }
+        },
+        'wc 8': {
+          test: function (message) {
+            return message.body.toLowerCase().match(/^wc 8$/i);
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Show quarters';
+          },
+          action: WorldCup.Quarters,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['WorldCup']['enabled'];
+          }
+        },
+        'wc 4': {
+          test: function (message) {
+            return message.body.toLowerCase().match(/^wc 4?$/i);
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Shows semis';
+          },
+          action: WorldCup.Semis,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state['WorldCup']['enabled'];
+          }
+        },
+        'wc 2': {
+          test: function (message) {
+            return message.body.toLowerCase().match(/^wc 2?$/i);
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+          },
+          help: function () {
+            return 'Show final';
+          },
+          action: WorldCup.Final,
           interactive: true,
           enabled: function () {
             return MessageStrategy.state['WorldCup']['enabled'];
@@ -444,8 +512,54 @@ class WorldCup extends MessageStrategy {
           }
         }
 
+        let append_home = []
+
+        for (let y = 0; y < home_scorers.length; y++) {
+          if (home_scorers[y].indexOf("(") > -1) {
+            let split = home_scorers[y].split("(");
+            let player = split[0].trim();
+            let amount = split[1].split(")")[0].trim();
+            if (player == "Penalties") {
+              continue;
+            }
+            else {
+              for (let l = 0; l < amount; l++) {
+                console.log(player);
+                append_home.push(player);
+              }
+            }
+          }
+        }
+
+        home_scorers.concat(append_home);
+
+        let append_away = []
+
+        for (let y = 0; y < away_scorers.length; y++) {
+          if (away_scorers[y].indexOf("(") > -1) {
+            let split = away_scorers[y].split("(");
+            let player = split[0].trim();
+            let amount = split[1].split(")")[0].trim();
+            if (player == "Penalties") {
+              continue;
+            }
+            else {
+              for (let l = 0; l < amount; l++) {
+                console.log(player);
+                append_away.push(player);
+              }
+            }
+          }
+        }
+
+        away_scorers.concat(append_away);
+
         for (let y = 0; y < home_scorers.length; y++) {
           top_country_mapping[home_scorers[y].trim()] = MessageStrategy.flags[match['home_team_en'].trim()];
+
+          if (home_scorers[y].indexOf("Penalties") > -1) {
+            continue;
+          }
 
           if (Object.keys(top_players).indexOf(home_scorers[y]) > -1) {
             top_players[home_scorers[y].trim()] += 1
@@ -462,6 +576,10 @@ class WorldCup extends MessageStrategy {
 
         for (let y = 0; y < away_scorers.length; y++) {
           top_country_mapping[away_scorers[y].trim()] = MessageStrategy.flags[match['away_team_en'].trim()];
+
+          if (away_scorers[y].indexOf("Penalties") > -1) {
+            continue;
+          }
 
           if (Object.keys(top_players).indexOf(away_scorers[y]) > -1) {
             top_players[away_scorers[y].trim()] += 1
@@ -641,21 +759,44 @@ class WorldCup extends MessageStrategy {
           lastDate = dateString;
         }
 
+        let fullscore_home = 0;
+        let fullscore_away = 0;
+
+        if (match['home_scorers'][0] != "null") {
+          if (match['home_scorers'][0].indexOf("Penalties(") > -1) {
+            console.log("xxxxxxxxxxxxxxxxxxxxxxxxx");
+            console.log(match['home_scorers'][0]);
+            let penos = match['home_scorers'][0].split("Penalties(");
+            penos = penos[1].split(")");
+            fullscore_home = parseInt(penos[0]);
+          }
+        }
+
+        if (match['away_scorers'][0] != "null") {
+          if (match['away_scorers'][0].indexOf("Penalties(") > -1) {
+            console.log("ddddddddddddddddddddddddddddddddd");
+            console.log(match['away_scorers'][0]);
+            let penos = match['away_scorers'][0].split("Penalties(");
+            penos = penos[1].split(")");
+            fullscore_away = parseInt(penos[0]);
+          }
+        }
+
         if (m.getFullYear() <= d.getFullYear() && m.getMonth() <= d.getMonth() && m.getDate() < d.getDate()) {
           console.log("Previous days scores");
-          home_goals = match['home_score'] == null ? "0" : match['home_score'];
-          home_goals = " (" + home_goals + ")";
-          away_goals = match['away_score'] == null ? "0" : match['away_score'];
-          away_goals = "(" + away_goals + ")";
+          home_goals = parseInt(match['home_score'] == null ? "0" : match['home_score']) + fullscore_home;
+          home_goals = " (" + home_goals.toString() + ")";
+          away_goals = parseInt(match['away_score'] == null ? "0" : match['away_score']) + fullscore_away;
+          away_goals = "(" + away_goals.toString() + ")";
         }
 
         if (m.getFullYear() == d.getFullYear() && m.getMonth() == d.getMonth() && m.getDate() == d.getDate() && d.getHours() >= m.getHours()) {
           console.log("Today goals scored");
           if (!tomorrow) {
-            home_goals = match['home_score'] == null ? "0" : match['home_score'];
-            home_goals = " (" + home_goals + ")";
-            away_goals = match['away_score'] == null ? "0" : match['away_score'];
-            away_goals = "(" + away_goals + ")";
+            home_goals = parseInt(match['home_score'] == null ? "0" : match['home_score']) + fullscore_home;
+            home_goals = " (" + home_goals.toString() + ")";
+            away_goals = parseInt(match['away_score'] == null ? "0" : match['away_score']) + fullscore_away;
+            away_goals = "(" + away_goals.toString() + ")";
           }
         }
 
@@ -810,6 +951,263 @@ class WorldCup extends MessageStrategy {
     }
   }
 
+  static async filterMatches(type) {
+    let filtered = [];
+    for (let y = 0; y < WorldCup.json_matches.length; y++) {
+      if (WorldCup.json_matches[y]['type'] == type) {
+        filtered.push(WorldCup.json_matches[y]);
+      }
+    }
+
+    return filtered;
+  }
+
+  static async orderMatches(matches, order) {
+    let filtered = [];
+
+    for (let u = 0; u < matches.length; u++) {
+      filtered[u] = {};
+    }
+    loop1:
+    for (let y = 0; y < matches.length; y++) {
+      loop2:
+      for (let i = 0; i < order.length; i++) {
+        console.log(order[i]);
+        if (matches[y]['home_team_en'] == order[i] || matches[y]['away_team_en'] == order[i]) {
+          let index = i == 0 ? 0 : Math.floor(i / 2);
+          filtered[index] = matches[y];
+          break loop2;
+        }
+      }
+    }
+
+    return filtered;
+  }
+
+  static async GetHomeAwayOrder(matches, order) {
+    for (let y = 0; y < matches.length; y++) {
+      for (let i = 0; i < order.length; i++) {
+        if (matches[y]['home_team_en'] == order[i] || matches[y]['away_team_en'] == order[i]) {
+          return i == 0 ? 0 : Math.floor(i / 2);
+        }
+      }
+    }
+  }
+
+  static async StageReplace(stage, template, lookup = false) {
+    let filtered = await WorldCup.filterMatches(stage);
+
+    let state_sep = "";
+    if (stage == "R16") state_sep = "R16";
+    if (stage == "semi") state_sep = "S";
+    if (stage == "QR") state_sep = "Q";
+    if (stage == "FIN") state_sep = "F";
+
+    if (lookup) {
+      filtered = (stage == "QR") ? await WorldCup.orderMatches(filtered, WorldCup.l16Order) : filtered;
+      filtered = (stage == "semi") ? await WorldCup.orderMatches(filtered, WorldCup.qOrder) : filtered;
+      filtered = (stage == "FIN") ? await WorldCup.orderMatches(filtered, WorldCup.sOrder) : filtered;
+    }
+
+    for (let t = 0; t < filtered.length; t++) {
+      if (filtered[t] == undefined) {
+        continue;
+      }
+      let home = Object.keys(filtered[t]).indexOf('home_team_en') > -1 ? filtered[t]['home_team_en'] : "";
+      let away = Object.keys(filtered[t]).indexOf('away_team_en') > -1 ? filtered[t]['away_team_en'] : "";
+
+      let fullscore_home = "";
+      let fullscore_away = "";
+
+      if (filtered[t]['home_score'] != undefined && filtered[t]['away_score'] != undefined) {
+        fullscore_home = parseInt(filtered[t]['home_score']);
+        fullscore_away = parseInt(filtered[t]['away_score']);
+
+        if (filtered[t]['home_scorers'][0] != "null") {
+          if (filtered[t]['home_scorers'][0].indexOf("Penalties(") > -1) {
+            console.log(filtered[t]['home_scorers'][0]);
+            let penos = filtered[t]['home_scorers'][0].split("Penalties(");
+            penos = penos[1].split(")");
+            fullscore_home += parseInt(penos[0]);
+          }
+        }
+
+        if (filtered[t]['away_scorers'][0] != "null") {
+          if (filtered[t]['away_scorers'][0].indexOf("Penalties(") > -1) {
+            console.log(filtered[t]['away_scorers'][0]);
+            let penos = filtered[t]['away_scorers'][0].split("Penalties(");
+            penos = penos[1].split(")");
+            fullscore_away += parseInt(penos[0]);
+          }
+        }
+      }
+
+      let home_score = fullscore_home == "" ? "" : " (" + fullscore_home.toString() + ")";
+      let away_score = fullscore_away == "" ? "" : " (" + fullscore_away.toString() + ")";
+
+      if (filtered[t]['time_elapsed'] == "notstarted") {
+        home_score = "";
+        away_score = "";
+      }
+
+      let home_flag = Object.keys(MessageStrategy.flags).indexOf(home) > -1 ? MessageStrategy.flags[home] : "";
+      let away_flag = Object.keys(MessageStrategy.flags).indexOf(away) > -1 ? MessageStrategy.flags[away] : "";
+
+      let home_replace = "M" + (t + 1).toString();
+      home_replace += state_sep;
+      let flag_home_replace = home_replace + "FlagHome";
+      home_replace += "Home";
+
+      let away_replace = "M" + (t + 1).toString();
+      away_replace += state_sep;
+      let flag_away_replace = away_replace + "FlagAway";
+      away_replace += "Away";
+
+      let home_vanity = WorldCup.countries[home] == undefined ? "TBC " + MessageStrategy.flags['World'] : WorldCup.countries[home];
+      let away_vanity = WorldCup.countries[away] == undefined ? "TBC" + MessageStrategy.flags['World'] : WorldCup.countries[away];
+      template = template.replace(home_replace, home_vanity + home_score);
+      template = template.replace(away_replace, away_vanity + away_score);
+      template = template.replace(flag_home_replace, home_flag);
+      template = template.replace(flag_away_replace, away_flag);
+
+      if (stage == "R16") {
+        if (filtered[t]['home_score'] > filtered[t]['away_score']) {
+          WorldCup.l16Order.push(home);
+        } else {
+          WorldCup.l16Order.push(away);
+        }
+      }
+
+      if (stage == "QR") {
+        if (filtered[t]['home_score'] > filtered[t]['away_score']) {
+          WorldCup.qOrder.push(home);
+        } else {
+          WorldCup.qOrder.push(away);
+        }
+      }
+
+      if (stage == "semi") {
+        if (filtered[t]['home_score'] > filtered[t]['away_score']) {
+          WorldCup.sOrder.push(home);
+        } else {
+          WorldCup.sOrder.push(away);
+        }
+      }
+    }
+
+    return template;
+  }
+
+  static async ShowGroupStages(message, num = 16) {
+
+    let sep = " ".repeat(20);
+
+    let template16 = "";
+    template16 = "M1R16FlagHome M1R16Home\n";
+    template16 += sep + "M1QFlagHome M1QHome\n";
+    template16 += "M1R16FlagAway M1R16Away\n";
+    template16 += sep + sep + "M1SFlagHome M1SHome\n";
+    template16 += "M2R16FlagHome M2R16Home\n";
+    template16 += sep + "M1QFlagAway M1QAway\n";
+    template16 += "M2R16FlagAway M2R16Away\n";
+    template16 += sep + sep + sep + "M1FFlagHome M1FHome\n";
+    template16 += "M3R16FlagHome M3R16Home\n";
+    template16 += sep + "M2QFlagHome M2QHome\n";
+    template16 += "M3R16FlagAway M3R16Away\n";
+    template16 += sep + sep + "M1SFlagAway M1SAway\n";
+    template16 += "M4R16FlagHome M4R16Home\n";
+    template16 += sep + "M2QFlagAway M2QAway\n";
+    template16 += "M4R16FlagAway M4R16Away\n\n";
+    template16 += sep + sep + sep + sep + MessageStrategy.flags['World'] + "\n\n";
+    template16 += "M5R16FlagHome M5R16Home\n";
+    template16 += sep + "M3QFlagHome M3QHome\n";
+    template16 += "M5R16FlagAway M5R16Away\n";
+    template16 += sep + sep + "M2SFlagHome M2SHome\n";
+    template16 += "M6R16FlagHome M6R16Home\n";
+    template16 += sep + "M3QFlagAway M3QAway\n";
+    template16 += "M6R16FlagAway M6R16Away\n";
+    template16 += sep + sep + sep + "M1FFlagAway M1FAway\n";
+    template16 += "M7R16FlagHome M7R16Home\n";
+    template16 += sep + "M4QFlagHome M4QHome\n";
+    template16 += "M7R16FlagAway M7R16Away\n";
+    template16 += sep + sep + "M2SFlagAway M2SAway\n";
+    template16 += "M8R16FlagHome M8R16Home\n";
+    template16 += sep + "M4QFlagAway M4QAway\n";
+    template16 += "M8R16FlagAway M8R16Away\n";
+
+    let templateq = "";
+    templateq = "M1QFlagHome M1QHome\n";
+    templateq += sep + "M1SFlagHome M1SHome\n";
+    templateq += "M1QFlagAway M1QAway\n";
+    templateq += sep + sep + "M1FFlagHome M1FHome\n";
+    templateq += "M2QFlagHome M2QHome\n";
+    templateq += sep + "M1SFlagAway M1SAway\n";
+    templateq += "M2QFlagAway M2QAway\n";
+    templateq += sep + sep + sep + MessageStrategy.flags['World'] + "\n\n";
+    templateq += "M3QFlagHome M3QHome\n";
+    templateq += sep + "M2SFlagHome M2SHome\n";
+    templateq += "M3QFlagAway M3QAway\n";
+    templateq += sep + sep + "M1FFlagAway M1FAway\n";
+    templateq += "M4QFlagHome M4QHome\n";
+    templateq += sep + "M2SFlagAway M2SAway\n";
+    templateq += "M4QFlagAway M4QAway\n";
+
+    let templates = "";
+    templates = "M1SFlagHome M1SHome\n";
+    templates += sep + "M1FFlagHome M1FHome\n";
+    templates += "M1SFlagAway M1SAway\n";
+    templates += sep + sep + WorldCup.countries['World'] + "\n\n";
+    templates += "M2SFlagHome M2SHome\n";
+    templates += sep + "M1FFlagAway M1FAway\n";
+    templates += "M2SFlagAway M2SAway\n";
+
+    let templatef = "";
+    templatef = "M1FFlagHome M1FHome\n";
+    templatef += sep + "W\n";
+    templatef += "M1FFlagAway M1FAway\n";
+
+    let msg = "";
+
+    try {
+      if (WorldCup.json_matches == undefined) {
+        console.log("Empty matches");
+        return;
+      }
+
+      if (num == 2) {
+        let res = await WorldCup.StageReplace("FIN", templatef);
+        msg = res;
+      }
+
+      if (num == 4) {
+        let res = await WorldCup.StageReplace("semi", templates);
+        res = await WorldCup.StageReplace("FIN", res, true);
+        msg = res;
+      }
+
+      if (num == 8) {
+        let res = await WorldCup.StageReplace("QR", templateq);
+        res = await WorldCup.StageReplace("semi", res, true);
+        res = await WorldCup.StageReplace("FIN", res, true);
+        msg = res;
+      }
+
+      if (num == 16) {
+        let res = await WorldCup.StageReplace("R16", template16);
+        res = await WorldCup.StageReplace("QR", res, true);
+        res = await WorldCup.StageReplace("semi", res, true);
+        res = await WorldCup.StageReplace("FIN", res, true);
+        msg = res;
+      }
+
+      MessageStrategy.typing(message);
+      MessageStrategy.client.sendText(message.from, msg);
+    }
+    catch (err) {
+      console.log(err);
+    }
+  }
+
   static async Group(message) {
     try {
       let groups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -884,6 +1282,42 @@ class WorldCup extends MessageStrategy {
   static async MatchesTomorrow(message) {
     try {
       WorldCup.ShowMatches(message, null, false, true, false);
+    }
+    catch (err) {
+      console.log(err);
+    }
+  }
+
+  static async Last16(message) {
+    try {
+      WorldCup.ShowGroupStages(message, 16);
+    }
+    catch (err) {
+      console.log(err);
+    }
+  }
+
+  static async Quarters(message) {
+    try {
+      WorldCup.ShowGroupStages(message, 8);
+    }
+    catch (err) {
+      console.log(err);
+    }
+  }
+
+  static async Semis(message) {
+    try {
+      WorldCup.ShowGroupStages(message, 4);
+    }
+    catch (err) {
+      console.log(err);
+    }
+  }
+
+  static async Final(message) {
+    try {
+      WorldCup.ShowGroupStages(message, 2);
     }
     catch (err) {
       console.log(err);
