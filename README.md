@@ -12,7 +12,7 @@ make local
 
 ### Install as systemd service
 
-[Follow setup on systemd readme](https://github.com/dmzoneill/Chuckbot/blob/main/systemd/README.md)
+[Follow setup on systemd readme](https://github.com/dmzoneill/Chuckbot/tree/main/systemd)
 
 Using the phone number you supplied to the setup.
 
