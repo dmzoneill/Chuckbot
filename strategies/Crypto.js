@@ -198,11 +198,11 @@ class Crypto extends MessageStrategy {
       }
 
       let paths = {
-        "1d": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[1]',
-        "7d": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[2]',
-        "1m": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[3]',
-        "3m": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[4]',
-        "1y": '/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div[2]/ul/li[5]'
+        "1d": '//*[@id="react-tabs-0"]',
+        "7d": '//*[@id="react-tabs-2"]',
+        "1m": '//*[@id="react-tabs-4"]',
+        "3m": '//*[@id="react-tabs-6"]',
+        "1y": '//*[@id="react-tabs-8"]'
       }
 
       if (period != "1d") {

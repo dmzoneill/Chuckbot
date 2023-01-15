@@ -10,6 +10,10 @@ make up
 make local
 ```
 
+### Install as systemd service
+
+[Follow setup on systemd readme](https://github.com/dmzoneill/Chuckbot/blob/main/systemd/README.md)
+
 Using the phone number you supplied to the setup.
 
 Invite the number for a whatsapp group, or chat him directly.

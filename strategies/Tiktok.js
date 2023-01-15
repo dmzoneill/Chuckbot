@@ -55,7 +55,7 @@ class TikTok extends MessageStrategy {
       let data = await TikTok.self.get_page_og_data(TikTok.self, message.body, 500);
 
       if (data[1] == null) {
-        MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);
+        // MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);
         return;
       }
 

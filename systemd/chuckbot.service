@@ -1,0 +1,9 @@
+[Unit]
+Description=Chuckbot
+
+[Service]
+WorkingDirectory=/home/dave/src/whatsbot
+ExecStart=/usr/bin/node chuckbot.js
+
+[Install]
+WantedBy=default.target
