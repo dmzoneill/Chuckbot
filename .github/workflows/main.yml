@@ -1,4 +1,4 @@
-name: chuckbot
+name: CICD
 
 on:
   push:
