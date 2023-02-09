@@ -11,5 +11,5 @@
 **/strategies/http_cache_folder/**
 **/strategies/media/**
 **/strategies/config/**
-
+**/__pycache__/**
 # end managed by open-wa
