@@ -1,56 +1,55 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
-// Radarr movie management 
+// Radarr movie management
 // ####################################
 
 class Radarr extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static self = null;
+  static dummy = MessageStrategy.derived.add(this.name)
+  static self = null
 
-  constructor() {
+  constructor () {
     super('Radarr', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    Radarr.self = this;
+  provides () {
+    Radarr.self = this
 
     return {
       help: 'Radarr search',
       provides: {
-        'radarr': {
+        radarr: {
           test: function (message) {
-            return message.body.toLowerCase() === 'radarr';
+            return message.body.toLowerCase() === 'radarr'
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do';
+            return 'To do'
           },
           action: Radarr.self.Radarr,
           interactive: false,
           enabled: function () {
-            return MessageStrategy.state['Radarr']['enabled'];
+            return MessageStrategy.state.Radarr.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['Radarr']['enabled'];
+        return MessageStrategy.state.Radarr.enabled
       }
     }
   }
 
-  Radarr() {
-    return false;
+  Radarr () {
+    return false
   }
 }
-
 
 module.exports = {
   MessageStrategy: Radarr

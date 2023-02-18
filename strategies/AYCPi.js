@@ -1,52 +1,52 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
-// AYCPi  
+// AYCPi
 // ####################################
 
 class AYCPi extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
+  static dummy = MessageStrategy.derived.add(this.name)
 
-  constructor() {
+  constructor () {
     super('AYCPi', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    AYCPi.self = this;
+  provides () {
+    AYCPi.self = this
 
     return {
       help: 'Manages AYC RPi',
       provides: {
-        'AYCPi': {
+        AYCPi: {
           test: function (message) {
-            return message.body.toLowerCase() === 'aycpi';
+            return message.body.toLowerCase() === 'aycpi'
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do';
+            return 'To do'
           },
           action: AYCPi.self.AYCPi,
           interactive: false,
           enabled: function () {
-            return MessageStrategy.state['AYCPi']['enabled'];
+            return MessageStrategy.state.AYCPi.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['AYCPi']['enabled'];
+        return MessageStrategy.state.AYCPi.enabled
       }
     }
   }
 
-  AYCPi() {
-    return false;
+  AYCPi () {
+    return false
   }
 }
 

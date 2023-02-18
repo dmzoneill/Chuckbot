@@ -1,53 +1,53 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
-// AYCComms  
+// AYCComms
 // ####################################
 
 class AYCComms extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static self = null;
+  static dummy = MessageStrategy.derived.add(this.name)
+  static self = null
 
-  constructor() {
+  constructor () {
     super('AYCComms', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    AYCComms.self = this;
+  provides () {
+    AYCComms.self = this
 
     return {
       help: 'Manages AYC Communications',
       provides: {
-        'Comms': {
+        Comms: {
           test: function (message) {
-            return message.body.toLowerCase() === 'ayccomms';
+            return message.body.toLowerCase() === 'ayccomms'
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do';
+            return 'To do'
           },
           action: AYCComms.self.AYCComms,
           interactive: false,
           enabled: function () {
-            return MessageStrategy.state['AYCComms']['enabled'];
+            return MessageStrategy.state.AYCComms.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['AYCComms']['enabled'];
+        return MessageStrategy.state.AYCComms.enabled
       }
     }
   }
 
-  AYCComms() {
-    return false;
+  AYCComms () {
+    return false
   }
 }
 

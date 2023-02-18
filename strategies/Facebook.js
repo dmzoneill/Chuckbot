@@ -1,70 +1,68 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
-// Facebook previews 
+// Facebook previews
 // ####################################
 
 class Facebook extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static self = null;
+  static dummy = MessageStrategy.derived.add(this.name)
+  static self = null
 
-  constructor() {
+  constructor () {
     super('Facebook', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    Facebook.self = this;
+  provides () {
+    Facebook.self = this
 
     return {
       help: 'Detects facebook urls and provides thumbnail preview if not provided',
       provides: {
-        'Preview': {
+        Preview: {
           test: function (message) {
-            return message.body.match(new RegExp(/^https:\/\/.*?facebook.com\/.*/));
+            return message.body.match(new RegExp(/^https:\/\/.*?facebook.com\/.*/))
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'Does the image preview lookup';
+            return 'Does the image preview lookup'
           },
           action: Facebook.self.Preview,
           interactive: false,
           enabled: function () {
-            return MessageStrategy.state['Facebook']['enabled'];
+            return MessageStrategy.state.Facebook.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['Facebook']['enabled'];
+        return MessageStrategy.state.Facebook.enabled
       }
     }
   }
 
-  async Preview(message) {
+  async Preview (message) {
     try {
-      if (message.thumbnail != "") return;
+      if (message.thumbnail != '') return
 
-      let data = await Facebook.self.get_page_og_data(Facebook.self, message.body.replace(/&amp;/g, "&"), 500);
+      const data = await Facebook.self.get_page_og_data(Facebook.self, message.body.replace(/&amp;/g, '&'), 500)
 
       if (data[1] == null) {
-        MessageStrategy.client.reply(message.from, "Sorry no preview", message.id, true);
-        return;
+        MessageStrategy.client.reply(message.from, 'Sorry no preview', message.id, true)
+        return
       }
 
-      MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1]);
-    }
-    catch (err) {
-      console.log(err);
+      MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1])
+    } catch (err) {
+      console.log(err)
     }
   }
 }
-
 
 module.exports = {
   MessageStrategy: Facebook

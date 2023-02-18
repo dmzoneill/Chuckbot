@@ -1,31 +1,31 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
 // PulseAudio
 // ####################################
 
 class PulseAudio extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static self = null;
+  static dummy = MessageStrategy.derived.add(this.name)
+  static self = null
 
-  constructor() {
+  constructor () {
     super('PulseAudio', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    PulseAudio.self = this;
+  provides () {
+    PulseAudio.self = this
 
     return {
       help: 'Controls basic PulseAudio settings',
       provides: {
         'volume x': {
           test: function (message) {
-            return message.body.toLowerCase().startsWith('volume');
+            return message.body.toLowerCase().startsWith('volume')
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
             return [
@@ -33,71 +33,68 @@ class PulseAudio extends MessageStrategy {
               'volume 45',
               'volume +10',
               'volume -15'
-            ].join("\n");
+            ].join('\n')
           },
           action: PulseAudio.self.SetVolume,
           interactive: true,
           enabled: function () {
-            return MessageStrategy.state['PulseAudio']['enabled'];
+            return MessageStrategy.state.PulseAudio.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['PulseAudio']['enabled'];
+        return MessageStrategy.state.PulseAudio.enabled
       }
     }
   }
 
-  async SetVolume(message) {
+  async SetVolume (message) {
     try {
-      if (message.body.indexOf(" ") == -1) {
-        return;
+      if (message.body.indexOf(' ') == -1) {
+        return
       }
 
-      let volume = 0;
-      let incrementor = "";
-      let change = "pactl -- set-sink-volume 0 ";
+      let volume = 0
+      let incrementor = ''
+      let change = 'pactl -- set-sink-volume 0 '
 
-      let parts = message.body.split(" ");
-      let value = parts[1].trim();
+      const parts = message.body.split(' ')
+      const value = parts[1].trim()
 
       if (value.startsWith('+') || value.startsWith('-')) {
-        incrementor = value.substring(0, 1);
-        volume = value.substring(1).trim();
+        incrementor = value.substring(0, 1)
+        volume = value.substring(1).trim()
       } else {
-        volume = value;
+        volume = value
       }
 
-      volume = parseInt(volume);
+      volume = parseInt(volume)
 
       if (volume < 0 || volume > 100) {
-        return;
+        return
       }
 
-      if (incrementor == "") {
-        change += volume.toString() + "%";
+      if (incrementor == '') {
+        change += volume.toString() + '%'
       } else {
-        change += incrementor + volume.toString() + "%";
+        change += incrementor + volume.toString() + '%'
       }
 
       exec(change, async (error, stdout, stderr) => {
         try {
-          console.log(stdout);
+          console.log(stdout)
+        } catch (err) {
+          console.log(err)
         }
-        catch (err) {
-          console.log(err);
-        }
-      });
-    }
-    catch (err) {
-      console.log(err);
+      })
+    } catch (err) {
+      console.log(err)
     }
   }
 }
-
 
 module.exports = {
   MessageStrategy: PulseAudio

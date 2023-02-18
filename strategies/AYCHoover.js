@@ -1,56 +1,55 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
-// AYCHoover  
+// AYCHoover
 // ####################################
 
 class AYCHoover extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static self = null;
+  static dummy = MessageStrategy.derived.add(this.name)
+  static self = null
 
-  constructor() {
+  constructor () {
     super('AYCHoover', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    AYCHoover.self = this;
+  provides () {
+    AYCHoover.self = this
 
     return {
       help: 'Manages AYC Hoover',
       provides: {
-        'Hoover': {
+        Hoover: {
           test: function (message) {
-            return message.body.toLowerCase() === 'aychoover';
+            return message.body.toLowerCase() === 'aychoover'
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do';
+            return 'To do'
           },
           action: AYCHoover.self.AYCHoover,
           interactive: false,
           enabled: function () {
-            return MessageStrategy.state['AYCHoover']['enabled'];
+            return MessageStrategy.state.AYCHoover.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['AYCHoover']['enabled'];
+        return MessageStrategy.state.AYCHoover.enabled
       }
     }
   }
 
-  AYCHoover() {
-    return false;
+  AYCHoover () {
+    return false
   }
 }
-
 
 module.exports = {
   MessageStrategy: AYCHoover

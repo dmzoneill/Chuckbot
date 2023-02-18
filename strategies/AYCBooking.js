@@ -1,56 +1,55 @@
-const MessageStrategy = require("../MessageStrategy.js")
+const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
-// AYCBooking  
+// AYCBooking
 // ####################################
 
 class AYCBooking extends MessageStrategy {
-  static dummy = MessageStrategy.derived.add(this.name);
-  static self = null;
+  static dummy = MessageStrategy.derived.add(this.name)
+  static self = null
 
-  constructor() {
+  constructor () {
     super('AYCBooking', {
-      'enabled': true
-    });
+      enabled: true
+    })
   }
 
-  provides() {
-    AYCBooking.self = this;
+  provides () {
+    AYCBooking.self = this
 
     return {
       help: 'Manages AYC bookings',
       provides: {
-        'Booking': {
+        Booking: {
           test: function (message) {
-            return message.body.toLowerCase() === 'aycbooking';
+            return message.body.toLowerCase() === 'aycbooking'
           },
           access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name);
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do';
+            return 'To do'
           },
           action: AYCBooking.self.AYCBooking,
           interactive: false,
           enabled: function () {
-            return MessageStrategy.state['AYCBooking']['enabled'];
+            return MessageStrategy.state.AYCBooking.enabled
           }
         }
       },
       access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name);
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
       },
       enabled: function () {
-        return MessageStrategy.state['AYCBooking']['enabled'];
+        return MessageStrategy.state.AYCBooking.enabled
       }
     }
   }
 
-  AYCBooking() {
-    return false;
+  AYCBooking () {
+    return false
   }
 }
-
 
 module.exports = {
   MessageStrategy: AYCBooking

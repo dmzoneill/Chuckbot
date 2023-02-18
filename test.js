@@ -1,5 +1,5 @@
-//const MS = require("./MessageStrategy.js");
-const Hi = require("./strategies/Hi.js");
+// const MS = require("./MessageStrategy.js");
+const Hi = require('./strategies/Hi.js')
 
 // jest.mock('cron');
 // jest.mock('fs');
@@ -24,33 +24,32 @@ const Hi = require("./strategies/Hi.js");
 // jest.mock('child_process');
 // jest.mock('jsdom');
 
-
-let msg = {
-  "from": "",
-  "body": "",
-  "thumbnail": "",
-  "id": false,
-  "sender": {
-    "id": false
+const msg = {
+  from: '',
+  body: '',
+  thumbnail: '',
+  id: false,
+  sender: {
+    id: false
   }
 }
 
-let client = {
-  'sendText': (to, message) => { },
-  'sendImage': (to, message, image, text) => { },
-  'sendLinkWithAutoPreview': (to, message) => { },
-  'simulateTyping': (chatid) => { },
-  'reply': (to, message) => { }
+const client = {
+  sendText: (to, message) => { },
+  sendImage: (to, message, image, text) => { },
+  sendLinkWithAutoPreview: (to, message) => { },
+  simulateTyping: (chatid) => { },
+  reply: (to, message) => { }
 }
 
-const sendTextMock = jest.spyOn(client, "sendText");
-const sendImageMock = jest.spyOn(client, "sendImage");
-const replyTextMock = jest.spyOn(client, "reply");
-const simulateTypingMock = jest.spyOn(client, "simulateTyping");
-const sendLinkWithAutoPreviewMock = jest.spyOn(client, "sendLinkWithAutoPreview");
+const sendTextMock = jest.spyOn(client, 'sendText')
+const sendImageMock = jest.spyOn(client, 'sendImage')
+const replyTextMock = jest.spyOn(client, 'reply')
+const simulateTypingMock = jest.spyOn(client, 'simulateTyping')
+const sendLinkWithAutoPreviewMock = jest.spyOn(client, 'sendLinkWithAutoPreview')
 
 describe('Test strategies', () => {
-  let message = {};
+  const message = {}
 
   beforeEach(async () => {
     // MS.client = client;
@@ -61,28 +60,28 @@ describe('Test strategies', () => {
     //   "id": "1234567890@c.us"
     // }
     // await new Promise((resolve) => { setTimeout(resolve, 150); });
-  });
+  })
 
   it('should return a list of strategies', async () => {
     // console.log(MS.strategies);
     // expect(Object.keys(MS.strategies).length).toBeGreaterThan(0);
-  });
+  })
 
   it('check hi strategy in stategies', async () => {
     // expect(Object.keys(MS.strategies).includes('Hi')).toBe(true);
-  });
+  })
 
   it('check all strategies enabled', async () => {
     // Object.keys(MS.strategies).forEach(element => {
     //   expect(MS.strategies[element].enabled).toBe(true);
     // });
-  });
+  })
 
   it('check all strategies have provides', async () => {
     // Object.keys(MS.strategies).forEach(element => {
     //   expect(Array.isArray(MS.strategies[element].provides())).toBe(true);
     // });
-  });
+  })
 
   it('check all strategies handles message', async () => {
     // Object.keys(MS.strategies).forEach(element => {
@@ -90,37 +89,35 @@ describe('Test strategies', () => {
     //   message['from'] = "3538619387876@c.us";
     //   expect(MS.strategies[element].handleMessage(message, MS.strategies)).toBe(false);
     // });
-  });
-});
-
+  })
+})
 
 describe('Test Hi strategy', () => {
-  let mockTyping = jest.fn();
-  let message = {};
+  const mockTyping = jest.fn()
+  const message = {}
   let test_obj = null
 
   beforeEach(async () => {
-    test_obj = new Hi();
-  });
+    test_obj = new Hi()
+  })
 
   it('Check Hi enabled', async () => {
-    expect(test_obj.enabled).toBe(true);
-  });
+    expect(test_obj.enabled).toBe(true)
+  })
 
   it('Hi returns true', async () => {
-    message['body'] = "hi";
-    message['from'] = "3538619387876@c.us";
-    expect(test_obj.handleMessage(message)).toBe(true);
-    expect(mockTyping).toHaveBeenCalled();
-  });
+    message.body = 'hi'
+    message.from = '3538619387876@c.us'
+    expect(test_obj.handleMessage(message)).toBe(true)
+    expect(mockTyping).toHaveBeenCalled()
+  })
 
   it('Hi returns false', async () => {
-    message['body'] = "who";
-    message['from'] = "3538619387876@c.us";
-    expect(test_obj.handleMessage(message, MS.strategies)).toBe(false);
-  });
-});
-
+    message.body = 'who'
+    message.from = '3538619387876@c.us'
+    expect(test_obj.handleMessage(message, MS.strategies)).toBe(false)
+  })
+})
 
 // describe('Test Spam strategy', () => {
 //   let mockTyping = jest.fn();
@@ -158,7 +155,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Help strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -191,7 +187,6 @@ describe('Test Hi strategy', () => {
 //     expect(Help.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test Harass strategy', () => {
 //   let mockTyping = jest.fn();
@@ -226,7 +221,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test ChuckJokes strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -259,7 +253,6 @@ describe('Test Hi strategy', () => {
 //     expect(ChuckJokes.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test Asthanga strategy', () => {
 //   let mockTyping = jest.fn();
@@ -296,7 +289,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Youtube strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -329,7 +321,6 @@ describe('Test Hi strategy', () => {
 //     expect(Youtube.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test TikTok strategy', () => {
 //   let mockTyping = jest.fn();
@@ -365,7 +356,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Twitter strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -399,7 +389,6 @@ describe('Test Hi strategy', () => {
 //     expect(Twitter.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test Facebook strategy', () => {
 //   let mockTyping = jest.fn();
@@ -435,7 +424,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test HyperLink strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -470,7 +458,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Currency strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -501,7 +488,6 @@ describe('Test Hi strategy', () => {
 //     expect(Currency.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test Crypto strategy', () => {
 //   let mockTyping = jest.fn();
@@ -544,7 +530,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Imdb strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -578,7 +563,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Google strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -611,7 +595,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Wikipedia strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -643,7 +626,6 @@ describe('Test Hi strategy', () => {
 //     expect(Wikipedia.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test Weather strategy', () => {
 //   let mockTyping = jest.fn();
@@ -680,7 +662,6 @@ describe('Test Hi strategy', () => {
 //   });
 // });
 
-
 // describe('Test Levenshteiner strategy', () => {
 //   let mockTyping = jest.fn();
 //   let message = {};
@@ -713,7 +694,6 @@ describe('Test Hi strategy', () => {
 //     expect(Levenshteiner.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test UrbanDictionary strategy', () => {
 //   let mockTyping = jest.fn();
@@ -748,7 +728,6 @@ describe('Test Hi strategy', () => {
 //     expect(UrbanDictionary.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
 
 // describe('Test Translate strategy', () => {
 //   let mockTyping = jest.fn();
@@ -814,4 +793,3 @@ describe('Test Hi strategy', () => {
 //     expect(Translate.handleMessage(message, strategies)).toBe(false);
 //   });
 // });
-
