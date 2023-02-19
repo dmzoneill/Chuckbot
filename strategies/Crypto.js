@@ -159,8 +159,6 @@ class Crypto extends MessageStrategy {
       const symbol = coin.toUpperCase()
       coin = slugkeys.includes(symbol) ? Crypto.coinslugs[symbol] : coin.toLowerCase()
 
-      console.log(coin)
-
       await page.goto('https://coinmarketcap.com/currencies/' + coin + '/')
       await page.setViewport({ width: 1366, height: 768 })
 
@@ -209,11 +207,9 @@ class Crypto extends MessageStrategy {
       }
 
       if (period != '1d') {
-        console.log('Clicking time period')
         await Crypto.self.waitFor(1500)
         const days = await page.waitForXPath(paths[period])
         if (days) {
-          console.log('Clicked')
           await days.click()
           await Crypto.self.waitFor(1500)
         }
@@ -232,6 +228,7 @@ class Crypto extends MessageStrategy {
       const element = await page.$x(xpath)
       const sha1d = crypto.createHash('sha1').digest('hex')
       const text = await page.evaluate(element => element.textContent, element[0])
+
       await element[0].screenshot({ path: sha1d + '.png' })
       await browser.close()
 
@@ -243,8 +240,6 @@ class Crypto extends MessageStrategy {
       MessageStrategy.typing(message)
       const coindetails = Crypto.self.get_coin(coin)
       let coin_msg = ''
-
-      console.log(coindetails)
 
       const objfiat = Object.keys(coindetails.quote).includes('USD') ? coindetails.quote.USD : coindetails.quote.USD
       const objCrypto = Object.keys(coindetails.quote).includes('USD') ? '$' : '€'
@@ -292,6 +287,7 @@ class Crypto extends MessageStrategy {
       }
     } catch (err) {
       console.log(err)
+      console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@")
       MessageStrategy.client.sendText(message.from, err)
     }
   }
