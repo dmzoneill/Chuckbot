@@ -8,7 +8,7 @@ class Formula1 extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
   static self = null
   static endpoint = 'v1.formula-1.api-sports.io'
-  static token = '9f1f5866c19deed2d24acadc0bd3030b'
+  static token = null
   static cache_folder = 'strategies/f1'
   static drivers = {}
   static teams = {}
@@ -24,6 +24,7 @@ class Formula1 extends MessageStrategy {
     super('Formula1', {
       enabled: true
     })
+    Formula1.token = fs.readFileSync('strategies/config/f1-token').toString().trim()
   }
 
   provides () {
