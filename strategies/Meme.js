@@ -10,13 +10,13 @@ class Meme extends MessageStrategy {
   static memes_setup = false
   static timers = {}
 
-  constructor () {
+  constructor() {
     super('Meme', {
       enabled: true
     })
   }
 
-  provides (message) {
+  provides(message) {
     Meme.self = this
 
     if (Meme.memes_setup === false) {
@@ -42,7 +42,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'gets the meme and posts it to the chat'
           },
-          action: function GetMeme (message) {
+          action: function GetMeme(message) {
             Meme.self.setup(message)
             Meme.self.update_counter(message)
           },
@@ -61,7 +61,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'gets the meme and posts it to the chat'
           },
-          action: function GetMeme (message) {
+          action: function GetMeme(message) {
             Meme.self.setup(message)
             Meme.self.get_meme(message)
           },
@@ -80,7 +80,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'enables automatic memes in the chat'
           },
-          action: function Enable (message) {
+          action: function Enable(message) {
             Meme.self.setup(message)
             Meme.self.toggle(message, true)
           },
@@ -99,7 +99,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'disables automatic memes in the chat'
           },
-          action: function Disable (message) {
+          action: function Disable(message) {
             Meme.self.setup(message)
             Meme.self.disable(message, true)
           },
@@ -118,7 +118,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'sets the frequency of the memes'
           },
-          action: function Frequency (message) {
+          action: function Frequency(message) {
             Meme.self.setup(message)
             Meme.self.frequency(message)
           },
@@ -137,7 +137,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'sets the spam protection level of memes'
           },
-          action: function Spam (message) {
+          action: function Spam(message) {
             Meme.self.setup(message)
             Meme.self.spam(message)
           },
@@ -156,55 +156,61 @@ class Meme extends MessageStrategy {
     }
   }
 
-  setup (message) {
-    const min = 30 * 60 * 1000
-    const max = 60 * 60 * 1000
-    const spam = 10
+  setup(message) {
+    try {
+      const min = 30 * 60 * 1000
+      const max = 60 * 60 * 1000
+      const spam = 10
 
-    if (message === null) {
+      if (message === null) {
+        return false
+      }
+
+      if (Object.keys(message).indexOf('chatId') === -1) {
+        return false
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme).indexOf('chats') === -1) {
+        MessageStrategy.state.Meme.chats = {}
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats).indexOf(message.chatId) === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId] = {}
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('enabled') === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId].enabled = false
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('from') === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId].from = message.from
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('min') === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId].min = min
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('max') === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId].max = max
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('spam') === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId].spam = spam
+      }
+
+      if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('counter') === -1) {
+        MessageStrategy.state.Meme.chats[message.chatId].counter = 0
+      }
+
+      return true
+    }
+    catch (err) {
+      console.log(err)
       return false
     }
-
-    if (Object.keys(message).indexOf('chatId') === -1) {
-      return false
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme).indexOf('chats') === -1) {
-      MessageStrategy.state.Meme.chats = {}
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats).indexOf(message.chatId) === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId] = {}
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('enabled') === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId].enabled = false
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('from') === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId].from = message.from
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('min') === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId].min = min
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('max') === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId].max = max
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('spam') === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId].spam = spam
-    }
-
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('counter') === -1) {
-      MessageStrategy.state.Meme.chats[message.chatId].counter = 0
-    }
-
-    return true
   }
 
-  setup_tickers () {
+  setup_tickers() {
     Meme.timers = {}
     Object.keys(MessageStrategy.state.Meme.chats).forEach(chatid => {
       if (MessageStrategy.state.Meme.chats[chatid].enabled === true) {
@@ -213,7 +219,7 @@ class Meme extends MessageStrategy {
     })
   }
 
-  async setup_ticker (chatid) {
+  async setup_ticker(chatid) {
     if (Object.keys(Meme.timers).indexOf(chatid) > -1) {
       clearTimeout(Meme.timers[chatid])
       delete Meme.timers[chatid]
@@ -225,7 +231,7 @@ class Meme extends MessageStrategy {
     Meme.timers[chatid] = timer
   }
 
-  async enable (message, update) {
+  async enable(message, update) {
     MessageStrategy.state.Meme.chats[message.chatId].enabled = true
     await Meme.self.setup_ticker(message.chatId)
     if (update) {
@@ -233,7 +239,7 @@ class Meme extends MessageStrategy {
     }
   }
 
-  async disable (message, update) {
+  async disable(message, update) {
     MessageStrategy.state.Meme.chats[message.chatId].enabled = false
     if (Object.keys(Meme.timers).indexOf(message.chatId) > -1) {
       clearTimeout(Meme.timers[message.chatId])
@@ -243,7 +249,7 @@ class Meme extends MessageStrategy {
     }
   }
 
-  async toggle (message, update) {
+  async toggle(message, update) {
     await Meme.self.disable(message, false)
     await Meme.self.waitFor(250)
     if (update) {
@@ -251,7 +257,7 @@ class Meme extends MessageStrategy {
     }
   }
 
-  async frequency (message) {
+  async frequency(message) {
     const parts = message.body.split(' ')
     MessageStrategy.state.Meme.chats[message.chatId].min = parseInt(parts[2]) * 60 * 1000
     MessageStrategy.state.Meme.chats[message.chatId].max = parseInt(parts[3]) * 60 * 1000
@@ -259,7 +265,7 @@ class Meme extends MessageStrategy {
     await this.toggle(message, false)
   }
 
-  async spam (message) {
+  async spam(message) {
     const parts = message.body.split(' ')
     const spam = parseInt(parts[2])
     MessageStrategy.state.Meme.chats[message.chatId].spam = spam
@@ -267,11 +273,11 @@ class Meme extends MessageStrategy {
     await this.toggle(message, false)
   }
 
-  async update_counter (message) {
+  async update_counter(message) {
     MessageStrategy.state.Meme.chats[message.chatId].counter += 1
   }
 
-  async scheduled_meme (chatid) {
+  async scheduled_meme(chatid) {
     const spam_level = MessageStrategy.state.Meme.chats[chatid].spam
     const breaker = spam_level - MessageStrategy.state.Meme.chats[chatid].counter
 
@@ -284,7 +290,7 @@ class Meme extends MessageStrategy {
     }
   }
 
-  async get_meme (message) {
+  async get_meme(message) {
     const topics = [
       'me_irl',
       'WackyTicTacs',
