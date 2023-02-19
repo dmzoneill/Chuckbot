@@ -1,5 +1,3 @@
-const { filter } = require('domutils')
-const { contact_update_counter } = require('../MessageStrategy.js')
 const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
@@ -297,7 +295,7 @@ class WorldCup extends MessageStrategy {
         file_data
       )
 
-      if (page == undefined) {
+      if (page === undefined) {
         console.log('Unable to obtain token')
         return
       }
@@ -315,7 +313,7 @@ class WorldCup extends MessageStrategy {
 
   static async getGroup (letter) {
     for (let y = 0; y < WorldCup.json_groups.length; y++) {
-      if (WorldCup.json_groups[y].group == letter.toUpperCase()) {
+      if (WorldCup.json_groups[y].group === letter.toUpperCase()) {
         return WorldCup.json_groups[y]
       }
     }
@@ -359,7 +357,7 @@ class WorldCup extends MessageStrategy {
 
   static async updateGroups (message) {
     try {
-      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') === -1) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'API down, check back later')
         WorldCup.Login(message)
@@ -385,7 +383,7 @@ class WorldCup extends MessageStrategy {
 
   static async updateTeams (message) {
     try {
-      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') === -1) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'API down, check back later')
         WorldCup.Login(message)
@@ -404,7 +402,7 @@ class WorldCup extends MessageStrategy {
       )
       console.log(WorldCup.json_teams)
 
-      if (WorldCup.json_teams == undefined) {
+      if (WorldCup.json_teams === undefined) {
         console.log('Empty teams')
         return
       }
@@ -421,7 +419,7 @@ class WorldCup extends MessageStrategy {
 
   static async parseTeamGroups (message) {
     try {
-      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') === -1) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'API down, check back later')
         WorldCup.Login(message)
@@ -430,7 +428,7 @@ class WorldCup extends MessageStrategy {
       console.log('Parse groups')
       MessageStrategy.typing(message)
 
-      if (WorldCup.json_groups.length == undefined) {
+      if (WorldCup.json_groups.length === undefined) {
         console.log('Empty groups')
         return
       }
@@ -452,7 +450,7 @@ class WorldCup extends MessageStrategy {
 
   static async Top (message) {
     try {
-      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') === -1) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'API down, check back later')
         WorldCup.Login(message)
@@ -462,7 +460,7 @@ class WorldCup extends MessageStrategy {
 
       let limit = 10
       const parts = message.body.split(' ')
-      if (parts.length == 3) {
+      if (parts.length === 3) {
         limit = parseInt(parts[2])
       }
 
@@ -472,7 +470,7 @@ class WorldCup extends MessageStrategy {
       const top_countries = {}
       const top_country_mapping = {}
 
-      if (WorldCup.json_groups == undefined) {
+      if (WorldCup.json_groups === undefined) {
         console.log('Empty matches')
         return
       }
@@ -480,14 +478,14 @@ class WorldCup extends MessageStrategy {
       for (let y = 0; y < WorldCup.json_matches.length; y++) {
         const match = WorldCup.json_matches[y]
 
-        if (match.home_scorers == undefined) {
+        if (match.home_scorers === undefined) {
           continue
         }
 
         let home_scorers = match.home_scorers[0]
         let away_scorers = match.away_scorers[0]
 
-        if (home_scorers == '' || home_scorers == 'null') {
+        if (home_scorers === '' || home_scorers === 'null') {
           home_scorers = []
         } else {
           if (home_scorers.indexOf(',') > -1) {
@@ -497,7 +495,7 @@ class WorldCup extends MessageStrategy {
           }
         }
 
-        if (away_scorers == '' || away_scorers == 'null') {
+        if (away_scorers === '' || away_scorers === 'null') {
           away_scorers = []
         } else {
           if (away_scorers.indexOf(',') > -1) {
@@ -514,7 +512,7 @@ class WorldCup extends MessageStrategy {
             const split = home_scorers[y].split('(')
             const player = split[0].trim()
             const amount = split[1].split(')')[0].trim()
-            if (player == 'Penalties') {
+            if (player === 'Penalties') {
               continue
             } else {
               for (let l = 0; l < amount; l++) {
@@ -534,7 +532,7 @@ class WorldCup extends MessageStrategy {
             const split = away_scorers[y].split('(')
             const player = split[0].trim()
             const amount = split[1].split(')')[0].trim()
-            if (player == 'Penalties') {
+            if (player === 'Penalties') {
               continue
             } else {
               for (let l = 0; l < amount; l++) {
@@ -589,8 +587,8 @@ class WorldCup extends MessageStrategy {
       }
 
       const sortable_players = []
-      for (var p in top_players) {
-        sortable_players.push([p, top_players[p]])
+      for (const p1 of top_players) {
+        sortable_players.push([p1, top_players[p1]])
       }
       sortable_players.sort(function (a, b) {
         return a[1] - b[1]
@@ -605,21 +603,21 @@ class WorldCup extends MessageStrategy {
         const rpeat = 25 - sortable_players[u][0].length > 0 ? 25 - sortable_players[u][0].length : 0
         msg += top_country_mapping[sortable_players[u][0]] + ' ' + sortable_players[u][0] + ' '.repeat(rpeat) + ' ' + sortable_players[u][1] + '\n'
 
-        if (u % 10 == 9) {
+        if (u % 10 === 9) {
           MessageStrategy.typing(message)
           MessageStrategy.client.sendText(message.from, '```' + msg + '```')
           msg = ''
         }
       }
 
-      if (msg.trim() != '') {
+      if (msg.trim() !== '') {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, '```' + msg + '```')
       }
 
       const sortable_countries = []
-      for (var p in top_countries) {
-        sortable_countries.push([p, top_countries[p]])
+      for (const p2 of top_countries) {
+        sortable_countries.push([p2, top_countries[p2]])
       }
       sortable_countries.sort(function (a, b) {
         return a[1] - b[1]
@@ -632,14 +630,14 @@ class WorldCup extends MessageStrategy {
         const rpeat = 25 - sortable_countries[u][0].length > 0 ? 25 - sortable_countries[u][0].length : 0
         msg += MessageStrategy.flags[sortable_countries[u][0]] + ' ' + sortable_countries[u][0] + ' '.repeat(rpeat) + ' ' + sortable_countries[u][1] + '\n'
 
-        if (u % 10 == 9) {
+        if (u % 10 === 9) {
           MessageStrategy.typing(message)
           MessageStrategy.client.sendText(message.from, '```' + msg + '```')
           msg = ''
         }
       }
 
-      if (msg.trim() != '') {
+      if (msg.trim() !== '') {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, '```' + msg + '```')
       }
@@ -650,7 +648,7 @@ class WorldCup extends MessageStrategy {
 
   static async ShowMatches (message, letter = null, today = false, tomorrow = false, current = false) {
     try {
-      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') === -1) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'API down, check back later')
         WorldCup.Login(message)
@@ -664,7 +662,7 @@ class WorldCup extends MessageStrategy {
 
       await WorldCup.Update(message)
 
-      if (WorldCup.json_matches == undefined) {
+      if (WorldCup.json_matches === undefined) {
         console.log('Empty matches')
         return
       }
@@ -695,7 +693,7 @@ class WorldCup extends MessageStrategy {
           console.log((m.getMonth() + 1) + '=' + d.getMonth())
           console.log(m.getDate() + '=' + d.getDate())
 
-          if (!(m.getFullYear() == d.getFullYear() && m.getMonth() == d.getMonth() && m.getDate() == d.getDate())) {
+          if (!(m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() && m.getDate() === d.getDate())) {
             console.log('Skip not today = ' + home + ' v ' + away)
             continue
           } else {
@@ -708,7 +706,7 @@ class WorldCup extends MessageStrategy {
           console.log('Tomorrow')
           d.setDate(d.getDate() + 1)
 
-          if (!(m.getFullYear() == d.getFullYear() && m.getMonth() == d.getMonth() && m.getDate() == d.getDate())) {
+          if (!(m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() && m.getDate() === d.getDate())) {
             console.log('Skip not tomorrow')
             continue
           } else {
@@ -720,9 +718,9 @@ class WorldCup extends MessageStrategy {
         if (current) {
           console.log('Current')
           if (!(
-            m.getFullYear() == d.getFullYear() &&
-            m.getMonth() == d.getMonth() &&
-            m.getDate() == d.getDate() &&
+            m.getFullYear() === d.getFullYear() &&
+            m.getMonth() === d.getMonth() &&
+            m.getDate() === d.getDate() &&
             d.getHours() >= m.getHours() &&
             d.getHours() <= m.getHours() + 2)) {
             console.log('Skip not current')
@@ -733,9 +731,9 @@ class WorldCup extends MessageStrategy {
           }
         }
 
-        if (letter != null) {
+        if (letter !== null) {
           console.log('Letter')
-          if (match.group != letter.toUpperCase()) {
+          if (match.group !== letter.toUpperCase()) {
             continue
           }
         }
@@ -746,7 +744,7 @@ class WorldCup extends MessageStrategy {
           continue
         }
 
-        if (lastDate != dateString) {
+        if (lastDate !== dateString) {
           tempLines.push(' '.repeat(7) + dateString)
           lastDate = dateString
         }
@@ -754,7 +752,7 @@ class WorldCup extends MessageStrategy {
         let fullscore_home = 0
         let fullscore_away = 0
 
-        if (match.home_scorers[0] != 'null') {
+        if (match.home_scorers[0] !== 'null') {
           if (match.home_scorers[0].indexOf('Penalties(') > -1) {
             console.log('xxxxxxxxxxxxxxxxxxxxxxxxx')
             console.log(match.home_scorers[0])
@@ -764,7 +762,7 @@ class WorldCup extends MessageStrategy {
           }
         }
 
-        if (match.away_scorers[0] != 'null') {
+        if (match.away_scorers[0] !== 'null') {
           if (match.away_scorers[0].indexOf('Penalties(') > -1) {
             console.log('ddddddddddddddddddddddddddddddddd')
             console.log(match.away_scorers[0])
@@ -776,38 +774,38 @@ class WorldCup extends MessageStrategy {
 
         if (m.getFullYear() <= d.getFullYear() && m.getMonth() <= d.getMonth() && m.getDate() < d.getDate()) {
           console.log('Previous days scores')
-          home_goals = parseInt(match.home_score == null ? '0' : match.home_score) + fullscore_home
+          home_goals = parseInt(match.home_score === null ? '0' : match.home_score) + fullscore_home
           home_goals = ' (' + home_goals.toString() + ')'
-          away_goals = parseInt(match.away_score == null ? '0' : match.away_score) + fullscore_away
+          away_goals = parseInt(match.away_score === null ? '0' : match.away_score) + fullscore_away
           away_goals = '(' + away_goals.toString() + ')'
         }
 
-        if (m.getFullYear() == d.getFullYear() && m.getMonth() == d.getMonth() && m.getDate() == d.getDate() && d.getHours() >= m.getHours()) {
+        if (m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() && m.getDate() === d.getDate() && d.getHours() >= m.getHours()) {
           console.log('Today goals scored')
           if (!tomorrow) {
-            home_goals = parseInt(match.home_score == null ? '0' : match.home_score) + fullscore_home
+            home_goals = parseInt(match.home_score === null ? '0' : match.home_score) + fullscore_home
             home_goals = ' (' + home_goals.toString() + ')'
-            away_goals = parseInt(match.away_score == null ? '0' : match.away_score) + fullscore_away
+            away_goals = parseInt(match.away_score === null ? '0' : match.away_score) + fullscore_away
             away_goals = '(' + away_goals.toString() + ')'
           }
         }
 
-        home = home == '--' ? 'TBC' : home
-        away = away == '--' ? 'TBC' : away
+        home = home === '--' ? 'TBC' : home
+        away = away === '--' ? 'TBC' : away
 
-        let left_space = away == 'TBC' ? 10 : 7
+        let left_space = away === 'TBC' ? 10 : 7
         left_space = left_space - (home + home_goals).length
         left_space = left_space <= 0 ? '' : ' '.repeat(left_space)
         let l_flag = MessageStrategy.flags[match.home_team_en]
         let r_flag = MessageStrategy.flags[match.away_team_en]
 
-        l_flag = l_flag == undefined ? '' : l_flag
-        r_flag = r_flag == undefined ? '' : r_flag
+        l_flag = l_flag === undefined ? '' : l_flag
+        r_flag = r_flag === undefined ? '' : r_flag
         const theLine = left_space + home + ' ' + l_flag + home_goals + ' · ' + away_goals + ' ' + r_flag + ' ' + away
 
         let scorerLines = ''
-        if (match.away_scorers[0] != null || match.home_scorers[0] != null) {
-          if (match.home_scorers[0] != 'null' && match.home_scorers[0] != '') {
+        if (match.away_scorers[0] !== null || match.home_scorers[0] !== null) {
+          if (match.home_scorers[0] !== 'null' && match.home_scorers[0] !== '') {
             const l_scorers = match.home_scorers[0].split(',')
             scorerLines += ' '.repeat(11) + l_flag + '\n'
             for (let t = 0; t < l_scorers.length; t++) {
@@ -816,7 +814,7 @@ class WorldCup extends MessageStrategy {
             }
           }
 
-          if (match.away_scorers[0] != 'null' && match.away_scorers[0] != '') {
+          if (match.away_scorers[0] !== 'null' && match.away_scorers[0] !== '') {
             const r_scorers = match.away_scorers[0].split(',')
             scorerLines += ' '.repeat(11) + r_flag + '\n'
             for (let t = 0; t < r_scorers.length; t++) {
@@ -829,10 +827,11 @@ class WorldCup extends MessageStrategy {
         tempLines.push('\n' + ' '.repeat(10) + timeString)
         tempLines.push(theLine)
         // tempLines.push(scorerLines);
+        console.log(scorerLines)
         appended += 1
       }
 
-      if (letter != null) {
+      if (letter !== null) {
         console.log('H Letter')
         tempLines.unshift('Group ' + letter + ' matches')
       }
@@ -852,7 +851,7 @@ class WorldCup extends MessageStrategy {
         tempLines.unshift('Now playing')
       }
 
-      if (appended == 0) {
+      if (appended === 0) {
         tempLines.push('0 matches')
       }
 
@@ -878,7 +877,7 @@ class WorldCup extends MessageStrategy {
 
   static async ShowGroup (message, letter) {
     try {
-      if (Object.keys(WorldCup.headers).indexOf('Authorization') == -1) {
+      if (Object.keys(WorldCup.headers).indexOf('Authorization') === -1) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'API down, check back later')
         WorldCup.Login(message)
@@ -944,7 +943,7 @@ class WorldCup extends MessageStrategy {
   static async filterMatches (type) {
     const filtered = []
     for (let y = 0; y < WorldCup.json_matches.length; y++) {
-      if (WorldCup.json_matches[y].type == type) {
+      if (WorldCup.json_matches[y].type === type) {
         filtered.push(WorldCup.json_matches[y])
       }
     }
@@ -963,8 +962,8 @@ class WorldCup extends MessageStrategy {
       loop2:
       for (let i = 0; i < order.length; i++) {
         console.log(order[i])
-        if (matches[y].home_team_en == order[i] || matches[y].away_team_en == order[i]) {
-          const index = i == 0 ? 0 : Math.floor(i / 2)
+        if (matches[y].home_team_en === order[i] || matches[y].away_team_en === order[i]) {
+          const index = i === 0 ? 0 : Math.floor(i / 2)
           filtered[index] = matches[y]
           break loop2
         }
@@ -977,8 +976,8 @@ class WorldCup extends MessageStrategy {
   static async GetHomeAwayOrder (matches, order) {
     for (let y = 0; y < matches.length; y++) {
       for (let i = 0; i < order.length; i++) {
-        if (matches[y].home_team_en == order[i] || matches[y].away_team_en == order[i]) {
-          return i == 0 ? 0 : Math.floor(i / 2)
+        if (matches[y].home_team_en === order[i] || matches[y].away_team_en === order[i]) {
+          return i === 0 ? 0 : Math.floor(i / 2)
         }
       }
     }
@@ -988,19 +987,19 @@ class WorldCup extends MessageStrategy {
     let filtered = await WorldCup.filterMatches(stage)
 
     let state_sep = ''
-    if (stage == 'R16') state_sep = 'R16'
-    if (stage == 'semi') state_sep = 'S'
-    if (stage == 'QR') state_sep = 'Q'
-    if (stage == 'FIN') state_sep = 'F'
+    if (stage === 'R16') state_sep = 'R16'
+    if (stage === 'semi') state_sep = 'S'
+    if (stage === 'QR') state_sep = 'Q'
+    if (stage === 'FIN') state_sep = 'F'
 
     if (lookup) {
-      filtered = (stage == 'QR') ? await WorldCup.orderMatches(filtered, WorldCup.l16Order) : filtered
-      filtered = (stage == 'semi') ? await WorldCup.orderMatches(filtered, WorldCup.qOrder) : filtered
-      filtered = (stage == 'FIN') ? await WorldCup.orderMatches(filtered, WorldCup.sOrder) : filtered
+      filtered = (stage === 'QR') ? await WorldCup.orderMatches(filtered, WorldCup.l16Order) : filtered
+      filtered = (stage === 'semi') ? await WorldCup.orderMatches(filtered, WorldCup.qOrder) : filtered
+      filtered = (stage === 'FIN') ? await WorldCup.orderMatches(filtered, WorldCup.sOrder) : filtered
     }
 
     for (let t = 0; t < filtered.length; t++) {
-      if (filtered[t] == undefined) {
+      if (filtered[t] === undefined) {
         continue
       }
       const home = Object.keys(filtered[t]).indexOf('home_team_en') > -1 ? filtered[t].home_team_en : ''
@@ -1009,11 +1008,11 @@ class WorldCup extends MessageStrategy {
       let fullscore_home = ''
       let fullscore_away = ''
 
-      if (filtered[t].home_score != undefined && filtered[t].away_score != undefined) {
+      if (filtered[t].home_score !== undefined && filtered[t].away_score !== undefined) {
         fullscore_home = parseInt(filtered[t].home_score)
         fullscore_away = parseInt(filtered[t].away_score)
 
-        if (filtered[t].home_scorers[0] != 'null') {
+        if (filtered[t].home_scorers[0] !== 'null') {
           if (filtered[t].home_scorers[0].indexOf('Penalties(') > -1) {
             console.log(filtered[t].home_scorers[0])
             let penos = filtered[t].home_scorers[0].split('Penalties(')
@@ -1022,7 +1021,7 @@ class WorldCup extends MessageStrategy {
           }
         }
 
-        if (filtered[t].away_scorers[0] != 'null') {
+        if (filtered[t].away_scorers[0] !== 'null') {
           if (filtered[t].away_scorers[0].indexOf('Penalties(') > -1) {
             console.log(filtered[t].away_scorers[0])
             let penos = filtered[t].away_scorers[0].split('Penalties(')
@@ -1032,10 +1031,10 @@ class WorldCup extends MessageStrategy {
         }
       }
 
-      let home_score = fullscore_home == '' ? '' : ' (' + fullscore_home.toString() + ')'
-      let away_score = fullscore_away == '' ? '' : ' (' + fullscore_away.toString() + ')'
+      let home_score = fullscore_home === '' ? '' : ' (' + fullscore_home.toString() + ')'
+      let away_score = fullscore_away === '' ? '' : ' (' + fullscore_away.toString() + ')'
 
-      if (filtered[t].time_elapsed == 'notstarted') {
+      if (filtered[t].time_elapsed === 'notstarted') {
         home_score = ''
         away_score = ''
       }
@@ -1053,14 +1052,14 @@ class WorldCup extends MessageStrategy {
       const flag_away_replace = away_replace + 'FlagAway'
       away_replace += 'Away'
 
-      const home_vanity = WorldCup.countries[home] == undefined ? 'TBC ' + MessageStrategy.flags.World : WorldCup.countries[home]
-      const away_vanity = WorldCup.countries[away] == undefined ? 'TBC' + MessageStrategy.flags.World : WorldCup.countries[away]
+      const home_vanity = WorldCup.countries[home] === undefined ? 'TBC ' + MessageStrategy.flags.World : WorldCup.countries[home]
+      const away_vanity = WorldCup.countries[away] === undefined ? 'TBC' + MessageStrategy.flags.World : WorldCup.countries[away]
       template = template.replace(home_replace, home_vanity + home_score)
       template = template.replace(away_replace, away_vanity + away_score)
       template = template.replace(flag_home_replace, home_flag)
       template = template.replace(flag_away_replace, away_flag)
 
-      if (stage == 'R16') {
+      if (stage === 'R16') {
         if (filtered[t].home_score > filtered[t].away_score) {
           WorldCup.l16Order.push(home)
         } else {
@@ -1068,7 +1067,7 @@ class WorldCup extends MessageStrategy {
         }
       }
 
-      if (stage == 'QR') {
+      if (stage === 'QR') {
         if (filtered[t].home_score > filtered[t].away_score) {
           WorldCup.qOrder.push(home)
         } else {
@@ -1076,7 +1075,7 @@ class WorldCup extends MessageStrategy {
         }
       }
 
-      if (stage == 'semi') {
+      if (stage === 'semi') {
         if (filtered[t].home_score > filtered[t].away_score) {
           WorldCup.sOrder.push(home)
         } else {
@@ -1158,30 +1157,30 @@ class WorldCup extends MessageStrategy {
     let msg = ''
 
     try {
-      if (WorldCup.json_matches == undefined) {
+      if (WorldCup.json_matches === undefined) {
         console.log('Empty matches')
         return
       }
 
-      if (num == 2) {
+      if (num === 2) {
         const res = await WorldCup.StageReplace('FIN', templatef)
         msg = res
       }
 
-      if (num == 4) {
+      if (num === 4) {
         let res = await WorldCup.StageReplace('semi', templates)
         res = await WorldCup.StageReplace('FIN', res, true)
         msg = res
       }
 
-      if (num == 8) {
+      if (num === 8) {
         let res = await WorldCup.StageReplace('QR', templateq)
         res = await WorldCup.StageReplace('semi', res, true)
         res = await WorldCup.StageReplace('FIN', res, true)
         msg = res
       }
 
-      if (num == 16) {
+      if (num === 16) {
         let res = await WorldCup.StageReplace('R16', template16)
         res = await WorldCup.StageReplace('QR', res, true)
         res = await WorldCup.StageReplace('semi', res, true)

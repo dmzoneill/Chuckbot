@@ -64,6 +64,8 @@ class Pornhub extends MessageStrategy {
 
       exec('python3 strategies/scripts/pornhub.py "' + search + '"', async (error, stdout, stderr) => {
         try {
+          if (error) return
+
           console.log(stdout)
           const porn = JSON.parse(stdout)
           console.log(stdout)

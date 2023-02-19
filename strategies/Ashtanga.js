@@ -147,6 +147,7 @@ class Ashtanga extends MessageStrategy {
           if (distance < nearest_distance && distance < 5) {
             nearest_distance = distance
             nearest = path
+            console.log(nearest)
           }
         })
       })
@@ -337,7 +338,7 @@ class Ashtanga extends MessageStrategy {
         }
       })
 
-      const check_distance = nearest == 'Navasana' ? 1 : 5
+      const check_distance = nearest === 'Navasana' ? 1 : 5
 
       if (nearest_distance < check_distance) {
         MessageStrategy.typing(message)

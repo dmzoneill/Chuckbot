@@ -17,7 +17,7 @@ class Chuck extends MessageStrategy {
     this.setup()
   }
 
-  async setup() {
+  async setup () {
     Chuck.apikey = fs.readFileSync('strategies/config/chatgpt.key').toString().trim()
 
     const { ChatGPTAPI } = await import('chatgpt')
@@ -30,7 +30,7 @@ class Chuck extends MessageStrategy {
   handleEvent (message) {
     // Chuck.self = this;
 
-    // if (message['event_type'] == 'onAddedToGroup') {
+    // if (message['event_type'] === 'onAddedToGroup') {
     //   console.log("pre added");
     //   Chuck.self.addedToGroup(message);
     // }
@@ -60,7 +60,7 @@ class Chuck extends MessageStrategy {
         },
         'chuck new': {
           test: function (message) {
-            return message.body.toLowerCase() == 'chuck new'
+            return message.body.toLowerCase() === 'chuck new'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -116,8 +116,7 @@ class Chuck extends MessageStrategy {
     }
   }
 
-
-  helpMenu() {
+  helpMenu () {
     let help = ''
 
     Object.keys(MessageStrategy.strategies).sort().forEach(key => {
@@ -126,11 +125,11 @@ class Chuck extends MessageStrategy {
         help += '  | - help ' + key.toLowerCase() + '\n'
 
         const actions = MessageStrategy.strategies[key].provides()
-        if (actions == undefined || actions == undefined) {
+        if (actions === undefined || actions === undefined) {
           console.log(key + ' undefined')
         }
         const provides = actions.provides
-        if (provides == undefined || provides == undefined) {
+        if (provides === undefined || provides === undefined) {
           console.log(key + ' undefined')
         }
 
@@ -150,10 +149,10 @@ class Chuck extends MessageStrategy {
     return help
   }
 
-  async Help(message) {
+  async Help (message) {
     try {
-      let question = message.body.substr("chuck help".length)
-      question = question + ", using the following menu system\n\n" + Chuck.self.helpMenu()
+      let question = message.body.substr('chuck help'.length)
+      question = question + ', using the following menu system\n\n' + Chuck.self.helpMenu()
       const res = await Chuck.gptapi.sendMessage(question)
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, res.text)
@@ -163,35 +162,37 @@ class Chuck extends MessageStrategy {
     }
   }
 
-  async Converse(message) {
+  async Converse (message) {
     try {
       const options = {}
-      if (!('chats' in MessageStrategy.state['Chuck'])) {
-        MessageStrategy.state['Chuck']['chats'] = {}
+      if (!('chats' in MessageStrategy.state.Chuck)) {
+        MessageStrategy.state.Chuck.chats = {}
       }
 
-      if (!(message.chatId in MessageStrategy.state['Chuck']['chats'])) {
-        MessageStrategy.state['Chuck']['chats'][message.chatId] = {}
-        MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId'] = null
-        MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId'] = null
+      if (!(message.chatId in MessageStrategy.state.Chuck.chats)) {
+        MessageStrategy.state.Chuck.chats[message.chatId] = {}
+        MessageStrategy.state.Chuck.chats[message.chatId].conversationId = null
+        MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = null
       }
 
-      if (MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId'] != null) {
-        options.conversationId = MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId']
+      if (MessageStrategy.state.Chuck.chats[message.chatId].conversationId != null) {
+        options.conversationId = MessageStrategy.state.Chuck.chats[message.chatId].conversationId
       }
 
-      if (MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId'] != null) {
-        options.parentMessageId = MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId']
+      if (MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId != null) {
+        options.parentMessageId = MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId
       }
 
-      const res = await Chuck.gptapi.sendMessage(message.body.substr(7), options)
+      const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
+
+      const res = await Chuck.gptapi.sendMessage(message.body.substr(7) + '(' + requester + ')', options)
 
       if (res.conversationId != null) {
-        MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId'] = res.conversationId
+        MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
       }
 
       if (res.id != null) {
-        MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId'] = res.id
+        MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
       }
 
       MessageStrategy.typing(message)
@@ -202,32 +203,36 @@ class Chuck extends MessageStrategy {
     }
   }
 
-  async NewConversation(message) {
+  async NewConversation (message) {
     try {
-      if (!('chats' in MessageStrategy.state['Chuck'])) {
-        MessageStrategy.state['Chuck']['chats'] = {}
+      if (!('chats' in MessageStrategy.state.Chuck)) {
+        MessageStrategy.state.Chuck.chats = {}
       }
 
-      if (!(message.chatId in MessageStrategy.state['Chuck']['chats'])) {
-        MessageStrategy.state['Chuck']['chats'][message.chatId] = {}
+      if (!(message.chatId in MessageStrategy.state.Chuck.chats)) {
+        MessageStrategy.state.Chuck.chats[message.chatId] = {}
       }
 
-      MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId'] = null
-      MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId'] = null
+      MessageStrategy.state.Chuck.chats[message.chatId].conversationId = null
+      MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = null
 
-      let question = "I want to ask you questions about the following menu system \n\n" + Chuck.self.helpMenu()
+      let question = 'I want to ask you questions about the following menu system \n\n' + Chuck.self.helpMenu()
+      question += '\n\nEach entry is a command, and i will ask you about commands on the list and their usage.'
+      question += '\n\nThe questions will have the name or phone number at the end of the question in brackets.  You can use their name in the response.'
       let res = await Chuck.gptapi.sendMessage(question)
 
-      let options = {}
+      const options = {}
       options.parentMessageId = res.id
       options.conversationId = res.conversationId
-      MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId'] = res.conversationId
-      MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId'] = res.id
+      MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
+      MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
 
-      res = await Chuck.gptapi.sendMessage('Lets start a new conversation', options)
+      const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
 
-      MessageStrategy.state['Chuck']['chats'][message.chatId]['conversationId'] = res.conversationId
-      MessageStrategy.state['Chuck']['chats'][message.chatId]['parentMessageId'] = res.id
+      res = await Chuck.gptapi.sendMessage('Lets start a new conversation (' + requester + ')', options)
+
+      MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
+      MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
 
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, res.text)

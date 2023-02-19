@@ -38,7 +38,7 @@ class Youtube extends MessageStrategy {
         },
         'skip-youtube': {
           test: function (message) {
-            return message.body.match(new RegExp(/^https:\/\/.*youtube.com\/.*/)) || message.body.match(new RegExp(/^https:\/\/youtu.be\/.*/))
+            return message.body.match(/^https:\/\/.*youtube.com\/.*/) || message.body.match(/^https:\/\/youtu.be\/.*/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -69,19 +69,19 @@ class Youtube extends MessageStrategy {
       MessageStrategy.typing(message)
       Youtube.self.waitFor(500)
 
-      if (Object.keys(message).includes('thumbnail') == false) {
+      if (Object.keys(message).includes('thumbnail') === false) {
         getVideo = true
       }
 
       if (Object.keys(message).includes('thumbnail')) {
-        if (message.thumbnail.length == 'undefined') {
+        if (message.thumbnail.length === 'undefined') {
           getVideo = true
         }
       }
 
       if (Object.keys(message).includes('thumbnail')) {
-        if (getVideo == false) {
-          if (message.thumbnail.length == 0) {
+        if (getVideo === false) {
+          if (message.thumbnail.length === 0) {
             getVideo = true
           }
         }
@@ -96,7 +96,7 @@ class Youtube extends MessageStrategy {
       if (parts[3].indexOf('v=') > -1) {
         const sub_parts = parts[3].split('v=')
         video_id = sub_parts[1]
-      } else if (parts[3] == 'shorts') {
+      } else if (parts[3] === 'shorts') {
         video_id = parts[4]
       } else {
         video_id = parts[3]
@@ -106,7 +106,7 @@ class Youtube extends MessageStrategy {
         MessageStrategy.typing(message)
         const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + video_id + '/hqdefault.jpg')
 
-        if (youtube_image == null) {
+        if (youtube_image === null) {
           return
         }
 
@@ -123,7 +123,7 @@ class Youtube extends MessageStrategy {
 
     try {
       const results = await yt.search(search_term)
-      if (results.length == 0) {
+      if (results.length === 0) {
         return false
       }
       MessageStrategy.typing(message)

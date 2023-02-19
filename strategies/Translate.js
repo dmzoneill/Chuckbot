@@ -138,7 +138,7 @@ class Translate extends MessageStrategy {
     Object.keys(Translate.self.supported).forEach(key => {
       const padding = ' '.repeat(25 - key.length)
       msg += key + padding + ' : ' + Translate.self.supported[key] + '\n'
-      msg += i % 5 == 0 ? '\n' : ''
+      msg += i % 5 === 0 ? '\n' : ''
       i += 1
     })
     msg += '```'
@@ -235,8 +235,8 @@ class Translate extends MessageStrategy {
 
   SetDefault (message) {
     const parts = message.body.split(' ')
-    if (parts.length == 3) {
-      if (Object.values(this.supported).includes(parts[2]) == false) {
+    if (parts.length === 3) {
+      if (Object.values(this.supported).includes(parts[2]) === false) {
         Translate.self.sendSupported(message)
         return false
       }
@@ -286,7 +286,7 @@ class Translate extends MessageStrategy {
       target_lang = langparts[1]
     }
 
-    if (Object.values(Translate.self.supported).includes(target_lang) == false) {
+    if (Object.values(Translate.self.supported).includes(target_lang) === false) {
       Translate.self.sendSupported(message)
       return false
     }

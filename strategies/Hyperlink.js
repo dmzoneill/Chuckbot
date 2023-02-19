@@ -22,7 +22,7 @@ class HyperLink extends MessageStrategy {
       provides: {
         Hyperlink: {
           test: function (message) {
-            return message.body.match(new RegExp(/^(http|https):\/\/.*/))
+            return message.body.match(/^(http|https):\/\/.*/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)

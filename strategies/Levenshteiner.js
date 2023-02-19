@@ -47,7 +47,7 @@ class Levenshteiner extends MessageStrategy {
   }
 
   Levenshteiner (message) {
-    if (message.body.indexOf(' ') == -1) {
+    if (message.body.indexOf(' ') === -1) {
       return
     }
 

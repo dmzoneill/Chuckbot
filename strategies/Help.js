@@ -73,7 +73,7 @@ class Help extends MessageStrategy {
     let help = ''
     let cnt = 0
 
-    if (message.from.indexOf('@c.us') == -1) {
+    if (message.from.indexOf('@c.us') === -1) {
       MessageStrategy.client.reply(message.from, 'Messaging you directly, check your messages', message.id, true)
     }
 
@@ -83,11 +83,11 @@ class Help extends MessageStrategy {
         help += '  | - help ' + key.toLowerCase() + '\n'
 
         const actions = MessageStrategy.strategies[key].provides()
-        if (actions == undefined || actions == undefined) {
+        if (actions === undefined || actions === undefined) {
           console.log(key + ' undefined')
         }
         const provides = actions.provides
-        if (provides == undefined || provides == undefined) {
+        if (provides === undefined || provides === undefined) {
           console.log(key + ' undefined')
         }
 
@@ -104,7 +104,7 @@ class Help extends MessageStrategy {
 
         help += ''
         cnt += 1
-        if (cnt % 6 == 0) {
+        if (cnt % 6 === 0) {
           MessageStrategy.client.sendText(message.sender.id, help.trim())
           help = ''
         }
@@ -112,7 +112,7 @@ class Help extends MessageStrategy {
         console.log(err)
       }
     })
-    if (help != '') {
+    if (help !== '') {
       MessageStrategy.client.sendText(message.sender.id, help.trim())
     }
     return true
@@ -123,12 +123,12 @@ class Help extends MessageStrategy {
     const parts = message.body.split(' ')
     const feature = parts[1].toLowerCase()
 
-    if (message.from.indexOf('@c.us') == -1) {
+    if (message.from.indexOf('@c.us') === -1) {
       MessageStrategy.client.reply(message.from, 'Messaging you directly, check your messages', message.id, true)
     }
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
-      if (key.toLowerCase() == feature) {
+      if (key.toLowerCase() === feature) {
         let full_help = MessageStrategy.strategies[key].provides().help + '\n\n'
 
         const actions = MessageStrategy.strategies[key].provides().provides

@@ -22,7 +22,7 @@ class Twitter extends MessageStrategy {
       provides: {
         Twitter: {
           test: function (message) {
-            return message.body.match(new RegExp(/^https:\/\/.*?twitter.com\/.*/))
+            return message.body.match(/^https:\/\/.*?twitter.com\/.*/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)

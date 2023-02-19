@@ -29,7 +29,7 @@ class Harass extends MessageStrategy {
         for (let v = 0; v < Harass.cunts.length; v++) {
           if (MessageStrategy.client) {
             const slut = Harass.cunts[v]
-            if (slut != undefined) {
+            if (slut !== undefined) {
               const parts = slut.trim().indexOf(' ') ? slut.trim().split(' ') : [slut.trim()]
               MessageStrategy.client.sendText(parts[0], Harass.self.get_joke())
             }

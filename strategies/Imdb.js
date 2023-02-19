@@ -50,6 +50,8 @@ class Imdb extends MessageStrategy {
     try {
       const search_term = message.body.substring(5)
       nameToImdb(search_term, function (err, res, inf) {
+        if (err) return
+
         MessageStrategy.typing(message)
         MessageStrategy.client.sendLinkWithAutoPreview(message.from, 'https://www.imdb.com/title/' + res + '/')
       })

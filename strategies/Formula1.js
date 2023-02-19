@@ -1,4 +1,3 @@
-const { contact_update_counter } = require('../MessageStrategy.js')
 const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
@@ -17,7 +16,6 @@ class Formula1 extends MessageStrategy {
   static ranking_driver = {}
   static ranking_team = {}
   static competition = {}
-  static drivers = {}
   static races = {}
 
   static cache = {}
@@ -234,12 +232,12 @@ class Formula1 extends MessageStrategy {
         Formula1.competition[competition.id] = competition
         const circuit = race.circuit
         Formula1.circuits[circuit.id] = circuit
-        const laps = race.laps
+        // const laps = race.laps
         const fastest_lap = race.fastest_lap
         await Formula1.downloadImage(circuit.image, Formula1.cache_folder + '/circuits/' + circuit.id)
         msg += competition.name + '\n'
         msg += 'Circuit: ' + circuit.name + '\n'
-        if (fastest_lap != null && Formula1.drivers[fastest_lap.driver.id] != undefined) {
+        if (fastest_lap !== null && Formula1.drivers[fastest_lap.driver.id] !== undefined) {
           msg += 'Fastest Lap: ' + Formula1.drivers[fastest_lap.driver.id].name + ' ' + fastest_lap.time + '\n'
         }
         msg += 'Laps ' + race.laps.total + ' Distance: ' + race.distance + '\n'

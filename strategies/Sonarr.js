@@ -310,10 +310,10 @@ class Sonarr extends MessageStrategy {
       if (Number.isNaN(search_id)) {
         const series = await Sonarr.self.List(message, true)
         const found = series.find(x => {
-          return x.title.toLowerCase() == message.body.substring(len).trim()
+          return x.title.toLowerCase() === message.body.substring(len).trim()
         })
 
-        if (found == undefined) {
+        if (found === undefined) {
           return
         }
 
@@ -344,20 +344,20 @@ class Sonarr extends MessageStrategy {
       if (Number.isNaN(search_id)) {
         const series = await Sonarr.self.List(message, true)
         const found = series.find(x => {
-          return x.title.toLowerCase() == message.body.substring(len).trim()
+          return x.title.toLowerCase() === message.body.substring(len).trim()
         })
 
-        if (found == undefined) {
+        if (found === undefined) {
           return
         }
         name = message.body.substring(len)
         search_id = found.id
       } else {
         const found = series.find(x => {
-          return x.id == search_id
+          return x.id === search_id
         })
 
-        if (found == undefined) {
+        if (found === undefined) {
           return
         }
         name = found.title
@@ -368,14 +368,14 @@ class Sonarr extends MessageStrategy {
       let fnd = 0
 
       while (true) {
-        if (page % 4 == 0) {
+        if (page % 4 === 0) {
           MessageStrategy.typing(message)
         }
         const missing = await Sonarr.self.sonarr_query('/api/v3/wanted/missing/?pageSize=1000&page=' + page.toString())
         const data = missing.data
 
         for (let h = 0; h < data.records.length; h++) {
-          if (data.records[h].seriesId == search_id) {
+          if (data.records[h].seriesId === search_id) {
             msg += 's' + data.records[h].seasonNumber.toString().padStart(2, '0')
             msg += 'e' + data.records[h].episodeNumber.toString().padStart(2, '0')
             msg += ' - ' + data.records[h].title + '\n'
@@ -415,7 +415,7 @@ class Sonarr extends MessageStrategy {
       let poster = ''
 
       for (let p = 0; p < show.images.length; p++) {
-        if (show.images[p].coverType == 'poster') {
+        if (show.images[p].coverType === 'poster') {
           poster = show.images[p].remoteUrl
           break
         }
@@ -506,7 +506,7 @@ class Sonarr extends MessageStrategy {
         }
       }
     } catch (err) {
-      if (x == 1) {
+      if (x === 1) {
         console.log(err)
         MessageStrategy.client.sendText(message.from, 'No results')
       }
@@ -534,7 +534,7 @@ class Sonarr extends MessageStrategy {
       for (let y = 0; y < map1.length; y++) {
         msg += map1[y] + '\n'
 
-        if (y % 10 == 9) {
+        if (y % 10 === 9) {
           msg = msg.trim() + '```'
           MessageStrategy.client.sendText(message.from, msg)
           msg = '```'
@@ -624,10 +624,10 @@ class Sonarr extends MessageStrategy {
       const name = message.body.substring('sonarr show'.length).toLowerCase().trim()
       const series = await Sonarr.self.List(message, true)
       const found = series.find(x => {
-        return x.title.toLowerCase() == name
+        return x.title.toLowerCase() === name
       })
 
-      if (found == undefined) {
+      if (found === undefined) {
         return
       }
 
@@ -759,7 +759,7 @@ class Sonarr extends MessageStrategy {
       let msg = ''
       for (let y = 0; y < data.length; y++) {
         const found = series.find(x => {
-          return x.id == data[y].seriesId
+          return x.id === data[y].seriesId
         })
 
         msg += '*' + found.title + '*\n'

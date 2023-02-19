@@ -22,7 +22,7 @@ class Wikipedia extends MessageStrategy {
       provides: {
         'wiki today': {
           test: function (message) {
-            return message.body.toLowerCase() == 'wiki today'
+            return message.body.toLowerCase() === 'wiki today'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -72,7 +72,7 @@ class Wikipedia extends MessageStrategy {
     try {
       const data = await Wikipedia.self.get_page_og_data(Wikipedia.self, fullurl, 500)
 
-      if (data[1] == null) {
+      if (data[1] === null) {
         MessageStrategy.client.reply(Wikipedia.self.message.from, 'Sorry no preview', Wikipedia.self.message.id, true)
         return
       }

@@ -22,7 +22,7 @@ class WebCam extends MessageStrategy {
       provides: {
         'webcam picture': {
           test: function (message) {
-            return message.body.toLowerCase() == 'webcam picture'
+            return message.body.toLowerCase() === 'webcam picture'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -90,6 +90,8 @@ class WebCam extends MessageStrategy {
     MessageStrategy.typing(message)
 
     exec(cmd, (error, stdout, stderr) => {
+      if (error) return
+
       if (fs.existsSync(sha1d + '.mp4')) {
         try {
           MessageStrategy.typing(message)
@@ -113,12 +115,13 @@ class WebCam extends MessageStrategy {
         saveShots: true,
         output: 'jpeg',
         device: false,
-        callbackReturn: 'location',
         verbose: false,
         callbackReturn: 'base64'
       }
 
       NodeWebcam.capture('test_picture', opts, function (err, data) {
+        if (err) return
+
         try {
           MessageStrategy.client.sendImage(message.chatId, data, 'filename.jpeg', '')
           fs.unlinkSync('test_picture.jpg')

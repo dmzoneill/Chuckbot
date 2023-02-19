@@ -19,7 +19,7 @@ class Crypto extends MessageStrategy {
 
   get_coin_value (slug) {
     for (let i = 0; i < Crypto.coins.length; i++) {
-      if (Crypto.coins[i].slug == slug) {
+      if (Crypto.coins[i].slug === slug) {
         return parseFloat(Crypto.coins[i].quote.USD.price).toFixed(3)
       }
     }
@@ -28,7 +28,7 @@ class Crypto extends MessageStrategy {
 
   get_coin (slug) {
     for (let i = 0; i < Crypto.coins.length; i++) {
-      if (Crypto.coins[i].slug == slug) {
+      if (Crypto.coins[i].slug === slug) {
         return Crypto.coins[i]
       }
     }
@@ -95,11 +95,11 @@ class Crypto extends MessageStrategy {
         percent_change_1h = percent_change_1h.startsWith('-') ? percent_change_1h : '+' + percent_change_1h
         let percent_change_24h = parseFloat(coins[i].quote.USD.percent_change_24h).toFixed(3).toString()
         percent_change_24h = percent_change_24h.startsWith('-') ? percent_change_24h : '+' + percent_change_24h
-        const change = '' + percent_change_1h + '%    ' + percent_change_24h + '%'
+        // const change = '' + percent_change_1h + '%    ' + percent_change_24h + '%'
 
         msg += symbol + symbolpadding + ' : $' + price + pricepadding + percent_change_24h + '\n'
-        if (i % 5 == 4) msg += '\n'
-        if (i % 25 == 24) {
+        if (i % 5 === 4) msg += '\n'
+        if (i % 25 === 24) {
           MessageStrategy.typing(message)
           MessageStrategy.client.sendText(message.from, msg.trim() + '```')
           await Crypto.self.waitFor(500)
@@ -123,12 +123,12 @@ class Crypto extends MessageStrategy {
     const parts = message.body.split(' ')
     let coin = parts[1]
     let period = parts.length > 2 ? parts[2] : '1'
-    period = (period == '1d' || period == '7d' || period == '1m' || period == '3m' || period == '1y') ? period : '1d'
+    period = (period === '1d' || period === '7d' || period === '1m' || period === '3m' || period === '1y') ? period : '1d'
 
     const slugkeys = Object.keys(Crypto.coinslugs)
     const slugvalues = Object.values(Crypto.coinslugs)
 
-    if (slugkeys.includes(coin.toUpperCase()) == false && slugvalues.includes(coin.toLowerCase()) == false) {
+    if (slugkeys.includes(coin.toUpperCase()) === false && slugvalues.includes(coin.toLowerCase()) === false) {
       try {
         MessageStrategy.typing(message)
         let msg = '```'
@@ -138,7 +138,7 @@ class Crypto extends MessageStrategy {
           const total = 10 - key.length
           const padding = ' '.repeat(total)
           msg += key + padding + '' + Crypto.coinslugs[key] + '\n'
-          if (i % 5 == 4) msg += '\n'
+          if (i % 5 === 4) msg += '\n'
           i += 1
           if (i > 50) return false
         })
@@ -206,7 +206,7 @@ class Crypto extends MessageStrategy {
         '1y': '//*[@id="react-tabs-8"]'
       }
 
-      if (period != '1d') {
+      if (period !== '1d') {
         await Crypto.self.waitFor(1500)
         const days = await page.waitForXPath(paths[period])
         if (days) {
@@ -227,7 +227,7 @@ class Crypto extends MessageStrategy {
       // wait for the selector to load
       const element = await page.$x(xpath)
       const sha1d = crypto.createHash('sha1').digest('hex')
-      const text = await page.evaluate(element => element.textContent, element[0])
+      // const text = await page.evaluate(element => element.textContent, element[0])
 
       await element[0].screenshot({ path: sha1d + '.png' })
       await browser.close()
@@ -239,55 +239,55 @@ class Crypto extends MessageStrategy {
 
       MessageStrategy.typing(message)
       const coindetails = Crypto.self.get_coin(coin)
-      let coin_msg = ''
+      let coinMsg = ''
 
       const objfiat = Object.keys(coindetails.quote).includes('USD') ? coindetails.quote.USD : coindetails.quote.USD
       const objCrypto = Object.keys(coindetails.quote).includes('USD') ? '$' : '€'
 
-      if (period == '7') {
-        coin_msg += '*' + coindetails.name + '* 🪙 '
-        coin_msg += '*' + parseFloat(objfiat.percent_change_7d).toFixed(3).toString() + '%* (7d)'
-        coin_msg += objfiat.percent_change_7d > 0 ? '🔺\n' : '🔻\n'
-        coin_msg += '\n'
-        coin_msg += '```'
-        coin_msg += 'Symbol           : ' + coindetails.symbol + '\n'
-        coin_msg += 'Slug             : ' + coindetails.slug + '\n'
-        coin_msg += 'Max supply       : ' + coindetails.max_supply + '\n'
-        coin_msg += 'Supply           : ' + coindetails.circulating_supply + '\n'
-        coin_msg += '\n'
-        coin_msg += 'Price            : ' + objCrypto + Crypto.self.get_coin_value(coin) + '\n'
-        coin_msg += 'Market Cap       : ' + objCrypto + Math.round(objfiat.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '\n'
-        coin_msg += 'Market Dominance : ' + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + '%'
+      if (period === '7') {
+        coinMsg += '*' + coindetails.name + '* 🪙 '
+        coinMsg += '*' + parseFloat(objfiat.percent_change_7d).toFixed(3).toString() + '%* (7d)'
+        coinMsg += objfiat.percent_change_7d > 0 ? '🔺\n' : '🔻\n'
+        coinMsg += '\n'
+        coinMsg += '```'
+        coinMsg += 'Symbol           : ' + coindetails.symbol + '\n'
+        coinMsg += 'Slug             : ' + coindetails.slug + '\n'
+        coinMsg += 'Max supply       : ' + coindetails.max_supply + '\n'
+        coinMsg += 'Supply           : ' + coindetails.circulating_supply + '\n'
+        coinMsg += '\n'
+        coinMsg += 'Price            : ' + objCrypto + Crypto.self.get_coin_value(coin) + '\n'
+        coinMsg += 'Market Cap       : ' + objCrypto + Math.round(objfiat.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '\n'
+        coinMsg += 'Market Dominance : ' + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + '%'
       } else {
-        coin_msg += '*' + coindetails.name + '* 🪙 '
-        coin_msg += '*' + parseFloat(objfiat.percent_change_24h).toFixed(3).toString() + '%* (24hr)'
-        coin_msg += objfiat.percent_change_24h > 0 ? '🔺\n' : '🔻\n'
-        coin_msg += '\n'
-        coin_msg += '```'
-        coin_msg += 'Symbol           : ' + coindetails.symbol + '\n'
-        coin_msg += 'Slug             : ' + coindetails.slug + '\n'
-        coin_msg += 'Max supply       : ' + coindetails.max_supply + '\n'
-        coin_msg += 'Supply           : ' + coindetails.circulating_supply + '\n'
-        coin_msg += '\n'
-        coin_msg += 'Price            : ' + objCrypto + Crypto.self.get_coin_value(coin) + '\n'
-        coin_msg += 'Volume 24h       : ' + Math.round(objfiat.volume_24h).toString() + '\n'
-        coin_msg += 'Market Cap       : ' + objCrypto + Math.round(objfiat.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '\n'
-        coin_msg += 'Market Dominance : ' + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + '%'
+        coinMsg += '*' + coindetails.name + '* 🪙 '
+        coinMsg += '*' + parseFloat(objfiat.percent_change_24h).toFixed(3).toString() + '%* (24hr)'
+        coinMsg += objfiat.percent_change_24h > 0 ? '🔺\n' : '🔻\n'
+        coinMsg += '\n'
+        coinMsg += '```'
+        coinMsg += 'Symbol           : ' + coindetails.symbol + '\n'
+        coinMsg += 'Slug             : ' + coindetails.slug + '\n'
+        coinMsg += 'Max supply       : ' + coindetails.max_supply + '\n'
+        coinMsg += 'Supply           : ' + coindetails.circulating_supply + '\n'
+        coinMsg += '\n'
+        coinMsg += 'Price            : ' + objCrypto + Crypto.self.get_coin_value(coin) + '\n'
+        coinMsg += 'Volume 24h       : ' + Math.round(objfiat.volume_24h).toString() + '\n'
+        coinMsg += 'Market Cap       : ' + objCrypto + Math.round(objfiat.market_cap).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '\n'
+        coinMsg += 'Market Dominance : ' + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + '%'
       }
-      coin_msg += '```'
+      coinMsg += '```'
 
       await MessageStrategy.client.sendImage(
         message.from,
         sha1d + '.png',
         '',
-        coin_msg)
+        coinMsg)
 
       if (fs.existsSync(sha1d + '.png')) {
         fs.unlinkSync(sha1d + '.png')
       }
     } catch (err) {
       console.log(err)
-      console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@")
+      console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@')
       MessageStrategy.client.sendText(message.from, err)
     }
   }
@@ -319,7 +319,7 @@ class Crypto extends MessageStrategy {
         },
         'coin 0-9': {
           test: function (message) {
-            return message.body.match(/^coin ([0-9]+)$/i) != null
+            return message.body.match(/^coin ([0-9]+)$/i) !== null
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -338,7 +338,7 @@ class Crypto extends MessageStrategy {
         },
         'coin name': {
           test: function (message) {
-            return message.body.match(/^coin ([0-9a-z\-]+)$/i) != null
+            return message.body.match(/^coin ([0-9a-z\-]+)$/i) !== null
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -357,7 +357,7 @@ class Crypto extends MessageStrategy {
         },
         'coin name duration': {
           test: function (message) {
-            return message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) != null
+            return message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) !== null
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)

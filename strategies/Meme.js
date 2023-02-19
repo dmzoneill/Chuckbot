@@ -19,10 +19,10 @@ class Meme extends MessageStrategy {
   provides (message) {
     Meme.self = this
 
-    if (Meme.memes_setup == false) {
+    if (Meme.memes_setup === false) {
       Object.keys(Meme.timers).forEach(key => clearInterval(Meme.timers[key]))
       const setup = Meme.self.setup(message)
-      if (setup == false) {
+      if (setup === false) {
         return {}
       }
       Meme.self.setup_tickers()
@@ -110,7 +110,7 @@ class Meme extends MessageStrategy {
         },
         'meme freq': {
           test: function (message) {
-            return message.body.toLowerCase().match(new RegExp(/meme freq \d+ \d+/))
+            return message.body.toLowerCase().match(/meme freq \d+ \d+/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -129,7 +129,7 @@ class Meme extends MessageStrategy {
         },
         'meme spam': {
           test: function (message) {
-            return message.body.toLowerCase().match(new RegExp(/meme spam \d+/))
+            return message.body.toLowerCase().match(/meme spam \d+/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -161,43 +161,43 @@ class Meme extends MessageStrategy {
     const max = 60 * 60 * 1000
     const spam = 10
 
-    if (message == null) {
+    if (message === null) {
       return false
     }
 
-    if (Object.keys(message).indexOf('chatId') == -1) {
+    if (Object.keys(message).indexOf('chatId') === -1) {
       return false
     }
 
-    if (Object.keys(MessageStrategy.state.Meme).indexOf('chats') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme).indexOf('chats') === -1) {
       MessageStrategy.state.Meme.chats = {}
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats).indexOf(message.chatId) == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats).indexOf(message.chatId) === -1) {
       MessageStrategy.state.Meme.chats[message.chatId] = {}
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('enabled') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('enabled') === -1) {
       MessageStrategy.state.Meme.chats[message.chatId].enabled = false
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('from') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('from') === -1) {
       MessageStrategy.state.Meme.chats[message.chatId].from = message.from
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('min') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('min') === -1) {
       MessageStrategy.state.Meme.chats[message.chatId].min = min
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('max') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('max') === -1) {
       MessageStrategy.state.Meme.chats[message.chatId].max = max
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('spam') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('spam') === -1) {
       MessageStrategy.state.Meme.chats[message.chatId].spam = spam
     }
 
-    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('counter') == -1) {
+    if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('counter') === -1) {
       MessageStrategy.state.Meme.chats[message.chatId].counter = 0
     }
 
@@ -207,7 +207,7 @@ class Meme extends MessageStrategy {
   setup_tickers () {
     Meme.timers = {}
     Object.keys(MessageStrategy.state.Meme.chats).forEach(chatid => {
-      if (MessageStrategy.state.Meme.chats[chatid].enabled == true) {
+      if (MessageStrategy.state.Meme.chats[chatid].enabled === true) {
         Meme.self.setup_ticker(chatid)
       }
     })

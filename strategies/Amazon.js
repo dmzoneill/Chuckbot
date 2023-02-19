@@ -22,7 +22,7 @@ class Amazon extends MessageStrategy {
       provides: {
         Preview: {
           test: function (message) {
-            return message.body.match(new RegExp(/^https:\/\/.*?\.amazon\..*?\/.*/))
+            return message.body.match(/^https:\/\/.*?\.amazon\..*?\/.*/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)

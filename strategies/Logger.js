@@ -89,7 +89,7 @@ class Logger extends MessageStrategy {
 
   async SaveMedia (message) {
     try {
-      if (message.type != 'image' && message.type != 'video') {
+      if (message.type !== 'image' && message.type !== 'video') {
         return
       }
 

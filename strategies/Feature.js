@@ -88,7 +88,7 @@ class Feature extends MessageStrategy {
     if (parts.length < 3) return
     console.log(parts[2])
     console.log(Object.keys(MessageStrategy.strategies))
-    if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) return
+    if (Object.keys(MessageStrategy.strategies).includes(parts[2]) === false) return
 
     MessageStrategy.typing(message)
     MessageStrategy.state[parts[2]].enabled = true
@@ -100,7 +100,7 @@ class Feature extends MessageStrategy {
     if (parts.length < 3) return
     console.log(parts[2])
     console.log(Object.keys(MessageStrategy.strategies))
-    if (Object.keys(MessageStrategy.strategies).includes(parts[2]) == false) return
+    if (Object.keys(MessageStrategy.strategies).includes(parts[2]) === false) return
 
     MessageStrategy.typing(message)
     MessageStrategy.state[parts[2]].enabled = false

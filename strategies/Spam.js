@@ -65,7 +65,7 @@ class Spam extends MessageStrategy {
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
       const provides = MessageStrategy.strategies[key].provides()
-      if (Object.keys(provides).indexOf('provides') == -1) {
+      if (Object.keys(provides).indexOf('provides') === -1) {
         return
       }
       const actions = provides.provides
@@ -80,11 +80,11 @@ class Spam extends MessageStrategy {
       }
     })
 
-    if (keycheck == false) {
+    if (keycheck === false) {
       return false
     }
 
-    if ((spammer in Spam.tracker) == false) {
+    if ((spammer in Spam.tracker) === false) {
       Spam.tracker[spammer] = []
       Spam.tracker[spammer].push(Date.now() / 1000)
       return false

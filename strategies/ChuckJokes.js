@@ -1,4 +1,3 @@
-const { setupLogging } = require('@open-wa/wa-automate')
 const MessageStrategy = require('../MessageStrategy.js')
 
 // ####################################
@@ -75,7 +74,7 @@ class ChuckJokes extends MessageStrategy {
         dojoke: {
           test: function (message) {
             ChuckJokes.self.Setup(message)
-            return MessageStrategy.state.ChuckJokes.chats[message.chatId].enabled == true
+            return MessageStrategy.state.ChuckJokes.chats[message.chatId].enabled === true
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -109,11 +108,11 @@ class ChuckJokes extends MessageStrategy {
   }
 
   Setup (message) {
-    if (Object.keys(MessageStrategy.state.ChuckJokes).includes('chats') == false) {
+    if (Object.keys(MessageStrategy.state.ChuckJokes).includes('chats') === false) {
       MessageStrategy.state.ChuckJokes.chats = {}
     }
 
-    if (Object.keys(MessageStrategy.state.ChuckJokes.chats).includes(message.chatId) == false) {
+    if (Object.keys(MessageStrategy.state.ChuckJokes.chats).includes(message.chatId) === false) {
       MessageStrategy.state.ChuckJokes.chats[message.chatId] = {}
       MessageStrategy.state.ChuckJokes.chats[message.chatId].enabled = false
     }

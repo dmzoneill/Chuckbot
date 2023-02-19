@@ -102,7 +102,7 @@ class Rbac extends MessageStrategy {
       provides: {
         'role mine': {
           test: function (message) {
-            return message.body.toLowerCase() == 'role mine'
+            return message.body.toLowerCase() === 'role mine'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -120,7 +120,7 @@ class Rbac extends MessageStrategy {
         },
         'role \d+': {
           test: function (message) {
-            return message.body.toLowerCase().match(new RegExp('role \d+'))
+            return message.body.toLowerCase().match(/role \d+'/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -138,7 +138,7 @@ class Rbac extends MessageStrategy {
         },
         'role list': {
           test: function (message) {
-            return message.body.toLowerCase() == 'role list'
+            return message.body.toLowerCase() === 'role list'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -156,7 +156,7 @@ class Rbac extends MessageStrategy {
         },
         'restricted list': {
           test: function (message) {
-            return message.body.toLowerCase() == 'restricted list'
+            return message.body.toLowerCase() === 'restricted list'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -257,19 +257,19 @@ class Rbac extends MessageStrategy {
   hasAccess (user, role) {
     user = user.substring(0, user.indexOf('@'))
 
-    if (Object.keys(MessageStrategy.state.Rbac).includes('roles') == false) {
+    if (Object.keys(MessageStrategy.state.Rbac).includes('roles') === false) {
       MessageStrategy.state.Rbac.roles = {}
     }
 
-    if (Object.keys(MessageStrategy.state.Rbac).includes('removed_roles') == false) {
+    if (Object.keys(MessageStrategy.state.Rbac).includes('removed_roles') === false) {
       MessageStrategy.state.Rbac.removed_roles = {}
     }
 
-    if (Object.keys(MessageStrategy.state.Rbac.roles).includes(user) == false) {
+    if (Object.keys(MessageStrategy.state.Rbac.roles).includes(user) === false) {
       MessageStrategy.state.Rbac.roles[user] = []
     }
 
-    if (Object.keys(MessageStrategy.state.Rbac.removed_roles).includes(user) == false) {
+    if (Object.keys(MessageStrategy.state.Rbac.removed_roles).includes(user) === false) {
       MessageStrategy.state.Rbac.removed_roles[user] = []
     }
 
@@ -309,7 +309,7 @@ class Rbac extends MessageStrategy {
   role_person (message) {
     try {
       const person = message.body.split(' ')[1]
-      if (MessageStrategy.contacts.indexOf(person + '@c.us') == -1) {
+      if (MessageStrategy.contacts.indexOf(person + '@c.us') === -1) {
         MessageStrategy.client.reply(message.from, 'No such person ' + person, message.id, true)
         return
       }
@@ -331,27 +331,27 @@ class Rbac extends MessageStrategy {
   role_add (message) {
     try {
       const parts = message.body.split(' ')
-      if (MessageStrategy.access_paths.sort().indexOf(parts[2]) == -1) {
+      if (MessageStrategy.access_paths.sort().indexOf(parts[2]) === -1) {
         MessageStrategy.client.reply(message.from, 'Unknown role: ' + parts[2], message.id, true)
         return
       }
 
-      if (MessageStrategy.contacts.indexOf(parts[3] + '@c.us') == -1) {
+      if (MessageStrategy.contacts.indexOf(parts[3] + '@c.us') === -1) {
         MessageStrategy.client.reply(message.from, 'No such person ' + parts[3], message.id, true)
         return
       }
 
       const addkeys = Object.keys(MessageStrategy.state.Rbac.roles)
-      if (addkeys.indexOf(parts[3]) == -1) {
+      if (addkeys.indexOf(parts[3]) === -1) {
         MessageStrategy.state.Rbac.roles[parts[3]] = []
       }
 
       const removekeys = Object.keys(MessageStrategy.state.Rbac.removed_roles)
-      if (removekeys.indexOf(parts[3]) == -1) {
+      if (removekeys.indexOf(parts[3]) === -1) {
         MessageStrategy.state.Rbac.removed_roles[parts[3]] = []
       }
 
-      if (MessageStrategy.state.Rbac.roles[parts[3]].includes(parts[2]) == false) {
+      if (MessageStrategy.state.Rbac.roles[parts[3]].includes(parts[2]) === false) {
         MessageStrategy.state.Rbac.roles[parts[3]].push(parts[2])
         const index = MessageStrategy.state.Rbac.removed_roles[parts[3]].indexOf(parts[2])
         if (index > -1) {
@@ -367,12 +367,12 @@ class Rbac extends MessageStrategy {
   restricted_role_add (message) {
     try {
       const parts = message.body.split(' ')
-      if (MessageStrategy.access_paths.indexOf(parts[2]) == -1) {
+      if (MessageStrategy.access_paths.indexOf(parts[2]) === -1) {
         MessageStrategy.client.reply(message.from, 'Unknown role: ' + parts[2], message.id, true)
         return
       }
 
-      if (MessageStrategy.state.Rbac.restricted_roles.indexOf(parts[2]) == -1) {
+      if (MessageStrategy.state.Rbac.restricted_roles.indexOf(parts[2]) === -1) {
         MessageStrategy.state.Rbac.restricted_roles.push(parts[2])
         Rbac.self.restricted_role_list(message)
       }
@@ -384,17 +384,17 @@ class Rbac extends MessageStrategy {
   role_remove (message) {
     try {
       const parts = message.body.split(' ')
-      if (MessageStrategy.access_paths.sort().indexOf(parts[2]) == -1) {
+      if (MessageStrategy.access_paths.sort().indexOf(parts[2]) === -1) {
         MessageStrategy.client.reply(message.from, 'Unknown role: ' + parts[2], message.id, true)
         return
       }
 
-      if (MessageStrategy.contacts.indexOf(parts[3] + '@c.us') == -1) {
+      if (MessageStrategy.contacts.indexOf(parts[3] + '@c.us') === -1) {
         MessageStrategy.client.reply(message.from, 'No such person ' + parts[3], message.id, true)
         return
       }
 
-      if (Object.keys(MessageStrategy.state.Rbac.roles).indexOf(parts[3]) == -1) {
+      if (Object.keys(MessageStrategy.state.Rbac.roles).indexOf(parts[3]) === -1) {
         MessageStrategy.state.Rbac.roles[parts[3]] = []
       }
 
@@ -414,7 +414,7 @@ class Rbac extends MessageStrategy {
   restricted_role_remove (message) {
     try {
       const parts = message.body.split(' ')
-      if (MessageStrategy.access_paths.indexOf(parts[2]) == -1) {
+      if (MessageStrategy.access_paths.indexOf(parts[2]) === -1) {
         MessageStrategy.client.reply(message.from, 'Unknown role: ' + parts[2], message.id, true)
         return
       }

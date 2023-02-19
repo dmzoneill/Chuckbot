@@ -92,9 +92,9 @@ class State extends MessageStrategy {
     try {
       const state_json = JSON.stringify(MessageStrategy.state)
 
-      if (state_json == undefined) return
-      if (state_json == null) return
-      if (state_json == '') return
+      if (state_json === undefined) return
+      if (state_json === null) return
+      if (state_json === '') return
       if (state_json.length < 1500) return
 
       fs.writeFile('state.json', state_json, function (err) {

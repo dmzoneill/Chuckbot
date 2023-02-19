@@ -79,7 +79,7 @@ class PhilipsHue extends MessageStrategy {
   }
 
   ChangeLighting (message) {
-    if (message.body.indexOf(' ') == 1) {
+    if (message.body.indexOf(' ') === 1) {
       return
     }
 
@@ -104,31 +104,31 @@ class PhilipsHue extends MessageStrategy {
     })
 
     // groups
-    if (clean_opts[1] == 'groups') {
+    if (clean_opts[1] === 'groups') {
       PhilipsHue.self.do_cmd([clean_opts[1]])
       return
     }
 
     // groups
-    if (clean_opts[1] == 'lights') {
+    if (clean_opts[1] === 'lights') {
       PhilipsHue.self.do_cmd([clean_opts[1]])
       return
     }
 
     let offset = 1
 
-    if (clean_opts[1] == 'group') {
+    if (clean_opts[1] === 'group') {
       console.log('Group checking offset')
       offset = 2
     }
 
-    if (clean_opts[offset].match(/\d+/) == null) {
+    if (clean_opts[offset].match(/\d+/) === null) {
       console.log('No light or group number')
       MessageStrategy.client.reply(message.from, 'No light or group number', message.id, true)
       return
     }
 
-    if (clean_opts[offset + 1].match(/(on|off|clear|reset|select|lselect|colorloop|#?[0-9a-zA-Z]{6})/) == null) {
+    if (clean_opts[offset + 1].match(/(on|off|clear|reset|select|lselect|colorloop|#?[0-9a-zA-Z]{6})/) === null) {
       console.log('Action should be on, off, clear, reset, select, lselect, colorloop, [0-9a-zA-Z]{6}')
       MessageStrategy.client.reply(message.from, 'Action should be on, off, clear, reset', message.id, true)
       return
@@ -159,7 +159,7 @@ class PhilipsHue extends MessageStrategy {
           passed = true
         }
       }
-      if (passed == false) {
+      if (passed === false) {
         console.log('Additional option ' + options[f] + ' nonsense')
         MessageStrategy.client.reply(message.from, 'Additional option ' + options[f] + ' nonsense', message.id, true)
         return
@@ -168,7 +168,7 @@ class PhilipsHue extends MessageStrategy {
 
     clean_opts.shift()
 
-    if (offset == 1) {
+    if (offset === 1) {
       clean_opts.unshift('light')
     }
 

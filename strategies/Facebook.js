@@ -22,7 +22,7 @@ class Facebook extends MessageStrategy {
       provides: {
         Preview: {
           test: function (message) {
-            return message.body.match(new RegExp(/^https:\/\/.*?facebook.com\/.*/))
+            return message.body.match(/^https:\/\/.*?facebook.com\/.*/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -48,7 +48,7 @@ class Facebook extends MessageStrategy {
 
   async Preview (message) {
     try {
-      if (message.thumbnail != '') return
+      if (message.thumbnail !== '') return
 
       const data = await Facebook.self.get_page_og_data(Facebook.self, message.body.replace(/&amp;/g, '&'), 500)
 

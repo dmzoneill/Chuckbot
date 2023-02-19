@@ -23,7 +23,7 @@ class TikTok extends MessageStrategy {
       provides: {
         TikTok: {
           test: function (message) {
-            return message.body.match(new RegExp(/^https:\/\/.*tiktok.com\/.*/))
+            return message.body.match(/^https:\/\/.*tiktok.com\/.*/)
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)

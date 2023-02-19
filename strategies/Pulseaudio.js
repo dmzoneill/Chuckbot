@@ -53,7 +53,7 @@ class PulseAudio extends MessageStrategy {
 
   async SetVolume (message) {
     try {
-      if (message.body.indexOf(' ') == -1) {
+      if (message.body.indexOf(' ') === -1) {
         return
       }
 
@@ -77,13 +77,14 @@ class PulseAudio extends MessageStrategy {
         return
       }
 
-      if (incrementor == '') {
+      if (incrementor === '') {
         change += volume.toString() + '%'
       } else {
         change += incrementor + volume.toString() + '%'
       }
 
       exec(change, async (error, stdout, stderr) => {
+        if (error) return
         try {
           console.log(stdout)
         } catch (err) {

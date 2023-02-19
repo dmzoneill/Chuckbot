@@ -49,8 +49,8 @@ class APC extends MessageStrategy {
   async Info (message) {
     try {
       const cmd = 'apcaccess'
-      const child_process = require('child_process')
-      const data = child_process.execSync(cmd)
+      const childProcess = require('child_process')
+      const data = childProcess.execSync(cmd)
 
       console.log(data.toString())
 
