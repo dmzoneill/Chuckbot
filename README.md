@@ -1,8 +1,8 @@
 # Chuckbot
 
-Hardest shit since sliced pan
+Chuck is an openai/chatgpt powered bot. - Hardest shit since sliced pan.
 
-![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/logo.png?raw=true)![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/chat.png?raw=true)
+![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/images/logo.png?raw=true)![alt text](https://github.com/dmzoneill/Chuckbot/blob/main/images/chat1.png?raw=true)
 
 ### Get setup
 ```
