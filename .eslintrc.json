@@ -1,0 +1,10 @@
+{
+    "rules": {
+        "camelcase": "off",
+        "no-undef": "off",
+        "no-labels": "off",
+        "array-callback-return": "off",
+        "no-useless-escape": "off",
+        "no-extend-native": "off",
+    }
+}
