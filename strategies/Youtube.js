@@ -123,7 +123,9 @@ class Youtube extends MessageStrategy {
 
     try {
       const results = await yt.search(search_term)
+      console.log(results)
       if (results.length === 0) {
+        console.log("0 results");
         return false
       }
       MessageStrategy.typing(message)

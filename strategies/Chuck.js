@@ -10,14 +10,14 @@ class Chuck extends MessageStrategy {
   static apikey = null
   static gptapi = null
 
-  constructor () {
+  constructor() {
     super('Chuck', {
       enabled: true
     })
     this.setup()
   }
 
-  async setup () {
+  async setup() {
     Chuck.apikey = fs.readFileSync('strategies/config/chatgpt.key').toString().trim()
 
     const { ChatGPTAPI } = await import('chatgpt')
@@ -27,7 +27,7 @@ class Chuck extends MessageStrategy {
     })
   }
 
-  handleEvent (message) {
+  handleEvent(message) {
     // Chuck.self = this;
 
     // if (message['event_type'] === 'onAddedToGroup') {
@@ -36,7 +36,7 @@ class Chuck extends MessageStrategy {
     // }
   }
 
-  provides () {
+  provides() {
     Chuck.self = this
 
     return {
@@ -90,9 +90,9 @@ class Chuck extends MessageStrategy {
             return MessageStrategy.state.Chuck.enabled
           }
         },
-        'chuck *': {
+        '*': {
           test: function (message) {
-            return message.body.toLowerCase().startsWith('chuck')
+            return true
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -100,7 +100,10 @@ class Chuck extends MessageStrategy {
           help: function () {
             return 'Converse with chuck'
           },
-          action: Chuck.self.Converse,
+          action: function (message) {
+            Chuck.self.Converse(message);
+            return false;
+          },
           interactive: true,
           enabled: function () {
             return MessageStrategy.state.Chuck.enabled
@@ -116,13 +119,13 @@ class Chuck extends MessageStrategy {
     }
   }
 
-  helpMenu () {
+  HelpMenu() {
     let help = ''
 
     Object.keys(MessageStrategy.strategies).sort().forEach(key => {
       try {
-        help += '*' + key + '*\n'
-        help += '  | - help ' + key.toLowerCase() + '\n'
+        help += '\n'
+        help += 'help ' + key.toLowerCase() + '\n'
 
         const actions = MessageStrategy.strategies[key].provides()
         if (actions === undefined || actions === undefined) {
@@ -136,7 +139,7 @@ class Chuck extends MessageStrategy {
         const keys = Object.keys(provides)
         for (let y = 0; y < keys.length; y++) {
           if (provides[keys[y]].interactive) {
-            help += '  | - ' + keys[y] + '\n'
+            help += keys[y] + '\n'
           }
         }
 
@@ -149,10 +152,10 @@ class Chuck extends MessageStrategy {
     return help
   }
 
-  async Help (message) {
+  async Help(message) {
     try {
       let question = message.body.substr('chuck help'.length)
-      question = question + ', using the following menu system\n\n' + Chuck.self.helpMenu()
+      question = question + ', using the following menu system\n\n' + Chuck.self.HelpMenu()
       const res = await Chuck.gptapi.sendMessage(question)
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, res.text)
@@ -162,7 +165,7 @@ class Chuck extends MessageStrategy {
     }
   }
 
-  async Converse (message) {
+  async Converse(message) {
     try {
       const options = {}
       if (!('chats' in MessageStrategy.state.Chuck)) {
@@ -185,7 +188,22 @@ class Chuck extends MessageStrategy {
 
       const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
 
-      const res = await Chuck.gptapi.sendMessage(message.body.substr(7) + '(' + requester + ')', options)
+      let the_msg = message.body;
+
+      if (message.isGroupMsg) {
+        if (message.body.toLowerCase().startsWith("chuck") == false && message.body.toLowerCase().indexOf(" chuck") == -1) {
+          return;
+        }
+        if (message.body.toLowerCase().startsWith("chuck")) {
+          the_msg = "Chatgpt " + the_msg.substr(6)
+        }
+        if (message.body.toLowerCase().indexOf(" chuck") == -1) {
+          the_msg = the_msg.replace(/ chuck/gi, ' chatgpt');
+        }
+      }
+
+      const res = await Chuck.gptapi.sendMessage(the_msg + '(' + requester + ')', options)
+      let resp = res.text.replace(/chatgpt/gi, 'chuck');
 
       if (res.conversationId != null) {
         MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
@@ -196,14 +214,14 @@ class Chuck extends MessageStrategy {
       }
 
       MessageStrategy.typing(message)
-      MessageStrategy.client.sendText(message.from, res.text)
+      MessageStrategy.client.sendText(message.from, resp)
     } catch (e) {
       console.log(e)
       MessageStrategy.client.sendText(message.from, e)
     }
   }
 
-  async NewConversation (message) {
+  async NewConversation(message) {
     try {
       if (!('chats' in MessageStrategy.state.Chuck)) {
         MessageStrategy.state.Chuck.chats = {}
@@ -216,9 +234,9 @@ class Chuck extends MessageStrategy {
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = null
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = null
 
-      let question = 'I want to ask you questions about the following menu system \n\n' + Chuck.self.helpMenu()
+      let question = 'I want to ask you questions about the following menu system \n\n' + Chuck.self.HelpMenu()
       question += '\n\nEach entry is a command, and i will ask you about commands on the list and their usage.'
-      question += '\n\nThe questions will have the name or phone number at the end of the question in brackets.  You can use their name in the response.'
+      question += '\n\nThe questions will have the name or phone number at the end of the question.  You can use their name in the response.'
       let res = await Chuck.gptapi.sendMessage(question)
 
       const options = {}
@@ -227,46 +245,48 @@ class Chuck extends MessageStrategy {
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
 
-      const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
+      let requester = message.sender.pushname === undefined ? '' : message.sender.pushname
+      requester = requester.indexOf(" ") > -1 ? requester.split(" ")[0] : requester
 
-      res = await Chuck.gptapi.sendMessage('Lets start a new conversation (' + requester + ')', options)
+      res = await Chuck.gptapi.sendMessage('Lets start a new conversation. ' + requester, options)
+      let resp = res.text.replace(/chatgpt/gi, 'chuck');
 
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
 
       MessageStrategy.typing(message)
-      MessageStrategy.client.sendText(message.from, res.text)
+      MessageStrategy.client.sendText(message.from, resp)
     } catch (e) {
       console.log(e)
       MessageStrategy.client.sendText(message.from, e)
     }
   }
 
-  SetMyName (message) {
+  SetMyName(message) {
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, '👋 Hello!!!')
     return true
   }
 
-  SetMyStatus (message) {
+  SetMyStatus(message) {
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, '👋 Hello!!!')
     return true
   }
 
-  setPresence (message) {
+  setPresence(message) {
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, '👋 Hello!!!')
     return true
   }
 
-  setProfilePic (message) {
+  setProfilePic(message) {
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, '👋 Hello!!!')
     return true
   }
 
-  addedToGroup (message) {
+  addedToGroup(message) {
     console.log('added')
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, 'Hey 👋, I\'m Chuck.  You can interact with me by saying \'help\'')

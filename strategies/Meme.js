@@ -306,6 +306,8 @@ class Meme extends MessageStrategy {
       'Jokes'
     ]
 
+    let fail_count = 3;
+
     while (true) {
       try {
         MessageStrategy.typing(message)
@@ -319,7 +321,11 @@ class Meme extends MessageStrategy {
         await MessageStrategy.client.sendImage(message.from, image, 'meme.jpg', json.postLink)
         return true
       } catch (err) {
+        fail_count = fail_count - 1
         console.log(err)
+        if (fail_count == 0) {
+          return
+        }
       }
     }
   }

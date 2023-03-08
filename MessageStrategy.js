@@ -337,82 +337,82 @@ class MessageStrategy {
       // }
       // console.log(output);
     },
-    sendText: function sendText () {
+    sendText: function sendText() {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
       return this.client.sendText(args[0], args[1])
     },
-    sendImage: function sendImage () {
+    sendImage: function sendImage() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
       return this.client.sendImage(args[0], args[1], args[2], args[3])
     },
-    sendLinkWithAutoPreview: function sendLinkWithAutoPreview () {
+    sendLinkWithAutoPreview: function sendLinkWithAutoPreview() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
       return this.client.sendLinkWithAutoPreview(args[0], args[1], args[2], args[3])
     },
-    reply: function reply () {
+    reply: function reply() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
       return this.client.reply(args[0], args[1], args[2], args[3])
     },
-    getAllChats: function getAllChats () {
+    getAllChats: function getAllChats() {
       const args = Array.from(arguments)
       return this.client.getAllChats()
     },
-    getAllGroups: function getAllGroups () {
+    getAllGroups: function getAllGroups() {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
       return this.client.getAllGroups(args[0], args[1])
     },
-    getGroupMembers: function getGroupMembers () {
+    getGroupMembers: function getGroupMembers() {
       const args = Array.from(arguments)
       this.log(args[0])
       return this.client.getGroupMembers(args[0])
     },
-    sendYoutubeLink: function sendYoutubeLink () {
+    sendYoutubeLink: function sendYoutubeLink() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
       return this.client.sendYoutubeLink(args[0], args[1], args[2], args[3])
     },
-    decryptMedia: function decryptMedia () {
+    decryptMedia: function decryptMedia() {
       const args = Array.from(arguments)
       this.log(args[0])
       return this.client.decryptMedia(args[0])
     },
-    sendFile: function sendFile () {
+    sendFile: function sendFile() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
       return this.client.sendFile(args[0], args[1], args[2], args[3])
     },
-    sendSeen: function sendSeen () {
+    sendSeen: function sendSeen() {
       const args = Array.from(arguments)
       this.log(args[0])
       return this.client.sendSeen(args[0])
     },
-    simulateTyping: function simulateTyping () {
+    simulateTyping: function simulateTyping() {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
       return this.client.simulateTyping(args[0], args[1])
     }
   }
 
-  constructor (key, config) {
+  constructor(key, config) {
     MessageStrategy.self = this
     if (Object.keys(MessageStrategy.state).includes(key) == false) {
       MessageStrategy.state[key] = config
     }
   }
 
-  static hasAccess (sender_id, prototype_name) {
+  static hasAccess(sender_id, prototype_name) {
     if (MessageStrategy.access_paths.includes(prototype_name) == false) {
       MessageStrategy.access_paths.push(prototype_name)
     }
     return MessageStrategy.strategies.Rbac.hasAccess(sender_id, prototype_name)
   }
 
-  static watch () {
+  static watch() {
     if (MessageStrategy.watcher != null) {
       MessageStrategy.watcher.close()
     }
@@ -424,7 +424,7 @@ class MessageStrategy {
     })
   }
 
-  static async update_active_chat_contacts () {
+  static async update_active_chat_contacts() {
     MessageStrategy.contacts = []
     const all_chats = await MessageStrategy.client.getAllChats()
 
@@ -449,7 +449,7 @@ class MessageStrategy {
     }
   }
 
-  static async get_chat_id (message) {
+  static async get_chat_id(message) {
     if (message == null) {
       return
     }
@@ -460,7 +460,7 @@ class MessageStrategy {
     }
   }
 
-  static async typing (message) {
+  static async typing(message) {
     try {
       await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), true)
       await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000)))
@@ -470,7 +470,7 @@ class MessageStrategy {
     }
   }
 
-  static update_strategy (file) {
+  static update_strategy(file) {
     try {
       if (Object.keys(MessageStrategy.watched_events).includes(strategies_dir + file) == false) {
         MessageStrategy.watched_events[strategies_dir + file] = new Date(0)
@@ -496,7 +496,7 @@ class MessageStrategy {
     }
   }
 
-  static update_strategies () {
+  static update_strategies() {
     if (Object.keys(MessageStrategy.strategies).length == 0) {
       MessageStrategy.strategies = {}
       MessageStrategy.watch()
@@ -519,10 +519,15 @@ class MessageStrategy {
     })
   }
 
-  static doHandleMessage (message) {
+  static doHandleMessage(message) {
     try {
       const keys = Object.keys(MessageStrategy.strategies)
       const is_chuck_event = Object.keys(message).indexOf('isChuck') != -1
+
+      if (message['event_type'] == "onAddedToGroup") {
+        MessageStrategy.client.sendText(message.event.id, 'Hey, this is Chuck!\n\nYou can chat with me by saying "chuck" anywhere in your message.\n\nIf you need help, simply say "Chuck how do i use the help commands" or similar.\n\nI also speak 150 languages.')
+        return;
+      }
 
       for (let y = 0; y < keys.length; y++) {
         const handler = MessageStrategy.strategies[keys[y]]
@@ -589,14 +594,14 @@ class MessageStrategy {
     }
   }
 
-  static async get_image (url, img_width = 480) {
+  static async get_image(url, img_width = 480) {
     const responseImage = await axios(url, { responseType: 'arraybuffer', headers: MessageStrategy.browser_config.headers })
     const image = await resizeImg(responseImage.data, { width: img_width, format: 'jpg' })
     const buffer64 = Buffer.from(image, 'binary').toString('base64')
     return 'data:image/jpeg;base64,' + buffer64
   }
 
-  static async fs_get_image (path, img_width = 480) {
+  static async fs_get_image(path, img_width = 480) {
     try {
       let image = fs.readFileSync(path)
       image = await resizeImg(image, { width: img_width, format: 'jpg' })
@@ -607,7 +612,7 @@ class MessageStrategy {
     }
   }
 
-  static async axiosHttpRequest (message, method = 'GET', url, headers = false, statusCode = 200, json = false, json_key = false, verbose = true, post_data = false) {
+  static async axiosHttpRequest(message, method = 'GET', url, headers = false, statusCode = 200, json = false, json_key = false, verbose = true, post_data = false) {
     try {
       const opts = {
         method: method.toLowerCase(),
@@ -648,7 +653,7 @@ class MessageStrategy {
     }
   }
 
-  handleEvent (message) {
+  handleEvent(message) {
     const sha1 = crypto.createHash('sha1').update(JSON.stringify(message)).digest('hex')
     if (MessageStrategy.last_event == null) {
       MessageStrategy.last_event = sha1
@@ -660,15 +665,15 @@ class MessageStrategy {
     }
   }
 
-  async call_update_active_chat_contacts () {
+  async call_update_active_chat_contacts() {
     MessageStrategy.update_active_chat_contacts()
   }
 
-  async waitFor (ms) {
+  async waitFor(ms) {
     return new Promise(resolve => setTimeout(() => resolve(), ms))
   }
 
-  async get_page (self, fullurl, wait = 500) {
+  async get_page(self, fullurl, wait = 500) {
     try {
       MessageStrategy.typing(self.message)
 
@@ -717,7 +722,7 @@ class MessageStrategy {
     }
   }
 
-  async get_page_og_data (self, fullurl, wait = 500) {
+  async get_page_og_data(self, fullurl, wait = 500) {
     try {
       const page = await self.get_page(self, fullurl, wait)
 
@@ -754,7 +759,7 @@ class MessageStrategy {
     }
   }
 
-  async get_page_title (url, wait = 250) {
+  async get_page_title(url, wait = 250) {
     try {
       const page = await MessageStrategy.get_page(url, wait)
 
@@ -776,19 +781,19 @@ class MessageStrategy {
     }
   }
 
-  get_contacts () {
+  get_contacts() {
     return MessageStrategy.contacts
   }
 
-  get_contacts_verbose () {
+  get_contacts_verbose() {
     return MessageStrategy.contacts_verbose
   }
 
-  get_groups () {
+  get_groups() {
     return MessageStrategy.groups
   }
 
-  get_groups_verbose () {
+  get_groups_verbose() {
     return MessageStrategy.groups_verbose
   }
 }
