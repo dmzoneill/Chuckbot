@@ -129,11 +129,11 @@ class Chuck extends MessageStrategy {
 
         const actions = MessageStrategy.strategies[key].provides()
         if (actions === undefined || actions === undefined) {
-          console.log(key + ' undefined')
+          return
         }
         const provides = actions.provides
         if (provides === undefined || provides === undefined) {
-          console.log(key + ' undefined')
+          return
         }
 
         const keys = Object.keys(provides)
@@ -165,8 +165,35 @@ class Chuck extends MessageStrategy {
     }
   }
 
+  is_help_command(message) {
+    let strat_keys = Object.keys(MessageStrategy.strategies).sort()
+    for (let h = 0; h < strat_keys.length; h++) {
+      try {
+        if (strat_keys[h] == "Chuck") continue;
+        const actions = MessageStrategy.strategies[strat_keys[h]].provides()
+        const provides = actions.provides
+        const keys = Object.keys(provides)
+        for (let y = 0; y < keys.length; y++) {
+          if (provides[keys[y]].interactive == false) continue;
+          if (provides[keys[y]].test(message)) {
+            return true
+          }
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    return false
+  }
+
   async Converse(message) {
     try {
+
+      if (Chuck.self.is_help_command(message)) {
+        return;
+      }
+
       const options = {}
       if (!('chats' in MessageStrategy.state.Chuck)) {
         MessageStrategy.state.Chuck.chats = {}
@@ -198,12 +225,12 @@ class Chuck extends MessageStrategy {
           the_msg = "Chatgpt " + the_msg.substr(6)
         }
         if (message.body.toLowerCase().indexOf(" chuck") == -1) {
-          the_msg = the_msg.replace(/ chuck/gi, ' chatgpt');
+          the_msg = the_msg.replace(/ chuck/gi, ' chatgpt')
         }
       }
 
-      const res = await Chuck.gptapi.sendMessage(the_msg + '(' + requester + ')', options)
-      let resp = res.text.replace(/chatgpt/gi, 'chuck');
+      const res = await Chuck.gptapi.sendMessage(the_msg + ' ' + requester, options)
+      let resp = res.text.replace(/chatgpt/gi, 'chuck')
 
       if (res.conversationId != null) {
         MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
@@ -287,7 +314,6 @@ class Chuck extends MessageStrategy {
   }
 
   addedToGroup(message) {
-    console.log('added')
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, 'Hey 👋, I\'m Chuck.  You can interact with me by saying \'help\'')
   }

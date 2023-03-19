@@ -54,7 +54,6 @@ class Twitter extends MessageStrategy {
       const data = await Twitter.self.get_page_og_data(Twitter.self, message.body, 500)
 
       if (data[1] == null) {
-        MessageStrategy.client.reply(message.from, 'Sorry no preview', message.id, true)
         return
       }
 

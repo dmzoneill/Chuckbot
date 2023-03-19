@@ -50,12 +50,13 @@ class Facebook extends MessageStrategy {
     try {
       if (message.thumbnail !== '') return
 
-      const data = await Facebook.self.get_page_og_data(Facebook.self, message.body.replace(/&amp;/g, '&'), 500)
+      const data = await Facebook.self.get_page_og_data(Facebook.self, message.body.replace(/&amp;/g, '&'), 500, true)
 
-      if (data[1] == null) {
-        MessageStrategy.client.reply(message.from, 'Sorry no preview', message.id, true)
+      if (data[0] == null || data[1] == null) {
         return
       }
+
+      console.log(data[1])
 
       MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1])
     } catch (err) {

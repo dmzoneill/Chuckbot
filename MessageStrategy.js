@@ -8,6 +8,7 @@ const CoinMarketCap = require('coinmarketcap-api')
 const puppeteer = require('puppeteer')
 const deluge = require('deluge')
 const resizeImg = require('resize-image-buffer')
+var Jimp = require("jimp")
 const axios = require('axios')
 const urlencode = require('rawurlencode')
 const nameToImdb = require('name-to-imdb')
@@ -20,6 +21,7 @@ const NodeWebcam = require('node-webcam')
 const exec = require('child_process')
 const jsdom = require('jsdom')
 const YAML = require('yaml')
+const craiyon = require("text-to-img-craiyon-scrapper")
 
 const strategies_dir = './strategies/'
 
@@ -45,10 +47,10 @@ class MessageStrategy {
       'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
       'Access-Control-Request-Headers': 'content-type',
       'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      Origin: 'https://google.com/',
-      Pragma: 'no-cache',
-      Referer: 'https://google.com/',
+      'Connection': 'keep-alive',
+      'Origin': 'https://google.com/',
+      'Pragma': 'no-cache',
+      'Referer': 'https://google.com/',
       'Sec-Fetch-Dest': 'empty',
       'Sec-Fetch-Mode': 'cors',
       'Sec-Fetch-Site': 'same-site',
@@ -546,7 +548,6 @@ class MessageStrategy {
         const actions_keys = Object.keys(module.provides)
         for (let x = 0; x < actions_keys.length; x++) {
           const action_obj = module.provides[actions_keys[x]]
-          // console.log(module.provides[actions_keys[x]]);
           MessageStrategy.hasAccess(message.sender.id, keys[y] + action_obj.action.name)
           if (action_obj.test(message)) {
             if (action_obj.access(message, handler, action_obj.action) == false) {
@@ -594,17 +595,40 @@ class MessageStrategy {
     }
   }
 
-  static async get_image(url, img_width = 480) {
+  static async get_image(url, img_width = 480, data_url = true) {
     const responseImage = await axios(url, { responseType: 'arraybuffer', headers: MessageStrategy.browser_config.headers })
-    const image = await resizeImg(responseImage.data, { width: img_width, format: 'jpg' })
+    let jimpImg = undefined
+
+    var buffer = Buffer.from(new Uint8Array(responseImage.data));
+    await Jimp.read(buffer).then((img) => {
+      img.resize(img_width, Jimp.AUTO)
+      img.quality(70)
+      jimpImg = img 
+    })
+    let image = await jimpImg.getBufferAsync(Jimp.MIME_JPEG)   
+
     const buffer64 = Buffer.from(image, 'binary').toString('base64')
-    return 'data:image/jpeg;base64,' + buffer64
+
+    if(data_url) {
+      return 'data:image/jpeg;base64,' + buffer64
+    } else {
+      return buffer64
+    }
   }
 
   static async fs_get_image(path, img_width = 480) {
     try {
       let image = fs.readFileSync(path)
-      image = await resizeImg(image, { width: img_width, format: 'jpg' })
+      let jimpImg = undefined
+
+      var buffer = Buffer.from(new Uint8Array(image));
+      await Jimp.read(buffer).then((img) => {
+        img.resize(img_width, Jimp.AUTO)
+        img.quality(70)
+        jimpImg = img 
+      })
+      image = await jimpImg.getBufferAsync(Jimp.MIME_JPEG)   
+
       const buffer64 = Buffer.from(image, 'binary').toString('base64')
       return 'data:image/jpeg;base64,' + buffer64
     } catch (err) {
@@ -612,11 +636,16 @@ class MessageStrategy {
     }
   }
 
-  static async axiosHttpRequest(message, method = 'GET', url, headers = false, statusCode = 200, json = false, json_key = false, verbose = true, post_data = false) {
+  static async axiosHttpRequest(message, method = 'GET', url, headers = false, statusCode = 200, json = false, json_key = false, verbose = true, post_data = false, cache = false, download = false) {
     try {
       const opts = {
         method: method.toLowerCase(),
         url
+      }
+
+      if(download) {
+        opts['responseType'] = 'arraybuffer',
+        opts['reponseEncoding'] = 'binary'
       }
 
       if (post_data != false) {
@@ -645,7 +674,9 @@ class MessageStrategy {
         fs.mkdirSync(MessageStrategy.http_cache_folder, { recursive: true })
       }
 
-      await fs.writeFileSync(MessageStrategy.http_cache_folder + '/' + url.replaceAll('/', '.').replaceAll(':', '.') + (json ? '.json' : ''), JSON.stringify(response.data))
+      if(cache) {
+        await fs.writeFileSync(MessageStrategy.http_cache_folder + '/' + url.replaceAll('/', '.').replaceAll(':', '.') + (json ? '.json' : ''), JSON.stringify(response.data))
+      }
 
       return json ? json_reduced : response.data
     } catch (err) {
@@ -722,7 +753,7 @@ class MessageStrategy {
     }
   }
 
-  async get_page_og_data(self, fullurl, wait = 500) {
+  async get_page_og_data(self, fullurl, wait = 500, data_url = true) {
     try {
       const page = await self.get_page(self, fullurl, wait)
 
@@ -751,7 +782,7 @@ class MessageStrategy {
       } else {
         const desc = description == null ? title : description
         MessageStrategy.typing(self.message)
-        return [desc, await MessageStrategy.get_image(image_url)]
+        return [desc, await MessageStrategy.get_image(image_url, 480, data_url)]
       }
     } catch (err) {
       console.log(err)

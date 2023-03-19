@@ -51,7 +51,7 @@ class Meme extends MessageStrategy {
             return MessageStrategy.state.Meme.enabled
           }
         },
-        meme: {
+        'meme': {
           test: function (message) {
             return message.body.toLowerCase() === 'meme'
           },
@@ -297,13 +297,12 @@ class Meme extends MessageStrategy {
       'memes',
       'AdviceAnimals',
       'funny',
-      'ContagiousLaughter',
-      'dadjokes',
+      // 'ContagiousLaughter',
       'sarcasm',
       'humour',
       'funny',
       'ProgrammerHumor',
-      'Jokes'
+      // 'Jokes'
     ]
 
     let fail_count = 3;
@@ -312,7 +311,7 @@ class Meme extends MessageStrategy {
       try {
         MessageStrategy.typing(message)
         const randomIndex = Math.floor(Math.random() * topics.length)
-        const meme = request('GET', 'https://meme-api.herokuapp.com/gimme/' + topics[randomIndex], {
+        const meme = request('GET', 'https://meme-api.com/gimme/' + topics[randomIndex], {
           headers: MessageStrategy.browser_config.headers
         })
         const json = JSON.parse(meme.getBody())
