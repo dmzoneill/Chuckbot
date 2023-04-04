@@ -166,30 +166,33 @@ class Chuck extends MessageStrategy {
   }
 
   is_help_command(message) {
-    let strat_keys = Object.keys(MessageStrategy.strategies).sort()
-    for (let h = 0; h < strat_keys.length; h++) {
-      try {
-        if (strat_keys[h] == "Chuck") continue;
-        const actions = MessageStrategy.strategies[strat_keys[h]].provides()
-        const provides = actions.provides
-        const keys = Object.keys(provides)
-        for (let y = 0; y < keys.length; y++) {
-          if (provides[keys[y]].interactive == false) continue;
-          if (provides[keys[y]].test(message)) {
-            return true
+    try {
+      let strat_keys = Object.keys(MessageStrategy.strategies).sort()
+      for (let h = 0; h < strat_keys.length; h++) {
+        try {
+          if (strat_keys[h] == "Chuck") continue;
+          const actions = MessageStrategy.strategies[strat_keys[h]].provides()
+          const provides = actions.provides
+          const keys = Object.keys(provides)
+          for (let y = 0; y < keys.length; y++) {
+            if (provides[keys[y]].interactive == false) continue;
+            if (provides[keys[y]].test(message)) {
+              return true
+            }
           }
+        } catch (e) {
+          console.log(e)
         }
-      } catch (e) {
-        console.log(e)
       }
     }
-
+    catch (err) {
+      return false
+    }
     return false
   }
 
   async Converse(message) {
     try {
-
       if (Chuck.self.is_help_command(message)) {
         return;
       }
@@ -217,16 +220,14 @@ class Chuck extends MessageStrategy {
 
       let the_msg = message.body;
 
-      if (message.isGroupMsg) {
-        if (message.body.toLowerCase().startsWith("chuck") == false && message.body.toLowerCase().indexOf(" chuck") == -1) {
-          return;
-        }
-        if (message.body.toLowerCase().startsWith("chuck")) {
-          the_msg = "Chatgpt " + the_msg.substr(6)
-        }
-        if (message.body.toLowerCase().indexOf(" chuck") == -1) {
-          the_msg = the_msg.replace(/ chuck/gi, ' chatgpt')
-        }
+      if (message.body.toLowerCase().startsWith("chuck") == false && message.body.toLowerCase().indexOf(" chuck") == -1) {
+        return;
+      }
+      if (message.body.toLowerCase().startsWith("chuck")) {
+        the_msg = "Chatgpt " + the_msg.substr(6)
+      }
+      if (message.body.toLowerCase().indexOf(" chuck") == -1) {
+        the_msg = the_msg.replace(/ chuck/gi, ' chatgpt')
       }
 
       const res = await Chuck.gptapi.sendMessage(the_msg + ' ' + requester, options)

@@ -87,10 +87,6 @@ class Youtube extends MessageStrategy {
         }
       }
 
-      // https://www.youtube.com/watch?v=7fncJdVjy5U
-      // https://youtu.be/xxxxxxxxx
-      // http://youtube.com/shorts/xxxxxxxxxx
-
       const parts = message.body.split('/')
       let video_id = ''
       if (parts[3].indexOf('v=') > -1) {

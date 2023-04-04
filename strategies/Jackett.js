@@ -75,7 +75,7 @@ class Jackett extends MessageStrategy {
 
       let url = "http://192.168.0.30:9117/api/v2.0/indexers/all/results"
       url += "?apikey=" + Jackett.apikey
-      url += "&Category[]=2000,2030,2040,2045,2080,5000,5010,5030,5040,5080"
+      // url += "&Category[]=2000,2030,2040,2045,2080,5000,5010,5030,5040,5080"
       url += "&Query=" + message.body.substring(8)
       url += "&Tracker[]=iptorrents"
 
@@ -97,7 +97,7 @@ class Jackett extends MessageStrategy {
         return a.Seeders - b.Seeders;
       });
 
-      let result = seedersG0[seedersG0.length -1];
+      let result = seedersG0[seedersG0.length - 1];
 
       if ("MagnetUri" in result && result['MagnetUri'] != null) {
         MessageStrategy.client.sendLinkWithAutoPreview(message.from, result['MagnetUri'], result['Title']);

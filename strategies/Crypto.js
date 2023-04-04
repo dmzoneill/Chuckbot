@@ -9,15 +9,320 @@ class Crypto extends MessageStrategy {
   static coinslugs = {}
   static coins = null
   static self = null
+  static ccxtconfig = null
 
-  constructor () {
+  constructor() {
     super('Crypto', {
       enabled: true
     })
     this.get_coins(this)
   }
 
-  get_coin_value (slug) {
+  provides() {
+    Crypto.self = this
+
+    return {
+      help: 'Stats and graphs for crypto',
+      provides: {
+        'coin exchanges': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'coin exchanges'
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows list of known exchanges'
+          },
+          action: Crypto.self.ExchangeList,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin exchange describe x': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('coin exchange describe')
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows exchange information'
+          },
+          action: Crypto.self.ExchangeDescribe,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin exchange symbols x': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('coin exchange symbols')
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows ticker for a symbol from a given exchange'
+          },
+          action: Crypto.self.ExchangeSymbols,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin exchange ticker x x': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('coin exchange ticker')
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows ticker for a symbol from a given exchange'
+          },
+          action: Crypto.self.ExchangeSymbolTicker,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'coin'
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows top 50 coins'
+          },
+          action: function GetCoinMarketCap(message) {
+            Crypto.self.GetCoinMarketCap(message)
+            return true
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin 0-9': {
+          test: function (message) {
+            return message.body.match(/^coin ([0-9]+)$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows X number of coins'
+          },
+          action: function GetCoinMarketCap(message) {
+            Crypto.self.GetCoinMarketCap(message)
+            return true
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin name': {
+          test: function (message) {
+            return message.body.match(/^coin ([0-9a-z\-]+)$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows graph for a given coin'
+          },
+          action: function GetGraph(message) {
+            Crypto.self.get_graph(message)
+            return true
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin name duration': {
+          test: function (message) {
+            return message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows graph for a given coin with a time frame 1d/7d/1m/3m/1y'
+          },
+          action: function GetGraphDated(message) {
+            Crypto.self.get_graph(message)
+            return true
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        }
+      },
+      access: function (message, strategy) {
+        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
+      },
+      enabled: function () {
+        return MessageStrategy.state.Crypto.enabled
+      }
+    }
+  }
+
+  async ExchangeList(message) {
+    try {
+      let exchanges = ccxt.exchanges
+
+      let msg = '```'
+      for (let p = 0; p < exchanges.length - 1; p += 2) {
+        msg += exchanges[p].padEnd(22, ' ')
+        msg += exchanges[p + 1].padEnd(22, ' ')
+        msg += '\n'
+
+        let exchange = new ccxt[exchanges[p]]()
+        exchange = new ccxt[exchanges[p + 1]]()
+
+        if (p > 0 && p % 20 == 0) {
+          msg = msg.trim()
+          msg += '```'
+          MessageStrategy.client.sendText(message.from, msg)
+          msg = "```"
+        }
+      }
+      msg = msg.trim()
+      msg += '```'
+      MessageStrategy.client.sendText(message.from, msg)
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async ExchangeDescribe(message) {
+    try {
+      const parts = message.body.split(' ')
+      let exchanges = ccxt.exchanges
+
+      if (parts.length != 3) {
+        console.log("bad request")
+        return
+      }
+
+      if (exchanges.indexOf(parts[2].toLowerCase()) == -1) {
+        console.log("bad exchange")
+        return
+      }
+
+      let exchange = new ccxt[parts[2].toLowerCase()]({ verbose: true })
+
+      MessageStrategy.client.sendText(message.from, JSON.stringify(exchange.describe(), null, 4))
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async ExchangeSymbols(message) {
+    try {
+      if (Crypto.ccxtconfig == null) {
+        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }));
+      }
+
+      const parts = message.body.split(' ')
+      let exchanges = ccxt.exchanges
+
+      if (exchanges.indexOf(parts[3].toLowerCase()) == -1) {
+        MessageStrategy.client.sendText(message.from, "No such exchange")
+        console.log("No such exchange")
+        return
+      }
+
+      if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) == -1) {
+        MessageStrategy.client.sendText(message.from, "Exchange not configured")
+        console.log("Exchange not configured")
+      }
+
+      let config = {
+        apiKey: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.apiKey,
+        secret: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.secret,
+        verbose: true
+      }
+
+      let exchange = new ccxt[parts[3].toLowerCase()](config)
+      let markets = await exchange.loadMarkets()
+
+      let keys = Object.keys(markets).sort()
+      let msg = "```"
+      for (let p = 0; p < keys.length; p++) {
+        msg += markets[keys[p]]['info']['symbol'] + "\n"
+        if (p > 1 && p % 15 == 0) {
+          msg += "```"
+          MessageStrategy.client.sendText(message.from, msg)
+          msg = "```"
+        }
+      }
+      msg += "```"
+
+      MessageStrategy.client.sendText(message.from, msg)
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async ExchangeSymbolTicker(message) {
+    // JavaScript
+    try {
+      if (Crypto.ccxtconfig == null) {
+        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }));
+      }
+
+      const parts = message.body.split(' ')
+      let exchanges = ccxt.exchanges
+
+      if (exchanges.indexOf(parts[3].toLowerCase()) == -1) {
+        MessageStrategy.client.sendText(message.from, "No such exchange")
+        console.log("No such exchange")
+        return
+      }
+
+      if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) == -1) {
+        MessageStrategy.client.sendText(message.from, "Exchange not configured")
+        console.log("Exchange not configured")
+      }
+
+      let config = {
+        apiKey: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.apiKey,
+        secret: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.secret,
+        verbose: false
+      }
+
+      let exchange = new ccxt[parts[3].toLowerCase()](config)
+      await exchange.loadMarkets()
+      console.log(Object.keys(exchange.markets))
+      console.log(exchange.markets['ETH/BTC'])
+      const index = 4 // [ timestamp, open, high, low, close, volume ]
+      const ohlcv = await exchange.fetchOHLCV('BTC/USD', '1h')
+      const lastPrice = ohlcv[ohlcv.length - 1][index]
+      const series = ohlcv.map(x => x[index])
+      const bitcoinRate = '₿ = $' + lastPrice
+      const period = '1hr'
+      const chart = asciichart.plot(series.slice(-25), { height: 12, padding: '         ' })
+      MessageStrategy.client.sendText(message.from, 
+        "```" + 
+        chart + "\n\n" + 
+        bitcoinRate + "\n\n" + 
+        period +
+        "```")
+
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  get_coin_value(slug) {
     for (let i = 0; i < Crypto.coins.length; i++) {
       if (Crypto.coins[i].slug === slug) {
         return parseFloat(Crypto.coins[i].quote.USD.price).toFixed(3)
@@ -26,7 +331,7 @@ class Crypto extends MessageStrategy {
     return '0'
   }
 
-  get_coin (slug) {
+  get_coin(slug) {
     for (let i = 0; i < Crypto.coins.length; i++) {
       if (Crypto.coins[i].slug === slug) {
         return Crypto.coins[i]
@@ -35,7 +340,7 @@ class Crypto extends MessageStrategy {
     return {}
   }
 
-  async get_coins (message) {
+  async get_coins(message) {
     const apiKey = fs.readFileSync('strategies/config/coincap-api.key').toString().trim()
     const client = new CoinMarketCap(apiKey)
 
@@ -55,7 +360,7 @@ class Crypto extends MessageStrategy {
     })
   }
 
-  async cmp (message) {
+  async GetCoinMarketCap(message) {
     await this.get_coins(this)
 
     const apiKey = fs.readFileSync('strategies/config/coincap-api.key').toString().trim()
@@ -117,7 +422,7 @@ class Crypto extends MessageStrategy {
     })
   }
 
-  async get_graph (message) {
+  async get_graph(message) {
     await this.get_coins(this)
 
     const parts = message.body.split(' ')
@@ -289,98 +594,6 @@ class Crypto extends MessageStrategy {
       console.log(err)
       console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@')
       MessageStrategy.client.sendText(message.from, err)
-    }
-  }
-
-  provides () {
-    Crypto.self = this
-
-    return {
-      help: 'Stats and graphs for crypto',
-      provides: {
-        coin: {
-          test: function (message) {
-            return message.body.toLowerCase() === 'coin'
-          },
-          access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
-          },
-          help: function () {
-            return 'Shows top 50 coins'
-          },
-          action: function Cmp (message) {
-            Crypto.self.cmp(message)
-            return true
-          },
-          interactive: true,
-          enabled: function () {
-            return MessageStrategy.state.Crypto.enabled
-          }
-        },
-        'coin 0-9': {
-          test: function (message) {
-            return message.body.match(/^coin ([0-9]+)$/i) !== null
-          },
-          access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
-          },
-          help: function () {
-            return 'Shows X number of coins'
-          },
-          action: function Cmp (message) {
-            Crypto.self.cmp(message)
-            return true
-          },
-          interactive: true,
-          enabled: function () {
-            return MessageStrategy.state.Crypto.enabled
-          }
-        },
-        'coin name': {
-          test: function (message) {
-            return message.body.match(/^coin ([0-9a-z\-]+)$/i) !== null
-          },
-          access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
-          },
-          help: function () {
-            return 'Shows graph for a given coin'
-          },
-          action: function GetGraph (message) {
-            Crypto.self.get_graph(message)
-            return true
-          },
-          interactive: true,
-          enabled: function () {
-            return MessageStrategy.state.Crypto.enabled
-          }
-        },
-        'coin name duration': {
-          test: function (message) {
-            return message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) !== null
-          },
-          access: function (message, strategy, action) {
-            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
-          },
-          help: function () {
-            return 'Shows graph for a given coin with a time frame 1d/7d/1m/3m/1y'
-          },
-          action: function GetGraphDated (message) {
-            Crypto.self.get_graph(message)
-            return true
-          },
-          interactive: true,
-          enabled: function () {
-            return MessageStrategy.state.Crypto.enabled
-          }
-        }
-      },
-      access: function (message, strategy) {
-        return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name)
-      },
-      enabled: function () {
-        return MessageStrategy.state.Crypto.enabled
-      }
     }
   }
 }

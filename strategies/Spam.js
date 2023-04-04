@@ -10,13 +10,13 @@ class Spam extends MessageStrategy {
   static banned = {}
   static self = null
 
-  constructor () {
+  constructor() {
     super('Spam', {
       enabled: true
     })
   }
 
-  provides () {
+  provides() {
     Spam.self = this
 
     return {
@@ -48,7 +48,7 @@ class Spam extends MessageStrategy {
     }
   }
 
-  Spam (message) {
+  Spam(message) {
     const spammer = message.chatId + ' - ' + message.sender.id
 
     if (spammer in Spam.banned) {
@@ -64,19 +64,24 @@ class Spam extends MessageStrategy {
     let keycheck = false
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
-      const provides = MessageStrategy.strategies[key].provides()
-      if (Object.keys(provides).indexOf('provides') === -1) {
-        return
-      }
-      const actions = provides.provides
-      const keys = Object.keys(actions)
-      for (let y = 0; y < keys.length; y++) {
-        if (actions[keys[y]].interactive) {
-          if (actions[keys[y]].test(message)) {
-            keycheck = true
-          }
+      try {
+        const provides = MessageStrategy.strategies[key].provides()
+
+        if (Object.keys(provides).indexOf('provides') === -1) {
+          return
         }
-        keywords.push(keys[y].toLowerCase())
+        const actions = provides.provides
+        const keys = Object.keys(actions)
+        for (let y = 0; y < keys.length; y++) {
+          if (actions[keys[y]].interactive) {
+            if (actions[keys[y]].test(message)) {
+              keycheck = true
+            }
+          }
+          keywords.push(keys[y].toLowerCase())
+        }
+      } catch (err) {
+        console.log(err)
       }
     })
 

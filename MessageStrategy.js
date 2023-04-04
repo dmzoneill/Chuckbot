@@ -8,7 +8,7 @@ const CoinMarketCap = require('coinmarketcap-api')
 const puppeteer = require('puppeteer')
 const deluge = require('deluge')
 const resizeImg = require('resize-image-buffer')
-var Jimp = require("jimp")
+const Jimp = require("jimp")
 const axios = require('axios')
 const urlencode = require('rawurlencode')
 const nameToImdb = require('name-to-imdb')
@@ -21,7 +21,15 @@ const NodeWebcam = require('node-webcam')
 const exec = require('child_process')
 const jsdom = require('jsdom')
 const YAML = require('yaml')
-const craiyon = require("text-to-img-craiyon-scrapper")
+const x2j = require('xml2json');
+const yahooStockAPI = require('yahoo-stock-api').default
+const ccxt = require ('ccxt')
+const asciichart = require ('asciichart')
+const IG = require('instagram-web-api')
+
+
+// const imageboard = require('imageboard')
+// const TradingView = require('tradingview')
 
 const strategies_dir = './strategies/'
 
@@ -545,6 +553,8 @@ class MessageStrategy {
         }
         handler.message = message
 
+        if (module.provides == null) continue
+
         const actions_keys = Object.keys(module.provides)
         for (let x = 0; x < actions_keys.length; x++) {
           const action_obj = module.provides[actions_keys[x]]
@@ -570,7 +580,11 @@ class MessageStrategy {
               y = keys.length
               break
             }
-            if (action_obj.action(message)) {
+
+            let action_result = action_obj.action(message)
+            action_result = action_result == undefined ? false : action_result
+
+            if (action_result) {
               y = keys.length
               break
             }
@@ -603,13 +617,13 @@ class MessageStrategy {
     await Jimp.read(buffer).then((img) => {
       img.resize(img_width, Jimp.AUTO)
       img.quality(70)
-      jimpImg = img 
+      jimpImg = img
     })
-    let image = await jimpImg.getBufferAsync(Jimp.MIME_JPEG)   
+    let image = await jimpImg.getBufferAsync(Jimp.MIME_JPEG)
 
     const buffer64 = Buffer.from(image, 'binary').toString('base64')
 
-    if(data_url) {
+    if (data_url) {
       return 'data:image/jpeg;base64,' + buffer64
     } else {
       return buffer64
@@ -625,9 +639,9 @@ class MessageStrategy {
       await Jimp.read(buffer).then((img) => {
         img.resize(img_width, Jimp.AUTO)
         img.quality(70)
-        jimpImg = img 
+        jimpImg = img
       })
-      image = await jimpImg.getBufferAsync(Jimp.MIME_JPEG)   
+      image = await jimpImg.getBufferAsync(Jimp.MIME_JPEG)
 
       const buffer64 = Buffer.from(image, 'binary').toString('base64')
       return 'data:image/jpeg;base64,' + buffer64
@@ -643,9 +657,9 @@ class MessageStrategy {
         url
       }
 
-      if(download) {
+      if (download) {
         opts['responseType'] = 'arraybuffer',
-        opts['reponseEncoding'] = 'binary'
+          opts['reponseEncoding'] = 'binary'
       }
 
       if (post_data != false) {
@@ -674,7 +688,7 @@ class MessageStrategy {
         fs.mkdirSync(MessageStrategy.http_cache_folder, { recursive: true })
       }
 
-      if(cache) {
+      if (cache) {
         await fs.writeFileSync(MessageStrategy.http_cache_folder + '/' + url.replaceAll('/', '.').replaceAll(':', '.') + (json ? '.json' : ''), JSON.stringify(response.data))
       }
 
@@ -684,16 +698,20 @@ class MessageStrategy {
     }
   }
 
+  async randomIntFromInterval(min = 10800, max = 28800) {
+    return Math.floor(Math.random() * (max - min + 1) + min)
+  }
+
   handleEvent(message) {
-    const sha1 = crypto.createHash('sha1').update(JSON.stringify(message)).digest('hex')
-    if (MessageStrategy.last_event == null) {
-      MessageStrategy.last_event = sha1
-      console.log(message)
-    }
-    if (MessageStrategy.last_event != sha1) {
-      MessageStrategy.last_event = sha1
-      console.log(message)
-    }
+    // const sha1 = crypto.createHash('sha1').update(JSON.stringify(message)).digest('hex')
+    // if (MessageStrategy.last_event == null) {
+    //   MessageStrategy.last_event = sha1
+    //   console.log(message)
+    // }
+    // if (MessageStrategy.last_event != sha1) {
+    //   MessageStrategy.last_event = sha1
+    //   console.log(message)
+    // }
   }
 
   async call_update_active_chat_contacts() {

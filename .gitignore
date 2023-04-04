@@ -12,4 +12,5 @@
 **/strategies/media/**
 **/strategies/config/**
 **/__pycache__/**
+**/strategies/FilipinoCupid.js
 # end managed by open-wa

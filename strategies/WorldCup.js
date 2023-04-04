@@ -296,7 +296,7 @@ class WorldCup extends MessageStrategy {
       )
 
       if (page === undefined) {
-        console.log('Unable to obtain token')
+        // console.log('Unable to obtain token')
         return
       }
 
@@ -307,7 +307,7 @@ class WorldCup extends MessageStrategy {
       }
       await WorldCup.Update(message)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -337,7 +337,7 @@ class WorldCup extends MessageStrategy {
 
   static async updateMatches (message) {
     try {
-      console.log('Update matches')
+      // console.log('Update matches')
       MessageStrategy.typing(message)
       WorldCup.json_matches = await MessageStrategy.axiosHttpRequest(
         message,
@@ -348,10 +348,10 @@ class WorldCup extends MessageStrategy {
         true, 'data',
         true
       )
-      console.log(WorldCup.json_matches)
+      // console.log(WorldCup.json_matches)
       WorldCup.updateGroups()
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -363,7 +363,7 @@ class WorldCup extends MessageStrategy {
         WorldCup.Login(message)
         return
       }
-      console.log('Update groups')
+      // console.log('Update groups')
       MessageStrategy.typing(message)
       WorldCup.json_groups = await MessageStrategy.axiosHttpRequest(
         message,
@@ -374,10 +374,10 @@ class WorldCup extends MessageStrategy {
         true, 'data',
         true
       )
-      console.log(WorldCup.json_groups)
+      // console.log(WorldCup.json_groups)
       WorldCup.updateTeams()
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -389,7 +389,7 @@ class WorldCup extends MessageStrategy {
         WorldCup.Login(message)
         return
       }
-      console.log('Update teams')
+      // console.log('Update teams')
       MessageStrategy.typing(message)
       WorldCup.json_teams = await MessageStrategy.axiosHttpRequest(
         message,
@@ -400,10 +400,10 @@ class WorldCup extends MessageStrategy {
         true, 'data',
         true
       )
-      console.log(WorldCup.json_teams)
+      // console.log(WorldCup.json_teams)
 
       if (WorldCup.json_teams === undefined) {
-        console.log('Empty teams')
+        // console.log('Empty teams')
         return
       }
 
@@ -413,7 +413,7 @@ class WorldCup extends MessageStrategy {
       }
       WorldCup.parseTeamGroups()
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -425,11 +425,11 @@ class WorldCup extends MessageStrategy {
         WorldCup.Login(message)
         return
       }
-      console.log('Parse groups')
+      // console.log('Parse groups')
       MessageStrategy.typing(message)
 
       if (WorldCup.json_groups.length === undefined) {
-        console.log('Empty groups')
+        // console.log('Empty groups')
         return
       }
 
@@ -444,7 +444,7 @@ class WorldCup extends MessageStrategy {
         }
       }
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -464,14 +464,14 @@ class WorldCup extends MessageStrategy {
         limit = parseInt(parts[2])
       }
 
-      console.log('Begin top scorers')
+      // console.log('Begin top scorers')
 
       const top_players = {}
       const top_countries = {}
       const top_country_mapping = {}
 
       if (WorldCup.json_groups === undefined) {
-        console.log('Empty matches')
+        // console.log('Empty matches')
         return
       }
 
@@ -516,7 +516,7 @@ class WorldCup extends MessageStrategy {
               continue
             } else {
               for (let l = 0; l < amount; l++) {
-                console.log(player)
+                // console.log(player)
                 append_home.push(player)
               }
             }
@@ -536,7 +536,7 @@ class WorldCup extends MessageStrategy {
               continue
             } else {
               for (let l = 0; l < amount; l++) {
-                console.log(player)
+                // console.log(player)
                 append_away.push(player)
               }
             }
@@ -642,7 +642,7 @@ class WorldCup extends MessageStrategy {
         MessageStrategy.client.sendText(message.from, '```' + msg + '```')
       }
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -654,7 +654,7 @@ class WorldCup extends MessageStrategy {
         WorldCup.Login(message)
         return
       }
-      console.log('Show Matches')
+      // console.log('Show Matches')
 
       let lastDate = null
       const tempLines = []
@@ -663,82 +663,82 @@ class WorldCup extends MessageStrategy {
       await WorldCup.Update(message)
 
       if (WorldCup.json_matches === undefined) {
-        console.log('Empty matches')
+        // console.log('Empty matches')
         return
       }
 
-      console.log('Matches: ' + WorldCup.json_matches.length.toString())
+      // console.log('Matches: ' + WorldCup.json_matches.length.toString())
 
       for (let y = 0; y < WorldCup.json_matches.length; y++) {
         const match = WorldCup.json_matches[y]
-        console.log(match)
-        console.log(match.local_date)
+        // console.log(match)
+        // console.log(match.local_date)
         const m = new Date(match.local_date)
         m.setHours(m.getHours() - 3)
         const d = new Date()
         const dateString = m.getFullYear() + '-' + (m.getMonth() + 1) + '-' + String(m.getDate()).padStart(2, '0')
         const timeString = m.getHours() + ':' + String(m.getMinutes()).padStart(2, '0')
         let home = WorldCup.countries[match.home_team_en]
-        console.log(match.home_team_en)
-        console.log('home: ' + home)
+        // console.log(match.home_team_en)
+        // console.log('home: ' + home)
         let away = WorldCup.countries[match.away_team_en]
-        console.log('away: ' + away)
-        console.log(match.away_team_en)
+        // console.log('away: ' + away)
+        // console.log(match.away_team_en)
         let home_goals = ''
         let away_goals = ''
 
         if (today) {
-          console.log('Today')
-          console.log(m.getFullYear() + '=' + d.getFullYear())
-          console.log((m.getMonth() + 1) + '=' + d.getMonth())
-          console.log(m.getDate() + '=' + d.getDate())
+          // console.log('Today')
+          // console.log(m.getFullYear() + '=' + d.getFullYear())
+          // console.log((m.getMonth() + 1) + '=' + d.getMonth())
+          // console.log(m.getDate() + '=' + d.getDate())
 
           if (!(m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() && m.getDate() === d.getDate())) {
-            console.log('Skip not today = ' + home + ' v ' + away)
+            // console.log('Skip not today = ' + home + ' v ' + away)
             continue
           } else {
-            console.log('Today')
-            console.log(match)
+            // console.log('Today')
+            // console.log(match)
           }
         }
 
         if (tomorrow) {
-          console.log('Tomorrow')
+          // console.log('Tomorrow')
           d.setDate(d.getDate() + 1)
 
           if (!(m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() && m.getDate() === d.getDate())) {
-            console.log('Skip not tomorrow')
+            // console.log('Skip not tomorrow')
             continue
           } else {
-            console.log('Tomorrow')
-            console.log(match)
+            // console.log('Tomorrow')
+            // console.log(match)
           }
         }
 
         if (current) {
-          console.log('Current')
+          // console.log('Current')
           if (!(
             m.getFullYear() === d.getFullYear() &&
             m.getMonth() === d.getMonth() &&
             m.getDate() === d.getDate() &&
             d.getHours() >= m.getHours() &&
             d.getHours() <= m.getHours() + 2)) {
-            console.log('Skip not current')
+            // console.log('Skip not current')
             continue
           } else {
-            console.log('Current')
-            console.log(match)
+            // console.log('Current')
+            // console.log(match)
           }
         }
 
         if (letter !== null) {
-          console.log('Letter')
+          // console.log('Letter')
           if (match.group !== letter.toUpperCase()) {
             continue
           }
         }
 
-        console.log('check teams lenght')
+        // console.log('check teams lenght')
 
         if (home.length < 2 || away.length < 2) {
           continue
@@ -754,8 +754,8 @@ class WorldCup extends MessageStrategy {
 
         if (match.home_scorers[0] !== 'null') {
           if (match.home_scorers[0].indexOf('Penalties(') > -1) {
-            console.log('xxxxxxxxxxxxxxxxxxxxxxxxx')
-            console.log(match.home_scorers[0])
+            // console.log('xxxxxxxxxxxxxxxxxxxxxxxxx')
+            // console.log(match.home_scorers[0])
             let penos = match.home_scorers[0].split('Penalties(')
             penos = penos[1].split(')')
             fullscore_home = parseInt(penos[0])
@@ -764,8 +764,8 @@ class WorldCup extends MessageStrategy {
 
         if (match.away_scorers[0] !== 'null') {
           if (match.away_scorers[0].indexOf('Penalties(') > -1) {
-            console.log('ddddddddddddddddddddddddddddddddd')
-            console.log(match.away_scorers[0])
+            // console.log('ddddddddddddddddddddddddddddddddd')
+            // console.log(match.away_scorers[0])
             let penos = match.away_scorers[0].split('Penalties(')
             penos = penos[1].split(')')
             fullscore_away = parseInt(penos[0])
@@ -773,7 +773,7 @@ class WorldCup extends MessageStrategy {
         }
 
         if (m.getFullYear() <= d.getFullYear() && m.getMonth() <= d.getMonth() && m.getDate() < d.getDate()) {
-          console.log('Previous days scores')
+          // console.log('Previous days scores')
           home_goals = parseInt(match.home_score === null ? '0' : match.home_score) + fullscore_home
           home_goals = ' (' + home_goals.toString() + ')'
           away_goals = parseInt(match.away_score === null ? '0' : match.away_score) + fullscore_away
@@ -781,7 +781,7 @@ class WorldCup extends MessageStrategy {
         }
 
         if (m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() && m.getDate() === d.getDate() && d.getHours() >= m.getHours()) {
-          console.log('Today goals scored')
+          // console.log('Today goals scored')
           if (!tomorrow) {
             home_goals = parseInt(match.home_score === null ? '0' : match.home_score) + fullscore_home
             home_goals = ' (' + home_goals.toString() + ')'
@@ -827,27 +827,27 @@ class WorldCup extends MessageStrategy {
         tempLines.push('\n' + ' '.repeat(10) + timeString)
         tempLines.push(theLine)
         // tempLines.push(scorerLines);
-        console.log(scorerLines)
+        // console.log(scorerLines)
         appended += 1
       }
 
       if (letter !== null) {
-        console.log('H Letter')
+        // console.log('H Letter')
         tempLines.unshift('Group ' + letter + ' matches')
       }
 
       if (today) {
-        console.log('H today')
+        // console.log('H today')
         tempLines.unshift('Todays matches')
       }
 
       if (tomorrow) {
-        console.log('H tomorrow')
+        // console.log('H tomorrow')
         tempLines.unshift('Tomorrows matches')
       }
 
       if (current) {
-        console.log('H Current')
+        // console.log('H Current')
         tempLines.unshift('Now playing')
       }
 
@@ -871,7 +871,7 @@ class WorldCup extends MessageStrategy {
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, '```' + msg + '```')
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -889,7 +889,7 @@ class WorldCup extends MessageStrategy {
       const group_teams_header = '    🌐   P W D L F A Pts\n'
       const lines = []
       const group = await WorldCup.getGroup(letter)
-      console.log(group)
+      // console.log(group)
       let groupTeams = group.teams
 
       groupTeams = groupTeams.sort((a, b) => {
@@ -928,15 +928,15 @@ class WorldCup extends MessageStrategy {
       }
 
       const group_teams = lines.join('\n')
-      console.log(group)
-      console.log(lines)
-      console.log(group_teams)
+      // console.log(group)
+      // console.log(lines)
+      // console.log(group_teams)
 
       const msg = '```' + group_header + group_teams_header + group_teams + '```'
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, msg)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -961,7 +961,7 @@ class WorldCup extends MessageStrategy {
     for (let y = 0; y < matches.length; y++) {
       loop2:
       for (let i = 0; i < order.length; i++) {
-        console.log(order[i])
+        // console.log(order[i])
         if (matches[y].home_team_en === order[i] || matches[y].away_team_en === order[i]) {
           const index = i === 0 ? 0 : Math.floor(i / 2)
           filtered[index] = matches[y]
@@ -1014,7 +1014,7 @@ class WorldCup extends MessageStrategy {
 
         if (filtered[t].home_scorers[0] !== 'null') {
           if (filtered[t].home_scorers[0].indexOf('Penalties(') > -1) {
-            console.log(filtered[t].home_scorers[0])
+            // console.log(filtered[t].home_scorers[0])
             let penos = filtered[t].home_scorers[0].split('Penalties(')
             penos = penos[1].split(')')
             fullscore_home += parseInt(penos[0])
@@ -1023,7 +1023,7 @@ class WorldCup extends MessageStrategy {
 
         if (filtered[t].away_scorers[0] !== 'null') {
           if (filtered[t].away_scorers[0].indexOf('Penalties(') > -1) {
-            console.log(filtered[t].away_scorers[0])
+            // console.log(filtered[t].away_scorers[0])
             let penos = filtered[t].away_scorers[0].split('Penalties(')
             penos = penos[1].split(')')
             fullscore_away += parseInt(penos[0])
@@ -1158,7 +1158,7 @@ class WorldCup extends MessageStrategy {
 
     try {
       if (WorldCup.json_matches === undefined) {
-        console.log('Empty matches')
+        // console.log('Empty matches')
         return
       }
 
@@ -1191,7 +1191,7 @@ class WorldCup extends MessageStrategy {
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, msg)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1203,7 +1203,7 @@ class WorldCup extends MessageStrategy {
         WorldCup.ShowGroup(message, requested_letter)
       }
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1214,7 +1214,7 @@ class WorldCup extends MessageStrategy {
         WorldCup.ShowGroup(message, arr[index])
       })
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1222,7 +1222,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowMatches(message, message.body.substring('wc matches '.length).toUpperCase())
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1230,7 +1230,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowMatches(message, message.body.substring('wc matches '.length).toUpperCase())
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1238,7 +1238,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowMatches(message, null)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1246,7 +1246,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowMatches(message, null, false, false, true)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1254,7 +1254,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowMatches(message, null, true, false, false)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1262,7 +1262,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowMatches(message, null, false, true, false)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1270,7 +1270,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowGroupStages(message, 16)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1278,7 +1278,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowGroupStages(message, 8)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1286,7 +1286,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowGroupStages(message, 4)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1294,7 +1294,7 @@ class WorldCup extends MessageStrategy {
     try {
       WorldCup.ShowGroupStages(message, 2)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 
@@ -1302,7 +1302,7 @@ class WorldCup extends MessageStrategy {
     try {
       await WorldCup.updateMatches(message)
     } catch (err) {
-      console.log(err)
+      // console.log(err)
     }
   }
 }
