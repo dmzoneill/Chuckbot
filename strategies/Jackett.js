@@ -23,7 +23,7 @@ class Jackett extends MessageStrategy {
     return {
       help: 'Jackett seearch',
       provides: {
-        Jackett: {
+        'jackett': {
           test: function (message) {
             return message.body.toLowerCase() === 'jackett'
           },
@@ -79,7 +79,11 @@ class Jackett extends MessageStrategy {
       url += "&Query=" + message.body.substring(8)
       url += "&Tracker[]=iptorrents"
 
+      console.log(url)
+
       let results = await MessageStrategy.axiosHttpRequest(message, 'GET', url, false, 200, true, 'Results');
+
+      console.log(results)
 
       MessageStrategy.typing(message)
 

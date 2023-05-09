@@ -88,6 +88,86 @@ class Crypto extends MessageStrategy {
             return MessageStrategy.state.Crypto.enabled
           }
         },
+        'coin functions': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'coin functions'
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows list of technical analysis functions'
+          },
+          action: Crypto.self.TAFunctionList,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin function explain x': {
+          test: function (message) {
+            return message.body.match(/^coin function explain ([a-zA-Z0-9]+)$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Shows a description of a technical analysis function'
+          },
+          action: Crypto.self.TAFunctionDescription,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin function explain': {
+          test: function (message) {
+            return message.body.match(/^coin function explain$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Explains all functions'
+          },
+          action: Crypto.self.TAFunctionDescriptionAll,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin analyze function pair interval exchange': {
+          test: function (message) {
+            return message.body.match(/^coin analyze ([a-zA-Z0-9]+) ([a-zA-Z0-9]+\/[a-zA-Z0-9]+) ([0-9]+[y|M|w|m|h|d|s])$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Does a technical analysys of a pair'
+          },
+          action: Crypto.self.TAAnalyzeFunc,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
+        'coin analyze pair interval exchange': {
+          test: function (message) {
+            return message.body.match(/^coin analyze ([a-zA-Z0-9]+\/[a-zA-Z0-9]+) ([0-9]+[y|M|w|m|h|d|s])$/i) !== null
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Does a technical analysys of a pair'
+          },
+          action: Crypto.self.TAAnalyze,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Crypto.enabled
+          }
+        },
         'coin': {
           test: function (message) {
             return message.body.toLowerCase() === 'coin'
@@ -310,12 +390,268 @@ class Crypto extends MessageStrategy {
       const bitcoinRate = '₿ = $' + lastPrice
       const period = '1hr'
       const chart = asciichart.plot(series.slice(-25), { height: 12, padding: '         ' })
-      MessageStrategy.client.sendText(message.from, 
-        "```" + 
-        chart + "\n\n" + 
-        bitcoinRate + "\n\n" + 
+      MessageStrategy.client.sendText(message.from,
+        "```" +
+        chart + "\n\n" +
+        bitcoinRate + "\n\n" +
         period +
         "```")
+
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async TAFunctionDescription(message) {
+    try {
+      let func = message.body.substring(13).trim().toUpperCase()
+      console.log(func)
+      let function_desc = talib.explain(func);
+      MessageStrategy.client.sendText(message.from, JSON.stringify(function_desc, null, 2))
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async TAFunctionDescriptionAll(message) {
+    try {
+      let functions = talib.functions;
+      for (let i in functions) {
+        let function_desc = talib.explain(functions[i].name);
+        console.log(function_desc)
+      }
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async TAFunctionList(message) {
+    try {
+      let functions = talib.functions;
+      let msg = "```"
+      let p = 0
+      for (let i in functions) {
+        console.log(JSON.stringify(functions[i]))
+        let name = functions[i].name
+        let hint = functions[i].hint
+        let group = functions[i].group
+
+        if (name == undefined || group == undefined || hint == undefined) {
+          continue
+        }
+
+        msg += name + "\n"
+        msg += "  " + hint + "\n"
+        msg += "  " + group + "\n"
+        if (p > 0 && p % 8 == 0) {
+          msg += "```"
+          MessageStrategy.client.sendText(message.from, msg)
+          msg = "```"
+        }
+        p++
+      }
+      msg += "```"
+      MessageStrategy.client.sendText(message.from, msg)
+    } catch (err) {
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async get_market_data(pair, interval = "1h", source_exchange = "binance") {
+    let config = {
+      apiKey: Crypto.ccxtconfig[source_exchange].creds.apiKey,
+      secret: Crypto.ccxtconfig[source_exchange].creds.secret,
+      verbose: false
+    }
+
+    let exchange = new ccxt[source_exchange](config)
+    await exchange.loadMarkets()
+    const ohlcv = await exchange.fetchOHLCV(pair, interval)
+
+    let oh_open = ohlcv.map(a => a[1]); // [ timestamp, open, high, low, close, volume ]
+    let oh_close = ohlcv.map(a => a[4]); // [ timestamp, open, high, low, close, volume ]
+    let oh_high = ohlcv.map(a => a[2]); // [ timestamp, open, high, low, close, volume ]
+    let oh_low = ohlcv.map(a => a[3]); // [ timestamp, open, high, low, close, volume ]
+    let oh_volume = ohlcv.map(a => a[5]); // [ timestamp, open, high, low, close, volume ]
+
+    // market data as arrays
+    var marketData = { open: oh_open, close: oh_close, high: oh_high, low: oh_low, volume: oh_volume };
+
+    return marketData
+  }
+
+  async TAAnalyzeFunc(message) {
+    try {
+
+      if (Crypto.ccxtconfig == null) {
+        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }));
+      }
+
+      const parts = message.body.split(' ')
+      let tafunc = parts[2].toUpperCase()
+      let tapair = parts[3].toUpperCase()
+      let tainterval = parts[4].toLowerCase()
+      let function_desc = talib.explain(tafunc);
+
+      const marketData = Object.keys(message).indexOf('marketData') > -1 ? message.marketData : await Crypto.self.get_market_data(tapair, tainterval)
+
+      console.log(tafunc)
+      console.log(JSON.stringify(function_desc['inputs'], null, 2))
+      console.log(JSON.stringify(function_desc['optInputs'], null, 2))
+      console.log(JSON.stringify(function_desc['outputs'], null, 2))
+
+      let options = {}
+
+      options = {
+        name: tafunc,
+        startIdx: 0,
+        endIdx: marketData.close.length - 1,
+        high: marketData.high,
+        low: marketData.low,
+        close: marketData.close,
+        optInTimePeriod: 14
+      }
+
+      if (tafunc == "SMA") {
+        options = {
+          name: tafunc,
+          startIdx: 0,
+          endIdx: marketData.close.length - 1,
+          inReal: marketData.close,
+          optInTimePeriod: 180
+        }
+      }
+
+      if (tafunc == "EMA") {
+        options = {
+          name: tafunc,
+          startIdx: 0,
+          endIdx: marketData.close.length - 1,
+          inReal: marketData.close,
+          optInTimePeriod: 180
+        }
+      }
+
+      if (tafunc == "STOCH") {
+        options = {
+          name: tafunc,
+          inPriceHLC: marketData.close,
+          high: marketData.high,
+          low: marketData.low,
+          close: marketData.close
+        }
+      }
+
+      if (tafunc == "STOCHF") {
+        options = {
+          name: tafunc,
+          startIdx: 0,
+          endIdx: marketData.close.length - 1,
+          inReal: marketData.close,
+          optInTimePeriod: 180,
+          high: marketData.high,
+          low: marketData.low,
+          close: marketData.close
+        }
+      }
+
+      if (tafunc == "STOCHRSI") {
+        options = {
+          name: tafunc,
+          startIdx: 0,
+          endIdx: marketData.close.length - 1,
+          inReal: marketData.close,
+          optInTimePeriod: 180,
+          high: marketData.high,
+          low: marketData.low,
+          close: marketData.close
+        }
+      }
+
+      // Calculate the ADX values using Ta-Lib
+      const taValues = talib.execute(options).result.outReal;
+
+      console.log(JSON.stringify(taValues, null, 2))
+
+      const { Chart, registerables } = await import('chart.js')
+      Chart.register(...registerables);
+
+      let interval = tainterval.indexOf("y") > -1 ? "Year" : ""
+      interval = tainterval.indexOf("M") > -1 ? "Month" : interval
+      interval = tainterval.indexOf("w") > -1 ? "Week" : interval
+      interval = tainterval.indexOf("d") > -1 ? "Day" : interval
+      interval = tainterval.indexOf("h") > -1 ? "Hour" : interval
+      interval = tainterval.indexOf("m") > -1 ? "Minute" : interval
+      interval = tainterval.indexOf("s") > -1 ? "Second" : interval
+
+      // Create a new Chart.js chart
+      const canvas = createCanvas(800, 600);
+      const ctx = canvas.getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: marketData.close.map((value, index) => `${interval} ${marketData.close.length - index}`),
+          datasets: [
+            {
+              label: tafunc,
+              data: taValues,
+              borderColor: 'blue',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+      });
+
+      // Export the chart as a PNG image
+      const imageBuffer = canvas.toBuffer('image/png');
+
+      MessageStrategy.client.sendImage(message.chatId, imageBuffer, 'filename.jpeg', '')
+
+      return marketData
+    } catch (err) {
+      console.log(err.stack);
+      MessageStrategy.client.sendText(message.from, err)
+    }
+  }
+
+  async TAAnalyze(message) {
+    try {
+
+      const parts = message.body.split(' ')
+      let tapair = parts[2].toUpperCase()
+      let tainterval = parts[3].toLowerCase()
+
+      let functions = talib.functions;
+      let msg = ""
+      let marketData = undefined
+      for (let i in functions) {
+        if (functions[i].group == "Math Transform" || functions[i].group == undefined || functions[i].group == "Price Transform") {
+          console.log("Skip " + functions[i].name)
+          continue
+        }
+        try {
+          let msg = {
+            body: "coin analyze " + functions[i].name + " " + tapair + " " + tainterval,
+            chatId: message.chatId,
+            from: message.from
+          }
+          if (marketData != undefined) {
+            msg['marketData'] = marketData
+          }
+          marketData = await Crypto.self.TAAnalyzeFunc(msg)
+        } catch (err) {
+          console.log(err)
+        }
+      }
 
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
@@ -458,7 +794,7 @@ class Crypto extends MessageStrategy {
     try {
       MessageStrategy.typing(message)
 
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] , headless:true})
       const page = await browser.newPage()
 
       const symbol = coin.toUpperCase()
@@ -498,10 +834,10 @@ class Crypto extends MessageStrategy {
         window.scrollTo(0, 0)
       })
 
-      const button = await page.waitForSelector('#cmc-cookie-policy-banner > div.cmc-cookie-policy-banner__close')
-      if (button) {
-        await button.click()
-      }
+      // const button = await page.waitForSelector('#cmc-cookie-policy-banner > div.cmc-cookie-policy-banner__close')
+      // if (button) {
+      //   await button.click()
+      // }
 
       const paths = {
         '1d': '//*[@id="react-tabs-0"]',
@@ -522,17 +858,30 @@ class Crypto extends MessageStrategy {
 
       MessageStrategy.typing(message)
 
-      // const doItLate = await page.waitForXPath('/html/body/div[3]/div/div/div/div/button[2]');
-      // await doItLate.click();
+      const acceptCookie = await page.waitForXPath('//*[@id="onetrust-accept-btn-handler"]');
+      await acceptCookie.click();
 
-      // await page.waitForXPath('/html/body/div[1]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div/div[2]/div[2]/ul/li[9]/div/div[2]')
-      await page.waitForXPath('//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div')
-      const xpath = '//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]'
-      await page.waitForXPath(xpath)
-      // wait for the selector to load
-      const element = await page.$x(xpath)
+      let selected = false
+
+      while(selected == false) {
+        try {
+          const xpath = '//*[@id="section-coin-chart"]'
+          await page.waitForXPath(xpath, {timeout: 1000})
+          selected = xpath
+          break
+        }
+        catch(err) {}
+        try {
+          const xpath = '//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div'
+          await page.waitForXPath(xpath, {timeout: 1000})          
+          selected = xpath
+          break
+        }
+        catch(err) {}
+      }
+
+      const element = await page.$x(selected)
       const sha1d = crypto.createHash('sha1').digest('hex')
-      // const text = await page.evaluate(element => element.textContent, element[0])
 
       await element[0].screenshot({ path: sha1d + '.png' })
       await browser.close()

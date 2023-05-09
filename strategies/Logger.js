@@ -21,7 +21,7 @@ class Logger extends MessageStrategy {
     return {
       help: 'Logs media to disk',
       provides: {
-        'logger save': {
+        '*': {
           test: function (message) {
             return true
           },

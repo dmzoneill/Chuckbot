@@ -248,7 +248,7 @@ class Ashtanga extends MessageStrategy {
             return MessageStrategy.state.Ashtanga.enabled
           }
         },
-        'Show yoga picture': {
+        '*': {
           test: function (message) {
             return true
           },

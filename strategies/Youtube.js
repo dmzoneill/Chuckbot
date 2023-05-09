@@ -8,13 +8,13 @@ class Youtube extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
   static self = null
 
-  constructor () {
+  constructor() {
     super('Youtube', {
       enabled: true
     })
   }
 
-  provides () {
+  provides() {
     Youtube.self = this
 
     return {
@@ -62,7 +62,7 @@ class Youtube extends MessageStrategy {
     }
   }
 
-  async Preview (message) {
+  async Preview(message) {
     try {
       let getVideo = false
 
@@ -114,18 +114,26 @@ class Youtube extends MessageStrategy {
     }
   }
 
-  async Search (message) {
+  async Search(message) {
     const search_term = message.body.substring(7)
 
     try {
-      const results = await yt.search(search_term)
-      console.log(results)
-      if (results.length === 0) {
+      // console.log(await usetube.searchVideo(search_term))
+      // const results = await yt.search(search_term)
+      const results = await usetube.searchVideo(search_term)
+      console.log(results.videos)
+      if (results.videos.length === 0) {
         console.log("0 results");
         return false
       }
       MessageStrategy.typing(message)
-      MessageStrategy.client.sendYoutubeLink(message.from, results[0].url)
+      // MessageStrategy.client.sendYoutubeLink(message.from, results[0].url)
+      MessageStrategy.client.sendYoutubeLink(message.from, "https://www.youtube.com/watch?v=" + results.videos[0].id)
+      // MessageStrategy.client.sendLinkWithAutoPreview(
+      //   message.from,
+      //   "https://www.youtube.com/watch?v=" + results.videos[0].id,
+      //   "https://www.youtube.com/watch?v=" + results.videos[0].id
+      // )
     } catch (err) {
       console.log(err)
     }

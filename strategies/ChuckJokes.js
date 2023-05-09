@@ -7,7 +7,7 @@ const MessageStrategy = require('../MessageStrategy.js')
 class ChuckJokes extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
 
-  constructor () {
+  constructor() {
     super('ChuckJokes', {
       enabled: true
     })
@@ -33,7 +33,7 @@ class ChuckJokes extends MessageStrategy {
     ]
   }
 
-  provides () {
+  provides() {
     ChuckJokes.self = this
 
     return {
@@ -47,7 +47,7 @@ class ChuckJokes extends MessageStrategy {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'Disables chuck'
+            return 'Disables chuck jokes'
           },
           action: ChuckJokes.self.ChuckSTFU,
           interactive: true,
@@ -55,7 +55,7 @@ class ChuckJokes extends MessageStrategy {
             return MessageStrategy.state.ChuckJokes.enabled
           }
         },
-        chuck: {
+        'chuck': {
           test: function (message) {
             return message.body.toLowerCase() === 'chuck'
           },
@@ -63,7 +63,7 @@ class ChuckJokes extends MessageStrategy {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'Enables chuck'
+            return 'Enables chuck jokes'
           },
           action: ChuckJokes.self.Chuck,
           interactive: true,
@@ -71,7 +71,7 @@ class ChuckJokes extends MessageStrategy {
             return MessageStrategy.state.ChuckJokes.enabled
           }
         },
-        dojoke: {
+        'dojoke': {
           test: function (message) {
             ChuckJokes.self.Setup(message)
             return MessageStrategy.state.ChuckJokes.chats[message.chatId].enabled === true
@@ -98,7 +98,7 @@ class ChuckJokes extends MessageStrategy {
     }
   }
 
-  get_joke () {
+  get_joke() {
     const joke = request('GET', 'https://api.chucknorris.io/jokes/random', {
       headers: {
         Accept: 'text/plain'
@@ -107,7 +107,7 @@ class ChuckJokes extends MessageStrategy {
     return joke.getBody()
   }
 
-  Setup (message) {
+  Setup(message) {
     if (Object.keys(MessageStrategy.state.ChuckJokes).includes('chats') === false) {
       MessageStrategy.state.ChuckJokes.chats = {}
     }
@@ -118,7 +118,7 @@ class ChuckJokes extends MessageStrategy {
     }
   }
 
-  ChuckSTFU (message) {
+  ChuckSTFU(message) {
     ChuckJokes.self.Setup(message)
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from, 'Don\'t let anyone tell you you\'re not powerful.  You\'re the most powerful woman i know')
@@ -126,14 +126,14 @@ class ChuckJokes extends MessageStrategy {
     return true
   }
 
-  Chuck (message) {
+  Chuck(message) {
     MessageStrategy.typing(message)
-    MessageStrategy.client.sendText(message.from, 'How many lesbians does it take to screw in a light bulb')
+    MessageStrategy.client.sendText(message.from, 'Game on ;)')
     MessageStrategy.state.ChuckJokes.chats[message.chatId].enabled = true
     return true
   }
 
-  DoJoke (message) {
+  DoJoke(message) {
     ChuckJokes.self.chuck_keywords.forEach(async function (word) {
       try {
         if (message.body.toLowerCase().indexOf(word) > -1) {

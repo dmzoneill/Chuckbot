@@ -120,7 +120,7 @@ class Meme extends MessageStrategy {
       }
 
       if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('frequency') === -1) {
-        MessageStrategy.state.Meme.chats[message.chatId].frequency = (Math.floor(Date.now() / 1000)) + await Meme.self.randomIntFromInterval()
+        MessageStrategy.state.Meme.chats[message.chatId].frequency = (Math.floor(Date.now() / 1000)) + await Meme.self.randomIntFromInterval(100800, 120800)
       }
     }
     catch (err) {

@@ -76,10 +76,12 @@ class Stock extends MessageStrategy {
       Stock.self.context = await Stock.self.browser.createIncognitoBrowserContext();
       Stock.self.page = await Stock.self.context.newPage();
 
-      let url = 'https://www.tradingview.com/symbols/' + symbol + ' /?exchange=' + exchange
+      let url = 'https://www.tradingview.com/symbols/' + symbol + '/?exchange=' + exchange
       if (type != "") {
         url += "&type=" + type
       }
+
+      console.log(url)
 
       await Stock.self.page.goto(url)
       await Stock.self.page.setViewport({ width: 1024, height: 1650 })
@@ -89,11 +91,13 @@ class Stock extends MessageStrategy {
       await bodyHandle.dispose()
       await Stock.self.waitFor(500)
 
-      const button = await Stock.self.page.waitForXPath('//*[@id="js-category-content"]/div[2]/div/section/div[1]/div[2]/div[1]/div[2]/div/div/div/div/article/button')
+      console.log("here!")
 
-      if (button) {
-        await button.click()
-      }
+      // const button = await Stock.self.page.waitForXPath('//*[@id="js-category-content"]/div[2]/div/section/div[1]/div[2]/div[1]/div[2]/div/div/div/div/article/button')
+
+      // if (button) {
+      //   await button.click()
+      // }
 
       const paths = {
         '1d': '//*[@id="js-category-content"]/div[2]/div/section/div[1]/div[2]/div[2]/div/div[2]/button[1]',
@@ -105,6 +109,8 @@ class Stock extends MessageStrategy {
         '5y': '//*[@id="js-category-content"]/div[2]/div/section/div[1]/div[2]/div[2]/div/div[2]/button[7]',
         'at': '//*[@id="js-category-content"]/div[2]/div/section/div[1]/div[2]/div[2]/div/div[2]/button[8]'
       }
+
+      console.log(paths[period])
 
       if (period !== '1d') {
         await Stock.self.waitFor(500)

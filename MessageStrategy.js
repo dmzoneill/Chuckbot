@@ -23,10 +23,12 @@ const jsdom = require('jsdom')
 const YAML = require('yaml')
 const x2j = require('xml2json');
 const yahooStockAPI = require('yahoo-stock-api').default
-const ccxt = require ('ccxt')
-const asciichart = require ('asciichart')
+const ccxt = require('ccxt')
+const asciichart = require('asciichart')
 const IG = require('instagram-web-api')
-
+const usetube = require('usetube')
+const talib = require('talib');
+const { createCanvas } = require('canvas');
 
 // const imageboard = require('imageboard')
 // const TradingView = require('tradingview')
@@ -405,6 +407,11 @@ class MessageStrategy {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
       return this.client.simulateTyping(args[0], args[1])
+    },
+    leaveGroup: function leaveGroup() {
+      const args = Array.from(arguments)
+      this.log(args[0])
+      return this.client.leaveGroup(args[0])
     }
   }
 
@@ -472,6 +479,9 @@ class MessageStrategy {
 
   static async typing(message) {
     try {
+      if (message.from == "chuck") {
+        return;
+      }
       await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), true)
       await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000)))
       await MessageStrategy.client.simulateTyping(await MessageStrategy.get_chat_id(message), false)
@@ -534,10 +544,7 @@ class MessageStrategy {
       const keys = Object.keys(MessageStrategy.strategies)
       const is_chuck_event = Object.keys(message).indexOf('isChuck') != -1
 
-      if (message['event_type'] == "onAddedToGroup") {
-        MessageStrategy.client.sendText(message.event.id, 'Hey, this is Chuck!\n\nYou can chat with me by saying "chuck" anywhere in your message.\n\nIf you need help, simply say "Chuck how do i use the help commands" or similar.\n\nI also speak 150 languages.')
-        return;
-      }
+      // MessageStrategy.typing(message)
 
       for (let y = 0; y < keys.length; y++) {
         const handler = MessageStrategy.strategies[keys[y]]
@@ -554,6 +561,8 @@ class MessageStrategy {
         handler.message = message
 
         if (module.provides == null) continue
+
+        console.log(" >> " + keys[y])
 
         const actions_keys = Object.keys(module.provides)
         for (let x = 0; x < actions_keys.length; x++) {
@@ -582,9 +591,12 @@ class MessageStrategy {
             }
 
             let action_result = action_obj.action(message)
+            console.log(" >>>> " + keys[y] + " - " + actions_keys[x])
             action_result = action_result == undefined ? false : action_result
 
             if (action_result) {
+              console.log("break")
+              console.log(action_result)
               y = keys.length
               break
             }
@@ -726,7 +738,7 @@ class MessageStrategy {
     try {
       MessageStrategy.typing(self.message)
 
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true })
       const page = await browser.newPage()
       await page.goto(fullurl)
       await page.setViewport({ width: 1366, height: 768 })
@@ -795,12 +807,15 @@ class MessageStrategy {
         return document.head.querySelector('title').innerText
       })
 
+      page.close()
+
       if (image_url == null) {
+        console.log("get_page_og_data image_url is null")
         return [null, null]
       } else {
         const desc = description == null ? title : description
         MessageStrategy.typing(self.message)
-        return [desc, await MessageStrategy.get_image(image_url, 480, data_url)]
+        return [desc, await MessageStrategy.get_image(image_url, 320, data_url)]
       }
     } catch (err) {
       console.log(err)
