@@ -106,8 +106,11 @@ class Youtube extends MessageStrategy {
           return
         }
 
+        let results = await usetube.searchVideo(video_id)
+
         MessageStrategy.typing(message)
-        MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', youtube_image)
+        // MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', youtube_image)
+        await MessageStrategy.client.sendImage(message.from, youtube_image, 'yt.jpg', results.videos[0].original_title + "\n\n" + "https://www.youtube.com/watch?v=" + video_id)
       }
     } catch (err) {
       console.log(err)
@@ -128,7 +131,9 @@ class Youtube extends MessageStrategy {
       }
       MessageStrategy.typing(message)
       // MessageStrategy.client.sendYoutubeLink(message.from, results[0].url)
-      MessageStrategy.client.sendYoutubeLink(message.from, "https://www.youtube.com/watch?v=" + results.videos[0].id)
+      // MessageStrategy.client.sendYoutubeLink(message.from, "https://www.youtube.com/watch?v=" + results.videos[0].id)
+      const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + results.videos[0].id + '/hqdefault.jpg')
+      await MessageStrategy.client.sendImage(message.from, youtube_image, 'yt.jpg', results.videos[0].original_title + "\n\n" + "https://www.youtube.com/watch?v=" + results.videos[0].id)
       // MessageStrategy.client.sendLinkWithAutoPreview(
       //   message.from,
       //   "https://www.youtube.com/watch?v=" + results.videos[0].id,
