@@ -236,9 +236,9 @@ class Chuck extends MessageStrategy {
     Chuck.gptapi = new ChatGPTAPI({
       apiKey: Chuck.apikey,
       debug: true,
-      // completionParams: {
-      //   model: 'gpt-4'
-      // }
+      completionParams: {
+        model: 'gpt-4'
+      }
     })
   }
 
@@ -605,9 +605,9 @@ class Chuck extends MessageStrategy {
 
       let current_user_usage = await Chuck.self.get_current_usage(message.sender.id)
 
-      if (current_user_usage > 30000) {
+      if (current_user_usage > 40000) {
         MessageStrategy.typing(message)
-        MessageStrategy.client.sendText(message.from, "You have a rolling 24hr quota of 30000 credits, relax a while")
+        MessageStrategy.client.sendText(message.from, "You have a rolling 24hr quota of 40000 credits, relax a while")
         return
       }
 
@@ -667,10 +667,15 @@ class Chuck extends MessageStrategy {
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = null
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = null
 
-      let question = 'I want to ask you questions about the following menu system \n\n' + Chuck.self.get_help_menu()
-      question += '\n\nEach entry is a command, and i will ask you about commands on the list and their usage.'
-      question += '\n\nThe questions will have the name or phone number at the end of the question.  You can use their name in the response.'
+      // let question = 'I want to ask you questions about the following menu system \n\n' + Chuck.self.get_help_menu()
+      // question += '\n\nEach entry is a command, and i will ask you about commands on the list and their usage.'
+      // question += '\n\nThe questions will have the name or phone number at the end of the question.  You can use their name in the response.'
+      // let res = await Chuck.gptapi.sendMessage(question)
+
+      let question = 'I will ask you questions.  Each question has a name or phone number at the end of the question.  Please use that in the response'
       let res = await Chuck.gptapi.sendMessage(question)
+
+      // MessageStrategy.client.sendText(message.from, question)
 
       const options = {}
       options.parentMessageId = res.id
@@ -683,6 +688,7 @@ class Chuck extends MessageStrategy {
 
       res = await Chuck.gptapi.sendMessage('Lets start a new conversation. ' + requester, options)
       let resp = res.text.replace(/chatgpt/gi, 'chuck');
+      resp = res.text.replace(/openai/gi, 'dave')
 
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id

@@ -364,6 +364,12 @@ class MessageStrategy {
       this.log(args[0], args[1], args[2], args[3])
       return this.client.sendLinkWithAutoPreview(args[0], args[1], args[2], args[3])
     },
+    sendMessageWithThumb: function sendMessageWithThumb() {
+      const args = Array.from(arguments)
+      this.log(args[0], args[1], args[2], args[3], args[4], args[5])
+      console.log("send message with thumb")
+      return this.client.sendMessageWithThumb(args[0], args[1], args[2], args[3], args[4], args[5])
+    },
     reply: function reply() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
@@ -544,7 +550,10 @@ class MessageStrategy {
       const keys = Object.keys(MessageStrategy.strategies)
       const is_chuck_event = Object.keys(message).indexOf('isChuck') != -1
 
-      // MessageStrategy.typing(message)
+      if (Object.keys(message).indexOf('chatId') == -1) {
+        MessageStrategy.client.sendSeen(message.chatId)
+      }
+      
 
       for (let y = 0; y < keys.length; y++) {
         const handler = MessageStrategy.strategies[keys[y]]
@@ -609,8 +618,7 @@ class MessageStrategy {
       }
 
       MessageStrategy.strategies.State.Save(message)
-
-      MessageStrategy.client.sendSeen(message.chatId)
+      
       if (MessageStrategy.contact_update_counter == 0 || MessageStrategy.contacts.length == 0) {
         MessageStrategy.self.call_update_active_chat_contacts()
         MessageStrategy.contact_update_counter = 10
@@ -738,7 +746,7 @@ class MessageStrategy {
     try {
       MessageStrategy.typing(self.message)
 
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true })
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: false })
       const page = await browser.newPage()
       await page.goto(fullurl)
       await page.setViewport({ width: 1366, height: 768 })
@@ -757,7 +765,7 @@ class MessageStrategy {
         await page.evaluate(_calculatedVh => {
           window.scrollBy(0, _calculatedVh)
         }, calculatedVh)
-        await self.waitFor(wait)
+        await self.waitFor(250)
         vhIncrease = vhIncrease + calculatedVh
       }
 
@@ -786,6 +794,8 @@ class MessageStrategy {
   async get_page_og_data(self, fullurl, wait = 500, data_url = true) {
     try {
       const page = await self.get_page(self, fullurl, wait)
+      const data = await page.evaluate(() => document.querySelector('*').outerHTML);
+      console.log(data)
 
       const description = await page.evaluate(() => {
         const desc = document.head.querySelector('meta[property="og:description"]')
@@ -807,7 +817,8 @@ class MessageStrategy {
         return document.head.querySelector('title').innerText
       })
 
-      page.close()
+      // page.close()
+      page.browser().close()
 
       if (image_url == null) {
         console.log("get_page_og_data image_url is null")

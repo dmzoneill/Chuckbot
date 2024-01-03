@@ -124,16 +124,30 @@ class Youtube extends MessageStrategy {
       // console.log(await usetube.searchVideo(search_term))
       // const results = await yt.search(search_term)
       const results = await usetube.searchVideo(search_term)
-      console.log(results.videos)
+      // console.log("==========================================")
+      // console.log(results.videos)
+      // console.log("==========================================")
       if (results.videos.length === 0) {
         console.log("0 results");
         return false
       }
       MessageStrategy.typing(message)
+      const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + results.videos[0].id + '/hqdefault.jpg', 200, false)
+      await MessageStrategy.client.sendImage(message.from, "data:image/jpeg;base64," + youtube_image, 'yt.jpg', results.videos[0].original_title + "\n\n" + "https://www.youtube.com/watch?v=" + results.videos[0].id)
+
+      // console.log("data:image/jpeg;base64," + youtube_image)
+
+      // await MessageStrategy.client.sendMessageWithThumb(
+      //   youtube_image,
+      //   "https://www.youtube.com/watch?v=" + results.videos[0].id,
+      //   results.videos[0].title + "",
+      //   results.videos[0].artist + "",
+      //   "https://www.youtube.com/watch?v=" + results.videos[0].id,
+      //   message.from
+      // )
+
       // MessageStrategy.client.sendYoutubeLink(message.from, results[0].url)
       // MessageStrategy.client.sendYoutubeLink(message.from, "https://www.youtube.com/watch?v=" + results.videos[0].id)
-      const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + results.videos[0].id + '/hqdefault.jpg')
-      await MessageStrategy.client.sendImage(message.from, youtube_image, 'yt.jpg', results.videos[0].original_title + "\n\n" + "https://www.youtube.com/watch?v=" + results.videos[0].id)
       // MessageStrategy.client.sendLinkWithAutoPreview(
       //   message.from,
       //   "https://www.youtube.com/watch?v=" + results.videos[0].id,
