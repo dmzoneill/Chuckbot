@@ -9,6 +9,9 @@ class Chuck extends MessageStrategy {
   static self = null
   static apikey = null
   static gptapi = null
+  static number = "353852619862@c.us"
+  static lastInteracted = {}
+  static pickedVideos = []
 
   constructor() {
     super('Chuck', {
@@ -199,6 +202,38 @@ class Chuck extends MessageStrategy {
             return MessageStrategy.state.Chuck.enabled
           }
         },
+        'chuck persona *': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('chuck persona')
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Change chucks persona'
+          },
+          action: Chuck.self.Persona,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Chuck.enabled
+          }
+        },
+        'chuck media *': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('chuck media')
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Change chucks media preferences'
+          },
+          action: Chuck.self.Media,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Chuck.enabled
+          }
+        },
         '*': {
           test: function (message) {
             return true
@@ -317,18 +352,19 @@ class Chuck extends MessageStrategy {
     if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTUserUsage') == -1) {
       MessageStrategy.state.Chuck['GPTUserUsage'] = {}
     }
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('ChatPersonas') == -1) {
+      MessageStrategy.state.Chuck['ChatPersonas'] = {}
+    }
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('ChatPersonasMedia') == -1) {
+      MessageStrategy.state.Chuck['ChatPersonasMedia'] = {}
+    }
   }
 
   handleEvent(message) {
     Chuck.self = this;
     Chuck.self.setup_state()
 
-    console.log("========================")
-    console.log(message['event_type'])
-    console.log("========================")
-
     if (message['event_type'] === 'onAddedToGroup') {
-      console.log("pre added");
       Chuck.self.addedToGroup(message);
     }
   }
@@ -358,24 +394,80 @@ class Chuck extends MessageStrategy {
   }
 
   addedToGroup(message) {
-    console.log(message)
+    if (Chuck.self.isPersonaMode(message)) {
+      Chuck.self.NewConversation(message)
+      return
+    }
     Chuck.self.leave_banned_groups()
     MessageStrategy.client.sendText(message.event.id, 'Hey, this is Chuck!\n\nYou can chat with me by saying "chuck" anywhere in your message.\n\nIf you need help, simply say "Chuck how do i use the help commands" or similar.\n\nI also speak 150 languages.')
     return true
   }
 
+  isPersonaMode(message) {
+    try {
+      let name;
+      if ('event' in message) {
+        if (message.event_type == 'onAddedToGroup') {
+          name = message.event.contact.id.toLowerCase()
+        }
+      } else {
+        name = message.chat.contact.id.toLowerCase()
+      }
+
+      Chuck.self.setup_state()
+      for (let key in MessageStrategy.state.Chuck.ChatPersonas) {
+        let check = key.toLowerCase()
+        if (check == name) {
+          return true
+        }
+      }
+      return false
+    } catch (e) {
+      console.log(e)
+      // MessageStrategy.client.sendText(message.from, e)
+    }
+  }
+
+  async Persona(message) {
+    try {
+      if (message.body.toLowerCase().trim() == "chuck persona") {
+        MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonas[message.from])
+        return
+      }
+      MessageStrategy.state.Chuck.ChatPersonas[message.from] = message.body.substring("chuck persona".length -1)
+    } catch (e) {
+      console.log(e)
+      // MessageStrategy.client.sendText(message.from, e)
+    }
+  }
+
+  async Media(message) {
+    try {
+      Chuck.self.setup_state()
+      if (message.body.toLowerCase().trim() == "chuck media") {
+        MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonasMedia[message.from])
+        return
+      }
+      MessageStrategy.state.Chuck.ChatPersonasMedia[message.from] = message.body.substring("chuck persona".length -1).split(',')
+    } catch (e) {
+      console.log(e)
+      // MessageStrategy.client.sendText(message.from, e)
+    }
+  }
+
   async leave_group(group_id) {
     try {
+
       MessageStrategy.client.sendText(group_id, 'Look at you! with your fucking 48% body fat! And you, you scrawny little bastard! Fuck you guys!')
       Chuck.self.waitFor(1000)
       MessageStrategy.client.leaveGroup(group_id)
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
-  async leave_banned_groups() {
+  async leave_banned_groups(message) {
     try {
       Chuck.self.setup_state()
       for (let h = 0; h < MessageStrategy.state.Chuck.BannedGroups.length; h++) {
@@ -383,7 +475,7 @@ class Chuck extends MessageStrategy {
       }
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -399,7 +491,7 @@ class Chuck extends MessageStrategy {
       }
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -413,7 +505,7 @@ class Chuck extends MessageStrategy {
       }
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -426,7 +518,7 @@ class Chuck extends MessageStrategy {
 
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -458,7 +550,7 @@ class Chuck extends MessageStrategy {
       }
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -470,7 +562,7 @@ class Chuck extends MessageStrategy {
       MessageStrategy.client.sendText(message.from, "Unbanned")
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -493,7 +585,7 @@ class Chuck extends MessageStrategy {
       MessageStrategy.client.sendText(message.from, "``` " + msg.trim() + "```")
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -513,7 +605,7 @@ class Chuck extends MessageStrategy {
       MessageStrategy.client.sendText(message.from, "``` " + msg.trim() + "```")
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -526,13 +618,12 @@ class Chuck extends MessageStrategy {
       MessageStrategy.client.sendText(message.from, res.text)
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
   async get_current_usage(user) {
     let total_usage = 0;
-    console.log(JSON.stringify(MessageStrategy.state.Chuck['GPTUserUsage'], null, 2))
     let usage = Object.keys(MessageStrategy.state.Chuck['GPTUserUsage'][user])
     for (let h = 0; h < usage.length; h++) {
       if (parseInt(usage[h]) > Math.floor(Date.now() / 1000) - 86400) {
@@ -562,6 +653,10 @@ class Chuck extends MessageStrategy {
         MessageStrategy.state.Chuck.chats[message.chatId] = {}
         MessageStrategy.state.Chuck.chats[message.chatId].conversationId = null
         MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = null
+
+        if (Chuck.self.isPersonaMode(message)) {
+          Chuck.self.NewConversation(message)
+        }
       }
 
       if (MessageStrategy.state.Chuck.chats[message.chatId].conversationId != null) {
@@ -578,14 +673,101 @@ class Chuck extends MessageStrategy {
 
       const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
 
+      if (!'type' in message) {
+        return
+      }
+
+      if (message.type != 'chat') {
+        return
+      }
+
+      if (Chuck.self.isPersonaMode(message)) {
+
+        options.systemMessage = MessageStrategy.state.Chuck.ChatPersonas[message.chatId]
+
+        let tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+  
+        for (let key in Chuck.lastInteracted) {
+            if (Chuck.lastInteracted[key] < tenMinutesAgo) {
+                delete Chuck.lastInteracted[key];
+            }
+        }
+
+        let recentlyInteractedWithAuthor = (message.author in Chuck.lastInteracted) ? true : false;
+        let respondWithQuote = Math.random() < 0.5;
+        let randomRespond = Math.random() < 0.15;
+        let randomRespondWithMedia = Math.random() < 0.25;
+        let iWasQuoted = "quotedMsg" in message && message.quotedMsg.author == Chuck.number;
+
+        if(randomRespondWithMedia && randomRespond && !recentlyInteractedWithAuthor) {
+          if(MessageStrategy.state.Chuck.ChatPersonasMedia[message.from].length > 0) {
+            let array = MessageStrategy.state.Chuck.ChatPersonasMedia[message.from];
+            let randomWord = array[Math.floor(Math.random() * array.length)];
+            usetube.searchVideo(randomWord).then(results => {
+              results.videos.sort(() => Math.random() - 0.5);
+              for (let video of results.videos) {
+                  if (!Chuck.pickedVideos.includes(video.id)) {
+                    Chuck.pickedVideos.push(video.id);
+                    MessageStrategy.client.sendYoutubeLink(message.from, "https://www.youtube.com/watch?v=" + video.id, video.title)
+                    break;
+                  }
+              }
+          }).catch(console.error);
+          }
+          if(Math.random() < 0.7) {
+            return;
+          }
+        }
+
+        if (message.body.length < 12 && !iWasQuoted) {
+          return
+        }
+  
+        if(!recentlyInteractedWithAuthor && !iWasQuoted && !randomRespond) {
+          return
+        }
+
+        Chuck.lastInteracted[message.author] = Date.now();
+
+        const res = await Chuck.gptapi.sendMessage(message.body, options)
+        let resp = res.text
+
+        if (res.conversationId != null) {
+          MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
+        }
+
+        if (res.id != null) {
+          MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
+        }
+
+        let keywords = ["as an AI", "openai", "gpt", "language model", "artificial intelligence", "chatbot"];
+        let lowerCaseResp = resp.toLowerCase();
+        
+        if (keywords.some(keyword => lowerCaseResp.indexOf(keyword) > -1)) {
+            return;
+        }
+
+        MessageStrategy.typing(message)
+        if(respondWithQuote) {
+          MessageStrategy.client.reply(message.from, resp, message.id, true)
+        }
+        else {
+          MessageStrategy.client.sendText(message.from, resp)
+        }
+        
+        return
+      }
+
       let the_msg = message.body;
 
       if (message.body.toLowerCase().startsWith("chuck") == false && message.body.toLowerCase().indexOf(" chuck") == -1) {
         return;
       }
+
       if (message.body.toLowerCase().startsWith("chuck")) {
         the_msg = "Chatgpt " + the_msg.substr(6)
       }
+
       if (message.body.toLowerCase().indexOf(" chuck") == -1) {
         the_msg = the_msg.replace(/ chuck/gi, ' chatgpt')
       }
@@ -615,8 +797,6 @@ class Chuck extends MessageStrategy {
       let resp = res.text.replace(/chatgpt/gi, 'chuck')
       resp = res.text.replace(/openai/gi, 'dave')
 
-      console.log(JSON.stringify(res, null, 2))
-
       if (res.detail.usage.total_tokens != undefined) {
         MessageStrategy.state.Chuck['GPTUserUsage'][message.sender.id][Math.floor(Date.now() / 1000)] = res.detail.usage.total_tokens
       }
@@ -631,26 +811,9 @@ class Chuck extends MessageStrategy {
 
       MessageStrategy.typing(message)
       MessageStrategy.client.sendText(message.from, resp)
-
-      // if ((Math.floor(Math.random() * 9) + 1) % 9 == 1) {
-      //   const res2 = await Chuck.gptapi.sendMessage("Can you ask a sarcastic personal question and add an insult into it?" + ' ' + requester, options)
-      //   let resp = res2.text.replace(/chatgpt/gi, 'chuck')
-
-      //   if (res2.conversationId != null) {
-      //     MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res2.conversationId
-      //   }
-
-      //   if (res2.id != null) {
-      //     MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res2.id
-      //   }
-
-      //   MessageStrategy.typing(message)
-      //   MessageStrategy.client.sendText(message.from, resp)
-      // }
-
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 
@@ -667,37 +830,45 @@ class Chuck extends MessageStrategy {
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = null
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = null
 
+      let prompt;
+
+      if (Chuck.self.isPersonaMode(message)) {
+        prompt = MessageStrategy.state.Chuck.ChatPersonas[message.from]
+      } else {
+        prompt = 'I will ask you questions.  Each question has a name or phone number at the end of the question.  Please use that in the response'
+      }
+
       // let question = 'I want to ask you questions about the following menu system \n\n' + Chuck.self.get_help_menu()
       // question += '\n\nEach entry is a command, and i will ask you about commands on the list and their usage.'
       // question += '\n\nThe questions will have the name or phone number at the end of the question.  You can use their name in the response.'
       // let res = await Chuck.gptapi.sendMessage(question)
 
-      let question = 'I will ask you questions.  Each question has a name or phone number at the end of the question.  Please use that in the response'
-      let res = await Chuck.gptapi.sendMessage(question)
-
-      // MessageStrategy.client.sendText(message.from, question)
+      let res = await Chuck.gptapi.sendMessage(prompt)
 
       const options = {}
       options.parentMessageId = res.id
       options.conversationId = res.conversationId
+      options.systemMessage = prompt
       MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
       MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
 
-      let requester = message.sender.pushname === undefined ? '' : message.sender.pushname
-      requester = requester.indexOf(" ") > -1 ? requester.split(" ")[0] : requester
+      if (!Chuck.self.isPersonaMode(message)) {
+        let requester = message.sender.pushname === undefined ? '' : message.sender.pushname
+        requester = requester.indexOf(" ") > -1 ? requester.split(" ")[0] : requester
 
-      res = await Chuck.gptapi.sendMessage('Lets start a new conversation. ' + requester, options)
-      let resp = res.text.replace(/chatgpt/gi, 'chuck');
-      resp = res.text.replace(/openai/gi, 'dave')
+        res = await Chuck.gptapi.sendMessage('Lets start a new conversation. ' + requester, options)
+        let resp = res.text.replace(/chatgpt/gi, 'chuck')
+        resp = res.text.replace(/openai/gi, 'dave')
 
-      MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
-      MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
+        MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
+        MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
 
-      MessageStrategy.typing(message)
-      MessageStrategy.client.sendText(message.from, resp)
+        MessageStrategy.typing(message)
+        MessageStrategy.client.sendText(message.from, resp)
+      }
     } catch (e) {
       console.log(e)
-      MessageStrategy.client.sendText(message.from, e)
+      // MessageStrategy.client.sendText(message.from, e)
     }
   }
 }

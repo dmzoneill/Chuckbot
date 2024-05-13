@@ -51,7 +51,7 @@ class Amazon extends MessageStrategy {
 
   async Preview (message) {
     try {
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'] })
       const page = await browser.newPage()
 
       await page.goto(message.body)

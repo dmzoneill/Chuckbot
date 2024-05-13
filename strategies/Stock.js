@@ -72,7 +72,7 @@ class Stock extends MessageStrategy {
     try {
       MessageStrategy.typing(message)
 
-      Stock.self.browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true })
+      Stock.self.browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'], headless: true })
       Stock.self.context = await Stock.self.browser.createIncognitoBrowserContext();
       Stock.self.page = await Stock.self.context.newPage();
 

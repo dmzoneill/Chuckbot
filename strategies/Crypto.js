@@ -794,7 +794,7 @@ class Crypto extends MessageStrategy {
     try {
       MessageStrategy.typing(message)
 
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] , headless:true})
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'] , headless:true})
       const page = await browser.newPage()
 
       const symbol = coin.toUpperCase()

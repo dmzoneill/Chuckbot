@@ -1,6 +1,7 @@
 const wa = require('@open-wa/wa-automate')
 const fs = require('fs')
 
+
 class ChuckBot {
   static source_dir = './'
   static chuck = null
@@ -82,7 +83,6 @@ class ChuckBot {
       const message = event_message
       message.event_type = 'onAddedToGroup'
       message.event = event
-      console.log('on added')
       ChuckBot.Strategies.doHandleMessage(message)
     })
 

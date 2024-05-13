@@ -1,6 +1,6 @@
 const CronJob = require('cron').CronJob
 const fs = require('fs')
-const globby = require('globby')
+let globby = undefined
 const levenshtein = require('js-levenshtein')
 const request = require('sync-request')
 const crypto = require('crypto')
@@ -16,7 +16,7 @@ const { translate } = require('bing-translate-api')
 const ud = require('@dmzoneill/urban-dictionary')
 const weather = require('weather-js')
 const wiki = require('wikipedia')
-const yt = require('youtube-search-without-api-key')
+let yt = undefined
 const NodeWebcam = require('node-webcam')
 const exec = require('child_process')
 const jsdom = require('jsdom')
@@ -29,6 +29,18 @@ const IG = require('instagram-web-api')
 const usetube = require('usetube')
 const talib = require('talib');
 const { createCanvas } = require('canvas');
+const worldFlags = require('./lib/flags.js');
+const browserConfig = require('./lib/browserconfig.js')
+
+// Import modules asynchronously
+Promise.all([
+  import('globby').then(module => globby = module.default),
+  import('youtube-search-without-api-key').then(module => yt = module.default)
+]).then(() => {
+  // ,
+}).catch(error => {
+  console.error('Failed to import modules:', error);
+});
 
 // const imageboard = require('imageboard')
 // const TradingView = require('tradingview')
@@ -50,291 +62,8 @@ class MessageStrategy {
   static self = null
   static contact_update_counter = 10
   static http_cache_folder = 'strategies/http_cache_folder'
-
-  static browser_config = {
-    headers: {
-      Accept: '*/*',
-      'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
-      'Access-Control-Request-Headers': 'content-type',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Origin': 'https://google.com/',
-      'Pragma': 'no-cache',
-      'Referer': 'https://google.com/',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-site',
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
-    }
-  }
-
-  static flags = {
-    World: '🌎',
-    'Ascension Island': '🇦🇨',
-    Andorra: '🇦🇩',
-    'United Arab Emirates': '🇦🇪',
-    Afghanistan: '🇦🇫',
-    'Antigua & Barbuda': '🇦🇬',
-    Anguilla: '🇦🇮',
-    Albania: '🇦🇱',
-    Armenia: '🇦🇲',
-    Angola: '🇦🇴',
-    Antarctica: '🇦🇶',
-    Argentina: '🇦🇷',
-    'American Samoa': '🇦🇸',
-    Austria: '🇦🇹',
-    Australia: '🇦🇺',
-    Aruba: '🇦🇼',
-    'Åland Islands': '🇦🇽',
-    Azerbaijan: '🇦🇿',
-    'Bosnia & Herzegovina': '🇧🇦',
-    Barbados: '🇧🇧',
-    Bangladesh: '🇧🇩',
-    Belgium: '🇧🇪',
-    BurkinaFaso: '🇧🇫',
-    Bulgaria: '🇧🇬',
-    Bahrain: '🇧🇭',
-    Burundi: '🇧🇮',
-    Benin: '🇧🇯',
-    'St.Barthélemy': '🇧🇱',
-    Bermuda: '🇧🇲',
-    Brunei: '🇧🇳',
-    Bolivia: '🇧🇴',
-    'Caribbean Netherlands': '🇧🇶',
-    Brazil: '🇧🇷',
-    Bahamas: '🇧🇸',
-    Bhutan: '🇧🇹',
-    'Bouvet Island': '🇧🇻',
-    Botswana: '🇧🇼',
-    Belarus: '🇧🇾',
-    Belize: '🇧🇿',
-    Canada: '🇨🇦',
-    'Cocos(Keeling)Islands': '🇨🇨',
-    'Congo-Kinshasa': '🇨🇩',
-    'Central African Republic': '🇨🇫',
-    'Congo-Brazzaville': '🇨🇬',
-    Switzerland: '🇨🇭',
-    'Côted’Ivoire': '🇨🇮',
-    'Cook Islands': '🇨🇰',
-    Chile: '🇨🇱',
-    Cameroon: '🇨🇲',
-    China: '🇨🇳',
-    Colombia: '🇨🇴',
-    'Clipperton Island': '🇨🇵',
-    'Costa Rica': '🇨🇷',
-    Cuba: '🇨🇺',
-    CapeVerde: '🇨🇻',
-    Curaçao: '🇨🇼',
-    'Christmas Island': '🇨🇽',
-    Cyprus: '🇨🇾',
-    Czechia: '🇨🇿',
-    Germany: '🇩🇪',
-    DiegoGarcia: '🇩🇬',
-    Djibouti: '🇩🇯',
-    Denmark: '🇩🇰',
-    Dominica: '🇩🇲',
-    'Dominican Republic': '🇩🇴',
-    Algeria: '🇩🇿',
-    'Ceuta&Melilla': '🇪🇦',
-    Ecuador: '🇪🇨',
-    Estonia: '🇪🇪',
-    Egypt: '🇪🇬',
-    'Western Sahara': '🇪🇭',
-    Eritrea: '🇪🇷',
-    Spain: '🇪🇸',
-    Ethiopia: '🇪🇹',
-    'European Union': '🇪🇺',
-    Finland: '🇫🇮',
-    Fiji: '🇫🇯',
-    'Falkland Islands': '🇫🇰',
-    Micronesia: '🇫🇲',
-    'Faroe Islands': '🇫🇴',
-    France: '🇫🇷',
-    Gabon: '🇬🇦',
-    'United Kingdom': '🇬🇧',
-    Grenada: '🇬🇩',
-    Georgia: '🇬🇪',
-    'French Guiana': '🇬🇫',
-    Guernsey: '🇬🇬',
-    Ghana: '🇬🇭',
-    Gibraltar: '🇬🇮',
-    Greenland: '🇬🇱',
-    Gambia: '🇬🇲',
-    Guinea: '🇬🇳',
-    Guadeloupe: '🇬🇵',
-    'Equatorial Guinea': '🇬🇶',
-    Greece: '🇬🇷',
-    'South Georgia&': '🇬🇸',
-    Guatemala: '🇬🇹',
-    Guam: '🇬🇺',
-    'Guinea-Bissau': '🇬🇼',
-    Guyana: '🇬🇾',
-    'Hong Kong SAR': '🇭🇰',
-    'Heard&McDonald': '🇭🇲',
-    Honduras: '🇭🇳',
-    Croatia: '🇭🇷',
-    Haiti: '🇭🇹',
-    Hungary: '🇭🇺',
-    'Canary Islands': '🇮🇨',
-    Indonesia: '🇮🇩',
-    Ireland: '🇮🇪',
-    Israel: '🇮🇱',
-    'Isle of Man': '🇮🇲',
-    India: '🇮🇳',
-    'British Indian Ocean': '🇮🇴',
-    Iraq: '🇮🇶',
-    Iran: '🇮🇷',
-    Iceland: '🇮🇸',
-    Italy: '🇮🇹',
-    Jersey: '🇯🇪',
-    Jamaica: '🇯🇲',
-    Jordan: '🇯🇴',
-    Japan: '🇯🇵',
-    Kenya: '🇰🇪',
-    Kyrgyzstan: '🇰🇬',
-    Cambodia: '🇰🇭',
-    Kiribati: '🇰🇮',
-    Comoros: '🇰🇲',
-    'St.Kitts&': '🇰🇳',
-    'North Korea': '🇰🇵',
-    'Korea Republic': '🇰🇷',
-    'South Korea': '🇰🇷',
-    Kuwait: '🇰🇼',
-    'Cayman Islands': '🇰🇾',
-    Kazakhstan: '🇰🇿',
-    Laos: '🇱🇦',
-    Lebanon: '🇱🇧',
-    'St.Lucia': '🇱🇨',
-    Liechtenstein: '🇱🇮',
-    SriLanka: '🇱🇰',
-    Liberia: '🇱🇷',
-    Lesotho: '🇱🇸',
-    Lithuania: '🇱🇹',
-    Luxembourg: '🇱🇺',
-    Latvia: '🇱🇻',
-    Libya: '🇱🇾',
-    Morocco: '🇲🇦',
-    Monaco: '🇲🇨',
-    Moldova: '🇲🇩',
-    Montenegro: '🇲🇪',
-    'St.Martin': '🇲🇫',
-    Madagascar: '🇲🇬',
-    'Marshall Islands': '🇲🇭',
-    'North Macedonia': '🇲🇰',
-    Mali: '🇲🇱',
-    'Myanmar(Burma)': '🇲🇲',
-    Mongolia: '🇲🇳',
-    'MacaoSar China': '🇲🇴',
-    'Northern Mariana Islands': '🇲🇵',
-    Martinique: '🇲🇶',
-    Mauritania: '🇲🇷',
-    Montserrat: '🇲🇸',
-    Malta: '🇲🇹',
-    Mauritius: '🇲🇺',
-    Maldives: '🇲🇻',
-    Malawi: '🇲🇼',
-    Mexico: '🇲🇽',
-    Malaysia: '🇲🇾',
-    Mozambique: '🇲🇿',
-    Namibia: '🇳🇦',
-    NewCaledonia: '🇳🇨',
-    Niger: '🇳🇪',
-    'Norfolk Island': '🇳🇫',
-    Nigeria: '🇳🇬',
-    Nicaragua: '🇳🇮',
-    Netherlands: '🇳🇱',
-    Nederlands: '🇳🇱',
-    Norway: '🇳🇴',
-    Nepal: '🇳🇵',
-    Nauru: '🇳🇷',
-    Niue: '🇳🇺',
-    'New Zealand': '🇳🇿',
-    Oman: '🇴🇲',
-    Panama: '🇵🇦',
-    Peru: '🇵🇪',
-    'French Polynesia': '🇵🇫',
-    'Papua New Guinea': '🇵🇬',
-    Philippines: '🇵🇭',
-    Pakistan: '🇵🇰',
-    Poland: '🇵🇱',
-    'St.Pierre&': '🇵🇲',
-    PitcairnIslands: '🇵🇳',
-    'Puerto Rico': '🇵🇷',
-    'Palestinian Territories': '🇵🇸',
-    Portugal: '🇵🇹',
-    Palau: '🇵🇼',
-    Paraguay: '🇵🇾',
-    Qatar: '🇶🇦',
-    Réunion: '🇷🇪',
-    Romania: '🇷🇴',
-    Serbia: '🇷🇸',
-    Russia: '🇷🇺',
-    Rwanda: '🇷🇼',
-    'Saudi Arabia': '🇸🇦',
-    'Solomon Islands': '🇸🇧',
-    Seychelles: '🇸🇨',
-    Sudan: '🇸🇩',
-    Sweden: '🇸🇪',
-    Singapore: '🇸🇬',
-    'St.Helena': '🇸🇭',
-    Slovenia: '🇸🇮',
-    'Svalbard&Jan': '🇸🇯',
-    Slovakia: '🇸🇰',
-    'Sierra Leone': '🇸🇱',
-    'San Marino': '🇸🇲',
-    Senegal: '🇸🇳',
-    Somalia: '🇸🇴',
-    Suriname: '🇸🇷',
-    'South Sudan': '🇸🇸',
-    'SãoTomé&': '🇸🇹',
-    ElSalvador: '🇸🇻',
-    SintMaarten: '🇸🇽',
-    Syria: '🇸🇾',
-    Eswatini: '🇸🇿',
-    TristanDaCunha: '🇹🇦',
-    'Turks & Caicos': '🇹🇨',
-    Chad: '🇹🇩',
-    'French Southern Territories': '🇹🇫',
-    Togo: '🇹🇬',
-    Thailand: '🇹🇭',
-    Tajikistan: '🇹🇯',
-    Tokelau: '🇹🇰',
-    'Timor-Leste': '🇹🇱',
-    Turkmenistan: '🇹🇲',
-    Tunisia: '🇹🇳',
-    Tonga: '🇹🇴',
-    Turkey: '🇹🇷',
-    'Trinidad & Tobago': '🇹🇹',
-    Tuvalu: '🇹🇻',
-    Taiwan: '🇹🇼',
-    Tanzania: '🇹🇿',
-    Ukraine: '🇺🇦',
-    Uganda: '🇺🇬',
-    'U.S.OutlyingIslands': '🇺🇲',
-    'United Nations': '🇺🇳',
-    'United States': '🇺🇸',
-    Uruguay: '🇺🇾',
-    Uzbekistan: '🇺🇿',
-    'Vatican City': '🇻🇦',
-    'St.Vincent&': '🇻🇨',
-    Venezuela: '🇻🇪',
-    'British Virgin Islands': '🇻🇬',
-    'U.S.VirginIslands': '🇻🇮',
-    Vietnam: '🇻🇳',
-    Vanuatu: '🇻🇺',
-    'Wallis & Futuna': '🇼🇫',
-    Samoa: '🇼🇸',
-    Kosovo: '🇽🇰',
-    Yemen: '🇾🇪',
-    Mayotte: '🇾🇹',
-    'South Africa': '🇿🇦',
-    Zambia: '🇿🇲',
-    Zimbabwe: '🇿🇼',
-    England: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    Scotland: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-    Wales: '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-    'forTexas(US-TX)': '🏴󠁵󠁳󠁴󠁸󠁿'
-  }
+  static browser_config = browserConfig;
+  static flags = worldFlags;
 
   static client = {
     client: null,
@@ -743,10 +472,11 @@ class MessageStrategy {
   }
 
   async get_page(self, fullurl, wait = 500) {
+    let browser = null
     try {
       MessageStrategy.typing(self.message)
 
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: false })
+      browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true })
       const page = await browser.newPage()
       await page.goto(fullurl)
       await page.setViewport({ width: 1366, height: 768 })
@@ -787,6 +517,7 @@ class MessageStrategy {
       return page
     } catch (err) {
       console.log(err)
+      if (browser) browser.close();
       return null
     }
   }
@@ -794,8 +525,13 @@ class MessageStrategy {
   async get_page_og_data(self, fullurl, wait = 500, data_url = true) {
     try {
       const page = await self.get_page(self, fullurl, wait)
+      if (!page) {
+        console.log("Failed to get page");
+        return [null, null];
+      }
+
       const data = await page.evaluate(() => document.querySelector('*').outerHTML);
-      console.log(data)
+      // console.log(data)
 
       const description = await page.evaluate(() => {
         const desc = document.head.querySelector('meta[property="og:description"]')
