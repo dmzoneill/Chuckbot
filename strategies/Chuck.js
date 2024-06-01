@@ -202,6 +202,38 @@ class Chuck extends MessageStrategy {
             return MessageStrategy.state.Chuck.enabled
           }
         },
+        'chuck persona delete': {
+          test: function (message) {
+            return message.body.toLowerCase() == 'chuck persona delete'
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Delete chucks persona'
+          },
+          action: Chuck.self.PersonaDelete,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Chuck.enabled
+          }
+        },
+        'chuck persona name *': {
+          test: function (message) {
+            return message.body.toLowerCase().startsWith('chuck persona name')
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Change chucks persona name'
+          },
+          action: Chuck.self.PersonaName,
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.Chuck.enabled
+          }
+        },
         'chuck persona *': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('chuck persona')
@@ -431,15 +463,44 @@ class Chuck extends MessageStrategy {
   async Persona(message) {
     try {
       if (message.body.toLowerCase().trim() == "chuck persona") {
-        MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonas[message.from])
+        MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonas[message.from]['desc'])
         return
       }
-      MessageStrategy.state.Chuck.ChatPersonas[message.from] = message.body.substring("chuck persona".length -1)
+      MessageStrategy.state.Chuck.ChatPersonas[message.from]['desc'] = message.body.substring("chuck persona".length)
     } catch (e) {
       console.log(e)
-      // MessageStrategy.client.sendText(message.from, e)
     }
   }
+
+  async PersonaName(message) {
+    try {
+      Chuck.self.setup_state()
+      if (message.body.toLowerCase().trim() == "chuck persona name") {
+        MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonas[message.from]['name'])
+        return
+      }
+
+      if (!(message.from in MessageStrategy.state.Chuck.ChatPersonas)) {
+        MessageStrategy.state.Chuck.ChatPersonas[message.from] = {}
+      }
+
+      MessageStrategy.state.Chuck.ChatPersonas[message.from]['name'] = message.body.substring("chuck persona name".length)
+    } catch (e) {
+      console.log(e)
+    }
+  }  
+
+  async PersonaDelete(message) {
+    try {
+      Chuck.self.setup_state()
+      if (message.body.toLowerCase().trim() == "chuck persona delete") {
+        delete MessageStrategy.state.Chuck.ChatPersonas[message.from];
+        return
+      }
+    } catch (e) {
+      console.log(e)
+    }
+  }  
 
   async Media(message) {
     try {
@@ -641,6 +702,7 @@ class Chuck extends MessageStrategy {
   async Converse(message) {
     try {
       if (Chuck.self.is_help_command(message)) {
+        console.log("Chuck help skip")
         return;
       }
 
@@ -674,18 +736,15 @@ class Chuck extends MessageStrategy {
       const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
 
       if (!'type' in message) {
-        return
-      }
-
-      if (message.type != 'chat') {
+        console.log("Chuck no type skip")
         return
       }
 
       if (Chuck.self.isPersonaMode(message)) {
 
-        options.systemMessage = MessageStrategy.state.Chuck.ChatPersonas[message.chatId]
+        options.systemMessage = MessageStrategy.state.Chuck.ChatPersonas[message.chatId]['desc']
 
-        let tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+        let tenMinutesAgo = Date.now() - 1 * 60 * 1000;
   
         for (let key in Chuck.lastInteracted) {
             if (Chuck.lastInteracted[key] < tenMinutesAgo) {
@@ -693,10 +752,11 @@ class Chuck extends MessageStrategy {
             }
         }
 
+        let isNameInSentence = undefined
         let recentlyInteractedWithAuthor = (message.author in Chuck.lastInteracted) ? true : false;
         let respondWithQuote = Math.random() < 0.5;
-        let randomRespond = Math.random() < 0.15;
-        let randomRespondWithMedia = Math.random() < 0.25;
+        let randomRespond = Math.random() < 0.10;
+        let randomRespondWithMedia = Math.random() < 0.3;
         let iWasQuoted = "quotedMsg" in message && message.quotedMsg.author == Chuck.number;
 
         if(randomRespondWithMedia && randomRespond && !recentlyInteractedWithAuthor) {
@@ -715,19 +775,35 @@ class Chuck extends MessageStrategy {
           }).catch(console.error);
           }
           if(Math.random() < 0.7) {
+            console.log("Chuck Math.random() < 0.7 skip")
             return;
           }
         }
 
-        if (message.body.length < 12 && !iWasQuoted) {
-          return
+        if (message.type == 'chat') {
+          let name = MessageStrategy.state.Chuck.ChatPersonas[message.chatId]['name'].trim().toLowerCase()
+          isNameInSentence = (sentence, name) => {
+              const words = sentence.toLowerCase().match(/\b\w+\b/g); // Match words with word boundaries
+              return words.includes(name);
+          }
+          isNameInSentence = isNameInSentence(message.body, name)
+          if (message.body.length < 8 && !iWasQuoted && !isNameInSentence) {
+            console.log("Chuck short, not quoted skip")
+            return
+          }
         }
   
-        if(!recentlyInteractedWithAuthor && !iWasQuoted && !randomRespond) {
+        if(!recentlyInteractedWithAuthor && !iWasQuoted && !randomRespond && !isNameInSentence) {
+          console.log("Chuck !recentlyInteractedWithAuthor && !iWasQuoted && !randomRespond && !isNameInSentence skip")
           return
         }
 
         Chuck.lastInteracted[message.author] = Date.now();
+
+        if (message.type != 'chat') {
+          console.log("Chuck not a chat skip")
+          return
+        }
 
         const res = await Chuck.gptapi.sendMessage(message.body, options)
         let resp = res.text
@@ -744,7 +820,8 @@ class Chuck extends MessageStrategy {
         let lowerCaseResp = resp.toLowerCase();
         
         if (keywords.some(keyword => lowerCaseResp.indexOf(keyword) > -1)) {
-            return;
+          console.log("Chuck said something about ai skip")
+          return;
         }
 
         MessageStrategy.typing(message)
@@ -758,10 +835,17 @@ class Chuck extends MessageStrategy {
         return
       }
 
+      if (message.type != 'chat') {
+        console.log("Chuck not a chat skip")
+        return
+      }
+
       let the_msg = message.body;
 
-      if (message.body.toLowerCase().startsWith("chuck") == false && message.body.toLowerCase().indexOf(" chuck") == -1) {
-        return;
+      if(message.isGroupMsg){
+        if (message.body.toLowerCase().startsWith("chuck") == false && message.body.toLowerCase().indexOf(" chuck") == -1) {
+          return;
+        }
       }
 
       if (message.body.toLowerCase().startsWith("chuck")) {
@@ -833,7 +917,7 @@ class Chuck extends MessageStrategy {
       let prompt;
 
       if (Chuck.self.isPersonaMode(message)) {
-        prompt = MessageStrategy.state.Chuck.ChatPersonas[message.from]
+        prompt = MessageStrategy.state.Chuck.ChatPersonas[message.from]['desc']
       } else {
         prompt = 'I will ask you questions.  Each question has a name or phone number at the end of the question.  Please use that in the response'
       }
