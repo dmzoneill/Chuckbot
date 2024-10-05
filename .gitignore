@@ -15,4 +15,6 @@
 **/strategies/FilipinoCupid.js
 **/strategies/Pornhub.js
 **/strategies/backup/**
+**/Session Storage/**
+**/state.json
 # end managed by open-wa

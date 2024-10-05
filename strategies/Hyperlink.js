@@ -57,7 +57,7 @@ class HyperLink extends MessageStrategy {
       if (message.body.indexOf('twitter') > -1) return
       if (message.body.indexOf('amazon') > -1) return
 
-      if ('thumbnail' in message) {
+      if ('thumbnail' in message && message.thumbnail.length > 10) {
         return false
       }
 
@@ -68,7 +68,8 @@ class HyperLink extends MessageStrategy {
         return false
       }
 
-      MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1])
+      // MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1])
+      MessageStrategy.client.sendMessageWithThumb(data[1], message.body, "Preview", data[0], "", message.from)      
       return true
     } catch (err) {
       console.log(err)

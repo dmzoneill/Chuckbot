@@ -549,7 +549,13 @@ class News extends MessageStrategy {
     }
 
     if (allowed) {
-      MessageStrategy.client.sendLinkWithAutoPreview(chat, url, data[0], data[1])
+      console.log("================================")
+      console.log(chat)
+      console.log(url)
+      
+      //MessageStrategy.client.sendLinkWithAutoPreview(chat, url, data[0], data[1])
+      console.log("here")
+      console.log("================================")
     }
   }
 }

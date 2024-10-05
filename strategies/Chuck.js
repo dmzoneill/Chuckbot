@@ -736,7 +736,6 @@ class Chuck extends MessageStrategy {
       const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
 
       if (!'type' in message) {
-        console.log("Chuck no type skip")
         return
       }
 
@@ -760,6 +759,9 @@ class Chuck extends MessageStrategy {
         let iWasQuoted = "quotedMsg" in message && message.quotedMsg.author == Chuck.number;
 
         if(randomRespondWithMedia && randomRespond && !recentlyInteractedWithAuthor) {
+          if(MessageStrategy.state.Chuck.ChatPersonasMedia[message.from] == undefined) {
+            MessageStrategy.state.Chuck.ChatPersonasMedia[message.from] = []
+          }
           if(MessageStrategy.state.Chuck.ChatPersonasMedia[message.from].length > 0) {
             let array = MessageStrategy.state.Chuck.ChatPersonasMedia[message.from];
             let randomWord = array[Math.floor(Math.random() * array.length)];
@@ -775,7 +777,6 @@ class Chuck extends MessageStrategy {
           }).catch(console.error);
           }
           if(Math.random() < 0.7) {
-            console.log("Chuck Math.random() < 0.7 skip")
             return;
           }
         }
@@ -788,13 +789,11 @@ class Chuck extends MessageStrategy {
           }
           isNameInSentence = isNameInSentence(message.body, name)
           if (message.body.length < 8 && !iWasQuoted && !isNameInSentence) {
-            console.log("Chuck short, not quoted skip")
             return
           }
         }
   
         if(!recentlyInteractedWithAuthor && !iWasQuoted && !randomRespond && !isNameInSentence) {
-          console.log("Chuck !recentlyInteractedWithAuthor && !iWasQuoted && !randomRespond && !isNameInSentence skip")
           return
         }
 
@@ -916,7 +915,7 @@ class Chuck extends MessageStrategy {
 
       let prompt;
 
-      if (Chuck.self.isPersonaMode(message)) {
+      if (Chuck.self.isPersonaMode(message) && MessageStrategy.state.Chuck.ChatPersonas[message.from] != undefined) {
         prompt = MessageStrategy.state.Chuck.ChatPersonas[message.from]['desc']
       } else {
         prompt = 'I will ask you questions.  Each question has a name or phone number at the end of the question.  Please use that in the response'

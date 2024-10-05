@@ -64,9 +64,9 @@ class MessageStrategy {
   static http_cache_folder = 'strategies/http_cache_folder'
   static browser_config = browserConfig;
   static flags = worldFlags;
+  static chuckclient = null;
 
   static client = {
-    client: null,
     log: function () {
       // let output = new Error().stack.toString().match(/at \w+\.\w+/)[0].split('.')[1].padEnd(20, ' ');
       // for (let u = 0; u < arguments.length; u++) {
@@ -81,72 +81,71 @@ class MessageStrategy {
     sendText: function sendText() {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
-      return this.client.sendText(args[0], args[1])
+      return MessageStrategy.chuckclient.sendText(args[0], args[1])
     },
     sendImage: function sendImage() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
-      return this.client.sendImage(args[0], args[1], args[2], args[3])
+      return MessageStrategy.chuckclient.sendImage(args[0], args[1], args[2], args[3])
     },
     sendLinkWithAutoPreview: function sendLinkWithAutoPreview() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
-      return this.client.sendLinkWithAutoPreview(args[0], args[1], args[2], args[3])
+      return MessageStrategy.chuckclient.sendLinkWithAutoPreview(args[0], args[1], args[2], args[3])
     },
     sendMessageWithThumb: function sendMessageWithThumb() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3], args[4], args[5])
-      console.log("send message with thumb")
-      return this.client.sendMessageWithThumb(args[0], args[1], args[2], args[3], args[4], args[5])
+      return MessageStrategy.chuckclient.sendMessageWithThumb(args[0], args[1], args[2], args[3], args[4], args[5])
     },
     reply: function reply() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
-      return this.client.reply(args[0], args[1], args[2], args[3])
+      return MessageStrategy.chuckclient.reply(args[0], args[1], args[2], args[3])
     },
     getAllChats: function getAllChats() {
       const args = Array.from(arguments)
-      return this.client.getAllChats()
+      return MessageStrategy.chuckclient.getAllChats()
     },
     getAllGroups: function getAllGroups() {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
-      return this.client.getAllGroups(args[0], args[1])
+      return MessageStrategy.chuckclient.getAllGroups(args[0], args[1])
     },
     getGroupMembers: function getGroupMembers() {
       const args = Array.from(arguments)
       this.log(args[0])
-      return this.client.getGroupMembers(args[0])
+      return MessageStrategy.chuckclient.getGroupMembers(args[0])
     },
     sendYoutubeLink: function sendYoutubeLink() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
-      return this.client.sendYoutubeLink(args[0], args[1], args[2], args[3])
+      return MessageStrategy.chuckclient.sendYoutubeLink(args[0], args[1], args[2], args[3])
     },
     decryptMedia: function decryptMedia() {
       const args = Array.from(arguments)
       this.log(args[0])
-      return this.client.decryptMedia(args[0])
+      return MessageStrategy.chuckclient.decryptMedia(args[0])
     },
     sendFile: function sendFile() {
       const args = Array.from(arguments)
       this.log(args[0], args[1], args[2], args[3])
-      return this.client.sendFile(args[0], args[1], args[2], args[3])
+      return MessageStrategy.chuckclient.sendFile(args[0], args[1], args[2], args[3])
     },
     sendSeen: function sendSeen() {
       const args = Array.from(arguments)
       this.log(args[0])
-      return this.client.sendSeen(args[0])
+      return MessageStrategy.chuckclient.sendSeen(args[0])
     },
     simulateTyping: function simulateTyping() {
       const args = Array.from(arguments)
       this.log(args[0], args[1])
-      return this.client.simulateTyping(args[0], args[1])
+      return MessageStrategy.chuckclient.simulateTyping(args[0], args[1])
     },
     leaveGroup: function leaveGroup() {
       const args = Array.from(arguments)
       this.log(args[0])
-      return this.client.leaveGroup(args[0])
+      return MessageStrategy.chuckclient.leaveGroup(args[0])
     }
   }
 
@@ -300,7 +299,7 @@ class MessageStrategy {
 
         if (module.provides == null) continue
 
-        console.log(" >> " + keys[y])
+        console.log(" >> trying: " + keys[y])
 
         const actions_keys = Object.keys(module.provides)
         for (let x = 0; x < actions_keys.length; x++) {
@@ -329,11 +328,11 @@ class MessageStrategy {
             }
 
             let action_result = action_obj.action(message)
-            console.log(" >>>> " + keys[y] + " - " + actions_keys[x])
+            console.log(" >>>> Activated: " + keys[y] + " - " + actions_keys[x])
             action_result = action_result == undefined ? false : action_result
 
             if (action_result) {
-              console.log("break")
+              console.log("Actioned: ")
               console.log(action_result)
               y = keys.length
               break
@@ -478,6 +477,23 @@ class MessageStrategy {
 
       browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true })
       const page = await browser.newPage()
+      await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36');
+      await page.setExtraHTTPHeaders({
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'en-US,en;q=0.9',
+        'cache-control': 'no-cache',
+        'pragma': 'no-cache',
+        'sec-ch-ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Linux"',
+        'upgrade-insecure-requests': '1',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'dnt': '1'
+      });
+
       await page.goto(fullurl)
       await page.setViewport({ width: 1366, height: 768 })
 
@@ -531,7 +547,6 @@ class MessageStrategy {
       }
 
       const data = await page.evaluate(() => document.querySelector('*').outerHTML);
-      // console.log(data)
 
       const description = await page.evaluate(() => {
         const desc = document.head.querySelector('meta[property="og:description"]')
