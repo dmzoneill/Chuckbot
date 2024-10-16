@@ -57,7 +57,7 @@ class Facebook extends MessageStrategy {
       }
 
       // MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1])  
-      MessageStrategy.client.sendMessageWithThumb(data[1], message.body, "Facebook", data[0], "", message.from)      
+      MessageStrategy.client.sendMessageWithThumb(data[1], message.body, 'Facebook', data[0], '', message.from)      
     } catch (err) {
       console.log(err)
     }

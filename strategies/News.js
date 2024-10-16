@@ -306,30 +306,36 @@ class News extends MessageStrategy {
     return [resshort, resfull]
   }
 
-  async getLocsFromXML(message, url) {
-    let urls = []
-    try {
-      let xml = await MessageStrategy.axiosHttpRequest(message, 'GET', url, false, 200, false)
-      let json = x2j.toJson(xml)
-      json = JSON.parse(json)
+  async getLocsFromXML(message, sitemapUrl) {
+    let locs = [];
+    
+    // Fetch the XML data from the sitemap URL
+    let xmlData = await MessageStrategy.axiosHttpRequest(message, 'GET', sitemapUrl, false, 200, false);
 
-      if (json.hasOwnProperty('urlset')) {
-        for (let i = 0; i < json['urlset']['url'].length; i++) {
-          urls.push(json['urlset']['url'][i]['loc']);
-        }
-      }
+    // Parse XML data using xml2js
+    let parser = new xml2js.Parser({ explicitArray: false });
+    let parsedData = await parser.parseStringPromise(xmlData);
 
-      if (json.hasOwnProperty('rss')) {
-        for (let i = 0; i < json['rss']['channel']['item'].length; i++) {
-          let item = json['rss']['channel']['item'][i]
-          urls.push(item['link']);
+    // Check for subsitemaps in <sitemap> tags
+    if (parsedData.sitemapindex && parsedData.sitemapindex.sitemap) {
+        let sitemaps = parsedData.sitemapindex.sitemap;
+        // Loop through subsitemaps and recursively fetch locs
+        for (let sitemap of Array.isArray(sitemaps) ? sitemaps : [sitemaps]) {
+            let subsitemapLoc = sitemap.loc;
+            let subsitemapLocs = await this.getLocsFromXML(message, subsitemapLoc);
+            locs.push(...subsitemapLocs);
         }
-      }
-    } catch (err) {
-      console.log(err);
     }
 
-    return urls;
+    // Get URLs from <url> tags in the current sitemap
+    if (parsedData.urlset && parsedData.urlset.url) {
+        let urls = parsedData.urlset.url;
+        for (let url of Array.isArray(urls) ? urls : [urls]) {
+            locs.push(url.loc);
+        }
+    }
+
+    return locs;
   }
 
   async subscribe(message) {
@@ -342,8 +348,6 @@ class News extends MessageStrategy {
       }
 
       let sitemaps = await News.self.getSiteMaps(message, parts[2])
-
-      console.log(sitemaps)
 
       if (sitemaps[0].length == 0) {
         MessageStrategy.client.sendText(message.from, "No sitemaps or robots.txt found.")
@@ -369,55 +373,37 @@ class News extends MessageStrategy {
         return;
       }
 
-      console.log("1")
-
       if (Object.keys(MessageStrategy.state).indexOf('News') == -1) {
         MessageStrategy.state['News'] = {}
       }
-
-      console.log("2")
 
       if (Object.keys(MessageStrategy.state['News']).indexOf('enabled') == -1) {
         MessageStrategy.state['News']['enabled'] = true
       }
 
-      console.log("3")
-
       if (Object.keys(MessageStrategy.state['News']).indexOf('Subscribed') == -1) {
         MessageStrategy.state['News']['Subscribed'] = {}
       }
-
-      console.log("4")
 
       if (Object.keys(MessageStrategy.state['News']).indexOf('Notified') == -1) {
         MessageStrategy.state['News']['Notified'] = {}
       }
 
-      console.log("5")
-
       if (Object.keys(MessageStrategy.state['News']).indexOf('LastNotified') == -1) {
         MessageStrategy.state['News']['LastNotified'] = {}
       }
-
-      console.log("6")
 
       if (Object.keys(MessageStrategy.state['News']).indexOf('Filter') == -1) {
         MessageStrategy.state['News']['Filter'] = {}
       }
 
-      console.log("7")
-
       if (Object.keys(MessageStrategy.state['News']['Filter']).indexOf(message.from) == -1) {
         MessageStrategy.state['News']['Filter'][message.from] = []
       }
 
-      console.log("8")
-
       if (Object.keys(MessageStrategy.state['News']['Subscribed']).indexOf(message.from) == -1) {
         MessageStrategy.state['News']['Subscribed'][message.from] = []
       }
-
-      console.log("9")
 
       if (MessageStrategy.state['News']['Subscribed'][message.from].indexOf(sitemaps[1][index]) == -1) {
         MessageStrategy.state['News']['Subscribed'][message.from].push(sitemaps[1][index])
@@ -426,39 +412,27 @@ class News extends MessageStrategy {
         return
       }
 
-      console.log("10")
-
       if (Object.keys(MessageStrategy.state['News']['Notified']).indexOf(message.from) == -1) {
         MessageStrategy.state['News']['Notified'][message.from] = {}
       }
-
-      console.log("12")
 
       if (Object.keys(MessageStrategy.state['News']['Notified'][message.from]).indexOf(sitemaps[1][index]) == -1) {
         MessageStrategy.state['News']['Notified'][message.from][sitemaps[1][index]] = []
       }
 
-      console.log("13")
-
       if (Object.keys(MessageStrategy.state['News']['LastNotified']).indexOf(message.from) == -1) {
         MessageStrategy.state['News']['LastNotified'][message.from] = {}
       }
 
-      console.log("14")
-
       if (Object.keys(MessageStrategy.state['News']['LastNotified'][message.from]).indexOf(sitemaps[1][index]) == -1) {
         MessageStrategy.state['News']['LastNotified'][message.from][sitemaps[1][index]] = 0
       }
-
-      console.log("15")
 
       MessageStrategy.state['News']['Queue'] = {}
 
       for (let i = 0; i < urls.length; i++) {
         MessageStrategy.state['News']['Notified'][message.from][sitemaps[1][index]].push(urls[i])
       }
-
-      console.log("17")
 
       MessageStrategy.client.sendText(message.from, "Subscribed")
       News.self.post(message)
@@ -548,14 +522,9 @@ class News extends MessageStrategy {
       }
     }
 
-    if (allowed) {
-      console.log("================================")
-      console.log(chat)
-      console.log(url)
-      
-      //MessageStrategy.client.sendLinkWithAutoPreview(chat, url, data[0], data[1])
-      console.log("here")
-      console.log("================================")
+    if (allowed) {     
+      // MessageStrategy.client.sendLinkWithAutoPreview(chat, url, data[0], data[1])
+      MessageStrategy.client.sendMessageWithThumb(data[1], url, data[2], data[0], '', chat)  
     }
   }
 }

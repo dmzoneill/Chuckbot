@@ -78,7 +78,7 @@ class Stock extends MessageStrategy {
 
       let url = 'https://www.tradingview.com/symbols/' + symbol + '/?exchange=' + exchange
       if (type != "") {
-        url += "&type=" + type
+        // url += "&type=" + type
       }
 
       console.log(url)
@@ -90,8 +90,6 @@ class Stock extends MessageStrategy {
       MessageStrategy.typing(message)
       await bodyHandle.dispose()
       await Stock.self.waitFor(500)
-
-      console.log("here!")
 
       // const button = await Stock.self.page.waitForXPath('//*[@id="js-category-content"]/div[2]/div/section/div[1]/div[2]/div[1]/div[2]/div/div/div/div/article/button')
 
@@ -156,6 +154,7 @@ class Stock extends MessageStrategy {
     const sha1d = crypto.createHash('sha1').digest('hex')
 
     const element = await Stock.self.page.$x(xpath)
+    console.log(element)
     await element[0].screenshot({ path: sha1d + '.png' })
 
     await MessageStrategy.client.sendImage(

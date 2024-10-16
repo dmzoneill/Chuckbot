@@ -1,5 +1,6 @@
 const CronJob = require('cron').CronJob
 const fs = require('fs')
+const path = require('path');
 let globby = undefined
 const levenshtein = require('js-levenshtein')
 const request = require('sync-request')
@@ -27,10 +28,12 @@ const ccxt = require('ccxt')
 const asciichart = require('asciichart')
 const IG = require('instagram-web-api')
 const usetube = require('usetube')
+const { Innertube } = require('youtubei.js');
 const talib = require('talib');
 const { createCanvas } = require('canvas');
 const worldFlags = require('./lib/flags.js');
 const browserConfig = require('./lib/browserconfig.js')
+const xml2js = require('xml2js');
 
 // Import modules asynchronously
 Promise.all([
@@ -543,7 +546,7 @@ class MessageStrategy {
       const page = await self.get_page(self, fullurl, wait)
       if (!page) {
         console.log("Failed to get page");
-        return [null, null];
+        return [null, null, null];
       }
 
       const data = await page.evaluate(() => document.querySelector('*').outerHTML);
@@ -573,15 +576,15 @@ class MessageStrategy {
 
       if (image_url == null) {
         console.log("get_page_og_data image_url is null")
-        return [null, null]
+        return [null, null, null]
       } else {
         const desc = description == null ? title : description
         MessageStrategy.typing(self.message)
-        return [desc, await MessageStrategy.get_image(image_url, 320, data_url)]
+        return [desc, await MessageStrategy.get_image(image_url, 320, data_url), title]
       }
     } catch (err) {
       console.log(err)
-      return [null, null]
+      return [null, null, null]
     }
   }
 

@@ -64,12 +64,12 @@ class HyperLink extends MessageStrategy {
       const data = await HyperLink.self.get_page_og_data(HyperLink.self, message.body, 500)
 
       if (data[1] == null) {
-        MessageStrategy.client.reply(message.from, 'Sorry no preview', message.id, true)
+        // MessageStrategy.client.reply(message.from, 'Sorry no preview', message.id, true)
         return false
       }
 
       // MessageStrategy.client.sendLinkWithAutoPreview(message.from, message.body, data[0], data[1])
-      MessageStrategy.client.sendMessageWithThumb(data[1], message.body, "Preview", data[0], "", message.from)      
+      MessageStrategy.client.sendMessageWithThumb(data[1], message.body, data[2], data[0], '', message.from)
       return true
     } catch (err) {
       console.log(err)

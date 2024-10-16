@@ -39,6 +39,25 @@ class WebCam extends MessageStrategy {
             return MessageStrategy.state.WebCam.enabled
           }
         },
+        'webcam pic': {
+          test: function (message) {
+            return message.body.toLowerCase() === 'webcam pic'
+          },
+          access: function (message, strategy, action) {
+            return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
+          },
+          help: function () {
+            return 'Take a webcam picture'
+          },
+          action: function SendPic (message) {
+            WebCam.self.SendPic(message)
+            return true
+          },
+          interactive: true,
+          enabled: function () {
+            return MessageStrategy.state.WebCam.enabled
+          }
+        },
         'webcam video': {
           test: function (message) {
             return message.body.toLowerCase().startsWith('webcam video')
@@ -131,6 +150,31 @@ class WebCam extends MessageStrategy {
       })
     } catch (err) {
       console.log(err)
+    }
+  }
+
+  async SendPic(message) {
+    try {
+      // Read the directory to get all files
+      const dirPath = './strategies/webcam/';
+      const files = fs.readdirSync(dirPath);
+  
+      // Filter to ensure only images are selected (optional, based on file extension)
+      const imageFiles = files.filter(file => ['.jpg', '.jpeg', '.png', '.gif'].includes(path.extname(file).toLowerCase()));
+  
+      if (imageFiles.length === 0) {
+        throw new Error('No image files found in the directory');
+      }
+  
+      // Select a random image
+      const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+  
+      // Send the randomly selected image
+      const filePath = path.join(dirPath, randomImage);
+      await MessageStrategy.client.sendImage(message.chatId, filePath, randomImage, '');
+  
+    } catch (err) {
+      console.log(err);
     }
   }
 }

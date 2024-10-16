@@ -106,11 +106,12 @@ class Youtube extends MessageStrategy {
           return
         }
 
-        let results = await usetube.searchVideo(video_id)
+        const youtube = await Innertube.create(/* options */);
+        const video = await youtube.getBasicInfo(video_id)
 
         MessageStrategy.typing(message)
         // MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', youtube_image)
-        await MessageStrategy.client.sendImage(message.from, youtube_image, 'yt.jpg', results.videos[0].original_title + "\n\n" + "https://www.youtube.com/watch?v=" + video_id)
+        await MessageStrategy.client.sendImage(message.from, youtube_image, 'yt.jpg', video.basic_info.title + "\n\n" + "https://www.youtube.com/watch?v=" + video_id)
       }
     } catch (err) {
       console.log(err)
@@ -121,19 +122,22 @@ class Youtube extends MessageStrategy {
     const search_term = message.body.substring(7)
 
     try {
+      const youtube = await Innertube.create(/* options */);
+      const videos = await youtube.search(search_term)
+
       // console.log(await usetube.searchVideo(search_term))
       // const results = await yt.search(search_term)
-      const results = await usetube.searchVideo(search_term)
+      // const results = await usetube.searchVideo(search_term)
       // console.log("==========================================")
       // console.log(results.videos)
       // console.log("==========================================")
-      if (results.videos.length === 0) {
+      if (videos.results.length === 0) {
         console.log("0 results");
         return false
       }
       MessageStrategy.typing(message)
-      const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + results.videos[0].id + '/hqdefault.jpg', 200, false)
-      await MessageStrategy.client.sendImage(message.from, "data:image/jpeg;base64," + youtube_image, 'yt.jpg', results.videos[0].original_title + "\n\n" + "https://www.youtube.com/watch?v=" + results.videos[0].id)
+      const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + videos.results[0].id + '/hqdefault.jpg', 200, false)
+      await MessageStrategy.client.sendImage(message.from, "data:image/jpeg;base64," + youtube_image, 'yt.jpg', videos.results[0].title + "\n\n" + "https://www.youtube.com/watch?v=" + videos.results[0].id)
 
       // console.log("data:image/jpeg;base64," + youtube_image)
 
