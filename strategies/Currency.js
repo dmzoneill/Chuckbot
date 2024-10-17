@@ -28,7 +28,7 @@ class Currency extends MessageStrategy {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'prints exchange rate between 2 currencies'
+            return 'Show currency'
           },
           action: Currency.self.CurrencyConvert,
           interactive: true,

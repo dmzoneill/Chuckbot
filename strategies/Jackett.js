@@ -22,7 +22,7 @@ class Jackett extends MessageStrategy {
     Jackett.self = this
 
     return {
-      help: 'Jackett seearch',
+      help: 'Jackett search',
       provides: {
         jackett: {
           test: function (message) {
@@ -32,7 +32,7 @@ class Jackett extends MessageStrategy {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do'
+            return 'Do nothing'
           },
           action: Jackett.self.Jackett,
           interactive: false,
@@ -48,7 +48,7 @@ class Jackett extends MessageStrategy {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
           },
           help: function () {
-            return 'To do'
+            return 'Search for a torrent given a string'
           },
           action: Jackett.self.Search,
           interactive: true,

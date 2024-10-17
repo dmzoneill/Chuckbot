@@ -264,7 +264,6 @@ class Translate extends MessageStrategy {
       MessageStrategy.client.reply(message.from, res.translation, message.id, true)
     }).catch(err => {
       MessageStrategy.client.sendText(message.from, err)
-      MessageStrategy.client.sendText(message.from, err)
     })
     return true
   }
@@ -297,7 +296,6 @@ class Translate extends MessageStrategy {
       MessageStrategy.typing(message)
       MessageStrategy.client.reply(message.from, res.translation, message.id, true)
     }).catch(err => {
-      MessageStrategy.client.sendText(message.from, err)
       MessageStrategy.client.sendText(message.from, err)
     })
 
