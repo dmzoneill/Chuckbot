@@ -59,6 +59,8 @@ class PhilipsHue extends MessageStrategy {
   do_cmd (message, opts) {
     const cmd = './node_modules/hueadm/bin/hueadm ' + opts.join(' ')
     console.log(cmd)
+
+    // eslint-disable-next-line no-undef
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`)
@@ -85,7 +87,7 @@ class PhilipsHue extends MessageStrategy {
 
     const opts = message.body.split(' ')
 
-    const clean_opts = []
+    const cleanOpts = []
     const dodgey = [
       '\\', '"', "'", ';', '>', '<', '$', '&', '`',
       '!', '@', '(', ')', '|',
@@ -94,51 +96,51 @@ class PhilipsHue extends MessageStrategy {
 
     // group
     opts.forEach(opt => {
-      const clean_opt = opt
+      const cleanOpts = opt
 
       for (let c = 0; c < dodgey.length; c++) {
-        clean_opt.replace(dodgey[c], '')
+        cleanOpts.replace(dodgey[c], '')
       }
 
-      clean_opts.push(clean_opt)
+      cleanOpts.push(cleanOpts)
     })
 
     // groups
-    if (clean_opts[1] === 'groups') {
-      PhilipsHue.self.do_cmd([clean_opts[1]])
+    if (cleanOpts[1] === 'groups') {
+      PhilipsHue.self.do_cmd([cleanOpts[1]])
       return
     }
 
     // groups
-    if (clean_opts[1] === 'lights') {
-      PhilipsHue.self.do_cmd([clean_opts[1]])
+    if (cleanOpts[1] === 'lights') {
+      PhilipsHue.self.do_cmd([cleanOpts[1]])
       return
     }
 
     let offset = 1
 
-    if (clean_opts[1] === 'group') {
+    if (cleanOpts[1] === 'group') {
       console.log('Group checking offset')
       offset = 2
     }
 
-    if (clean_opts[offset].match(/\d+/) === null) {
+    if (cleanOpts[offset].match(/\d+/) === null) {
       console.log('No light or group number')
       MessageStrategy.client.reply(message.from, 'No light or group number', message.id, true)
       return
     }
 
-    if (clean_opts[offset + 1].match(/(on|off|clear|reset|select|lselect|colorloop|#?[0-9a-zA-Z]{6})/) === null) {
+    if (cleanOpts[offset + 1].match(/(on|off|clear|reset|select|lselect|colorloop|#?[0-9a-zA-Z]{6})/) === null) {
       console.log('Action should be on, off, clear, reset, select, lselect, colorloop, [0-9a-zA-Z]{6}')
       MessageStrategy.client.reply(message.from, 'Action should be on, off, clear, reset', message.id, true)
       return
     }
 
-    if (clean_opts[offset + 1].match(/#?[0-9a-zA-Z]{6}/) != null) {
-      clean_opts[offset + 1] = "'" + clean_opts[offset + 1] + "'"
+    if (cleanOpts[offset + 1].match(/#?[0-9a-zA-Z]{6}/) != null) {
+      cleanOpts[offset + 1] = "'" + cleanOpts[offset + 1] + "'"
     }
 
-    if (clean_opts.length > 20) {
+    if (cleanOpts.length > 20) {
       console.log('Where are you off to?')
       MessageStrategy.client.reply(message.from, 'Where are you off to?', message.id, true)
       return
@@ -152,10 +154,10 @@ class PhilipsHue extends MessageStrategy {
     ]
 
     // check repeating args
-    for (let f = offset + 2; f < clean_opts.length; f++) {
+    for (let f = offset + 2; f < cleanOpts.length; f++) {
       let passed = false
       for (let h = 0; h < options.length; h++) {
-        if (clean_opts[f].match(new RegExp(options[h]))) {
+        if (cleanOpts[f].match(new RegExp(options[h]))) {
           passed = true
         }
       }
@@ -166,15 +168,15 @@ class PhilipsHue extends MessageStrategy {
       }
     }
 
-    clean_opts.shift()
+    cleanOpts.shift()
 
     if (offset === 1) {
-      clean_opts.unshift('light')
+      cleanOpts.unshift('light')
     }
 
-    console.log(clean_opts)
+    console.log(cleanOpts)
 
-    PhilipsHue.self.do_cmd(message, clean_opts)
+    PhilipsHue.self.do_cmd(message, cleanOpts)
   }
 }
 

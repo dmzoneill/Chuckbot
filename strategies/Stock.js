@@ -64,6 +64,7 @@ class Stock extends MessageStrategy {
   }
 
   async LoadSymbols () {
+    // eslint-disable-next-line no-undef
     const rawdata = fs.readFileSync('strategies/symbols/symbols.txt')
     Stock.symbols = JSON.parse(rawdata)
   }
@@ -72,12 +73,13 @@ class Stock extends MessageStrategy {
     try {
       MessageStrategy.typing(message)
 
+      // eslint-disable-next-line no-undef
       Stock.self.browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'], headless: true })
       Stock.self.context = await Stock.self.browser.createIncognitoBrowserContext()
       Stock.self.page = await Stock.self.context.newPage()
 
       const url = 'https://www.tradingview.com/symbols/' + symbol + '/?exchange=' + exchange
-      if (type != '') {
+      if (type !== '') {
         // url += "&type=" + type
       }
 
@@ -121,10 +123,10 @@ class Stock extends MessageStrategy {
 
       await Stock.self.SendScreenshot(message, '//*[@id="js-category-content"]/div[2]/div/section/div[1]')
 
-      const technicals_button = await Stock.self.page.waitForXPath("//a[text()[contains(.,'Technicals')]]")
+      const technicalsButton = await Stock.self.page.waitForXPath("//a[text()[contains(.,'Technicals')]]")
 
-      if (technicals_button) {
-        await technicals_button.click()
+      if (technicalsButton) {
+        await technicalsButton.click()
       }
 
       await Stock.self.waitFor(500)
@@ -163,7 +165,9 @@ class Stock extends MessageStrategy {
       '',
       '')
 
+    // eslint-disable-next-line no-undef
     if (fs.existsSync(sha1d + '.png')) {
+      // eslint-disable-next-line no-undef
       fs.unlinkSync(sha1d + '.png')
     }
   }
@@ -184,7 +188,7 @@ class Stock extends MessageStrategy {
       let allparts = periods.concat(extras)
       allparts = allparts.concat(stats)
 
-      if (parts.length == 4) {
+      if (parts.length === 4) {
         if (periods.indexOf(parts[3]) > -1) {
           parts.pop()
         }
@@ -196,7 +200,7 @@ class Stock extends MessageStrategy {
         }
       }
 
-      if (parts.length == 3) {
+      if (parts.length === 3) {
         if (periods.indexOf(parts[2]) > -1) {
           parts.pop()
         }
@@ -208,15 +212,15 @@ class Stock extends MessageStrategy {
         }
       }
 
-      if (parts.length == 2) {
+      if (parts.length === 2) {
         if (allparts.indexOf(parts[1].toLowerCase()) > -1) {
           MessageStrategy.client.sendText(message.from, 'No exchange provided, expected format e.g:\n\ncoin gold capitalcom 1y extra stats')
           return []
         }
 
         for (let i = 0; i < Stock.symbols.length; i++) {
-          if (parts[0] == Stock.symbols[i].symbol.toUpperCase() &&
-            parts[1] == Stock.symbols[i].exchange.toUpperCase()) {
+          if (parts[0] === Stock.symbols[i].symbol.toUpperCase() &&
+            parts[1] === Stock.symbols[i].exchange.toUpperCase()) {
             res.push(Stock.symbols[i])
           }
         }
@@ -224,16 +228,16 @@ class Stock extends MessageStrategy {
         parts[2] = parts[2].toUpperCase()
 
         for (let i = 0; i < Stock.symbols.length; i++) {
-          if (parts[0] == Stock.symbols[i].symbol.toUpperCase() &&
-            parts[1] == Stock.symbols[i].exchange.toUpperCase() &&
-            parts[2] == Stock.symbols[i].type.toUpperCase()) {
+          if (parts[0] === Stock.symbols[i].symbol.toUpperCase() &&
+            parts[1] === Stock.symbols[i].exchange.toUpperCase() &&
+            parts[2] === Stock.symbols[i].type.toUpperCase()) {
             res.push(Stock.symbols[i])
           }
         }
       }
     } else {
       for (let i = 0; i < Stock.symbols.length; i++) {
-        if (symbol.toUpperCase().trim() == Stock.symbols[i].symbol) {
+        if (symbol.toUpperCase().trim() === Stock.symbols[i].symbol) {
           res.push(Stock.symbols[i])
         }
       }
@@ -246,9 +250,9 @@ class Stock extends MessageStrategy {
     try {
       const req = message.body.trim().substring(6).trim()
 
-      if (Stock.symbols.length == 0) {
+      if (Stock.symbols.length === 0) {
         await Stock.self.LoadSymbols()
-        if (Stock.symbols.length == 0) {
+        if (Stock.symbols.length === 0) {
           MessageStrategy.client.sendText(message.from, 'Unable to load symbols')
           return
         }
@@ -256,12 +260,12 @@ class Stock extends MessageStrategy {
 
       const symbols = await Stock.self.SearchSymbol(message, req)
 
-      if (symbols.length == 0) {
+      if (symbols.length === 0) {
         MessageStrategy.client.sendText(message.from, 'Trying searech with:\n\nstock search xxx')
         return
       }
 
-      if (symbols.length == 1) {
+      if (symbols.length === 1) {
         let period = '1d'
         let extra = false
         let stat = false
@@ -306,7 +310,7 @@ class Stock extends MessageStrategy {
           msg += '\n'
         }
         msg = msg.trim()
-        if (msg == '') {
+        if (msg === '') {
           MessageStrategy.client.sendText(message.from, 'Nothing found')
         }
         msg += '```'
@@ -322,9 +326,9 @@ class Stock extends MessageStrategy {
       const req = message.body.trim().substring('stock search'.length).trim()
       const symbols = []
 
-      if (Stock.symbols.length == 0) {
+      if (Stock.symbols.length === 0) {
         await Stock.self.LoadSymbols()
-        if (Stock.symbols.length == 0) {
+        if (Stock.symbols.length === 0) {
           MessageStrategy.client.sendText(message.from, 'Unable to load symbols')
           return
         }
@@ -348,7 +352,7 @@ class Stock extends MessageStrategy {
         msg += '\n'
       }
       msg = msg.trim()
-      if (msg == '') {
+      if (msg === '') {
         MessageStrategy.client.sendText(message.from, 'Nothing found')
       }
       msg += '```'

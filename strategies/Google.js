@@ -47,9 +47,10 @@ class Google extends MessageStrategy {
   }
 
   GoogleSearch (message) {
-    const search_term = message.body.substring(7).trim()
+    const searchTerm = message.body.substring(7).trim()
     MessageStrategy.typing(message)
-    MessageStrategy.client.sendLinkWithAutoPreview(message.from, 'https://www.google.com/search?q=' + urlencode(search_term))
+    // eslint-disable-next-line no-undef
+    MessageStrategy.client.sendLinkWithAutoPreview(message.from, 'https://www.google.com/search?q=' + urlencode(searchTerm))
     return true
   }
 }

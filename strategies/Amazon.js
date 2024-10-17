@@ -51,6 +51,7 @@ class Amazon extends MessageStrategy {
 
   async Preview (message) {
     try {
+      // eslint-disable-next-line no-undef
       const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'] })
       const page = await browser.newPage()
 
@@ -98,7 +99,7 @@ class Amazon extends MessageStrategy {
         return null
       })
 
-      const image_url = await page.evaluate(() => {
+      const imageUrl = await page.evaluate(() => {
         const image = document.body.querySelector('#landingImage')
         if (image) {
           return image.getAttribute('src')
@@ -106,11 +107,13 @@ class Amazon extends MessageStrategy {
         return null
       })
 
-      if (image_url == null) {
+      if (imageUrl == null) {
         return [null, null]
       } else {
         MessageStrategy.typing(message)
-        const responseImage = await axios(image_url, { responseType: 'arraybuffer', headers: MessageStrategy.browser_config.headers })
+        // eslint-disable-next-line no-undef
+        const responseImage = await axios(imageUrl, { responseType: 'arraybuffer', headers: MessageStrategy.browser_config.headers })
+        // eslint-disable-next-line no-undef
         const image = await resizeImg(responseImage.data, { width: 200, format: 'jpg' })
         const buffer64 = Buffer.from(image, 'binary').toString('base64')
         const data = 'data:image/jpeg;base64,' + buffer64

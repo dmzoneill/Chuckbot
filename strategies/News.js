@@ -23,7 +23,7 @@ class News extends MessageStrategy {
       provides: {
         'news subscriptions': {
           test: function (message) {
-            return message.body.toLowerCase() == 'news subscriptions'
+            return message.body.toLowerCase() === 'news subscriptions'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -71,7 +71,7 @@ class News extends MessageStrategy {
         },
         'news state': {
           test: function (message) {
-            return message.body.toLowerCase() == 'news state'
+            return message.body.toLowerCase() === 'news state'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -87,7 +87,7 @@ class News extends MessageStrategy {
         },
         'news clear': {
           test: function (message) {
-            return message.body.toLowerCase() == 'news clear'
+            return message.body.toLowerCase() === 'news clear'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -103,7 +103,7 @@ class News extends MessageStrategy {
         },
         'news pop': {
           test: function (message) {
-            return message.body.toLowerCase() == 'news pop'
+            return message.body.toLowerCase() === 'news pop'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -194,10 +194,10 @@ class News extends MessageStrategy {
       for (let y = 0; y < chatkeys.length; y++) {
         const subkeys = Object.keys(MessageStrategy.state.News.Notified[chatkeys[y]])
         for (let h = 0; h < subkeys.length; h++) {
+          MessageStrategy.state.News.LastNotified[message.from][chatkeys[y]][subkeys[h]] = 0
           console.log('Popped: ' + MessageStrategy.state.News.Notified[chatkeys[y]][subkeys[h]].pop().toString())
         }
       }
-      MessageStrategy.state.News.LastNotified[message.from][url] = 0
     } catch (err) {
     }
   }
@@ -207,32 +207,32 @@ class News extends MessageStrategy {
       const parts = message.body.trim().split(' ')
       parts.shift()
       parts.shift()
-      const news_filters = []
+      const newsFilters = []
 
-      if (Object.keys(MessageStrategy.state.News).indexOf('Filter') == -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('Filter') === -1) {
         MessageStrategy.state.News.Filter = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News.Filter).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.News.Filter).indexOf(message.from) === -1) {
         MessageStrategy.state.News.Filter[message.from] = []
       }
 
       for (let j = 0; j < parts.length; j++) {
-        if (parts[j].trim() == '') continue
-        news_filters.push(parts[j].trim())
+        if (parts[j].trim() === '') continue
+        newsFilters.push(parts[j].trim())
       }
 
-      if (news_filters.length == 0) {
-        const current_filters = MessageStrategy.state.News.Filter[message.from]
-        if (current_filters.length == 0) {
+      if (newsFilters.length === 0) {
+        const currentFilters = MessageStrategy.state.News.Filter[message.from]
+        if (currentFilters.length === 0) {
           MessageStrategy.client.sendText(message.from, 'No filters defined')
           return
         }
-        MessageStrategy.client.sendText(message.from, current_filters.join(' '))
+        MessageStrategy.client.sendText(message.from, currentFilters.join(' '))
         return
       }
 
-      MessageStrategy.state.News.Filter[message.from] = news_filters.sort().reverse()
+      MessageStrategy.state.News.Filter[message.from] = newsFilters.sort().reverse()
 
       MessageStrategy.client.sendText(message.from, 'Updated')
     } catch (err) {
@@ -245,7 +245,7 @@ class News extends MessageStrategy {
       let msg = ''
       const subkeys = Object.keys(MessageStrategy.state.News.Subscribed[message.from])
 
-      if (subkeys.length == 0) {
+      if (subkeys.length === 0) {
         MessageStrategy.client.sendText(message.from, 'This chat has 0 subscriptions')
         return
       }
@@ -262,25 +262,25 @@ class News extends MessageStrategy {
     try {
       const parts = message.body.split(' ')
       const isno = parseInt(parts[2])
-      let to_be_removed = parts[2]
+      let toTeRemoved = parts[2]
 
-      if (Number.isNaN(isno) == false) {
+      if (Number.isNaN(isno) === false) {
         const subkeys = MessageStrategy.state.News.Subscribed[message.from]
         for (let h = 0; h < subkeys.length; h++) {
-          if (h == isno) {
-            to_be_removed = subkeys[h]
+          if (h === isno) {
+            toTeRemoved = subkeys[h]
             break
           }
         }
       }
 
-      const index = MessageStrategy.state.News.Subscribed[message.from].indexOf(to_be_removed)
+      const index = MessageStrategy.state.News.Subscribed[message.from].indexOf(toTeRemoved)
       if (index !== -1) {
         MessageStrategy.state.News.Subscribed[message.from].splice(index, 1)
       }
 
-      delete MessageStrategy.state.News.Notified[message.from][to_be_removed]
-      delete MessageStrategy.state.News.LastNotified[message.from][to_be_removed]
+      delete MessageStrategy.state.News.Notified[message.from][toTeRemoved]
+      delete MessageStrategy.state.News.LastNotified[message.from][toTeRemoved]
 
       MessageStrategy.client.sendText(message.from, 'Un-subscribed')
     } catch (err) {
@@ -291,7 +291,7 @@ class News extends MessageStrategy {
   async getSiteMaps (message, urlstr) {
     const url = new URL(urlstr)
     const robotstxt = await MessageStrategy.axiosHttpRequest(message, 'GET', url.protocol + '//' + url.hostname + '/robots.txt', false, 200, false)
-    const regex1 = RegExp('Sitemap: .*', 'g')
+    const regex1 = /Sitemap: .*/g
     let array1
     const resshort = []
     const resfull = []
@@ -313,6 +313,7 @@ class News extends MessageStrategy {
     const xmlData = await MessageStrategy.axiosHttpRequest(message, 'GET', sitemapUrl, false, 200, false)
 
     // Parse XML data using xml2js
+    // eslint-disable-next-line no-undef
     const parser = new xml2js.Parser({ explicitArray: false })
     const parsedData = await parser.parseStringPromise(xmlData)
 
@@ -342,19 +343,19 @@ class News extends MessageStrategy {
     try {
       const parts = message.body.trim().split(' ')
 
-      if (await News.self.validURL(parts[2]) == false) {
+      if (await News.self.validURL(parts[2]) === false) {
         MessageStrategy.client.sendText(message.from, 'Not a valid subscription url')
         return
       }
 
       const sitemaps = await News.self.getSiteMaps(message, parts[2])
 
-      if (sitemaps[0].length == 0) {
+      if (sitemaps[0].length === 0) {
         MessageStrategy.client.sendText(message.from, 'No sitemaps or robots.txt found.')
         return
       }
 
-      if (sitemaps[0].length > 1 && parts.length == 3) {
+      if (sitemaps[0].length > 1 && parts.length === 3) {
         MessageStrategy.client.sendText(message.from, 'More than 1 sitemap found, please specify which one, e.g:\n\nNews subscribe http://x.com/ 1\n\n')
         let msg = ''
         for (let h = 0; h < sitemaps[0].length; h++) {
@@ -364,67 +365,67 @@ class News extends MessageStrategy {
         return
       }
 
-      const index = (parts.length == 3) ? 0 : parseInt(parts[3])
+      const index = (parts.length === 3) ? 0 : parseInt(parts[3])
 
       const urls = await News.self.getLocsFromXML(message, sitemaps[1][index])
 
-      if (urls.length == 0) {
+      if (urls.length === 0) {
         MessageStrategy.client.sendText(message.from, 'Not a valid subscription url')
         return
       }
 
-      if (Object.keys(MessageStrategy.state).indexOf('News') == -1) {
+      if (Object.keys(MessageStrategy.state).indexOf('News') === -1) {
         MessageStrategy.state.News = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News).indexOf('enabled') == -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('enabled') === -1) {
         MessageStrategy.state.News.enabled = true
       }
 
-      if (Object.keys(MessageStrategy.state.News).indexOf('Subscribed') == -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('Subscribed') === -1) {
         MessageStrategy.state.News.Subscribed = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News).indexOf('Notified') == -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('Notified') === -1) {
         MessageStrategy.state.News.Notified = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News).indexOf('LastNotified') == -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('LastNotified') === -1) {
         MessageStrategy.state.News.LastNotified = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News).indexOf('Filter') == -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('Filter') === -1) {
         MessageStrategy.state.News.Filter = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News.Filter).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.News.Filter).indexOf(message.from) === -1) {
         MessageStrategy.state.News.Filter[message.from] = []
       }
 
-      if (Object.keys(MessageStrategy.state.News.Subscribed).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.News.Subscribed).indexOf(message.from) === -1) {
         MessageStrategy.state.News.Subscribed[message.from] = []
       }
 
-      if (MessageStrategy.state.News.Subscribed[message.from].indexOf(sitemaps[1][index]) == -1) {
+      if (MessageStrategy.state.News.Subscribed[message.from].indexOf(sitemaps[1][index]) === -1) {
         MessageStrategy.state.News.Subscribed[message.from].push(sitemaps[1][index])
       } else {
         MessageStrategy.client.sendText(message.from, 'Already subscribed')
         return
       }
 
-      if (Object.keys(MessageStrategy.state.News.Notified).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.News.Notified).indexOf(message.from) === -1) {
         MessageStrategy.state.News.Notified[message.from] = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News.Notified[message.from]).indexOf(sitemaps[1][index]) == -1) {
+      if (Object.keys(MessageStrategy.state.News.Notified[message.from]).indexOf(sitemaps[1][index]) === -1) {
         MessageStrategy.state.News.Notified[message.from][sitemaps[1][index]] = []
       }
 
-      if (Object.keys(MessageStrategy.state.News.LastNotified).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.News.LastNotified).indexOf(message.from) === -1) {
         MessageStrategy.state.News.LastNotified[message.from] = {}
       }
 
-      if (Object.keys(MessageStrategy.state.News.LastNotified[message.from]).indexOf(sitemaps[1][index]) == -1) {
+      if (Object.keys(MessageStrategy.state.News.LastNotified[message.from]).indexOf(sitemaps[1][index]) === -1) {
         MessageStrategy.state.News.LastNotified[message.from][sitemaps[1][index]] = 0
       }
 
@@ -442,11 +443,11 @@ class News extends MessageStrategy {
   }
 
   async post (message) {
-    if (Object.keys(MessageStrategy.state).indexOf('News') == -1) {
+    if (Object.keys(MessageStrategy.state).indexOf('News') === -1) {
       return
     }
 
-    if (Object.keys(MessageStrategy.state.News).indexOf('Subscribed') == -1) {
+    if (Object.keys(MessageStrategy.state.News).indexOf('Subscribed') === -1) {
       return
     }
 
@@ -478,8 +479,8 @@ class News extends MessageStrategy {
   }
 
   async queuePost (chat, subscription, url) {
-    if (MessageStrategy.state.News.Notified[chat][subscription].indexOf(url) == -1) {
-      if (Object.keys(MessageStrategy.state.News).indexOf('Queue') == -1) {
+    if (MessageStrategy.state.News.Notified[chat][subscription].indexOf(url) === -1) {
+      if (Object.keys(MessageStrategy.state.News).indexOf('Queue') === -1) {
         MessageStrategy.state.News.Queue = {}
       }
       MessageStrategy.state.News.Notified[chat][subscription].push(url)
@@ -504,16 +505,16 @@ class News extends MessageStrategy {
 
     let allowed = true
 
-    if (Object.keys(MessageStrategy.state.News).indexOf('Filter') != -1) {
-      if (Object.keys(MessageStrategy.state.News.Filter).indexOf(chat) != -1) {
+    if (Object.keys(MessageStrategy.state.News).indexOf('Filter') !== -1) {
+      if (Object.keys(MessageStrategy.state.News.Filter).indexOf(chat) !== -1) {
         const filters = MessageStrategy.state.News.Filter[chat]
         for (let l = 0; l < filters.length; l++) {
           const type = filters[l].substring(0, 1)
           const filter = filters[l].substring(1)
-          if (type == '-' && data[0].toLowerCase().indexOf(filter.toLowerCase()) > -1) {
+          if (type === '-' && data[0].toLowerCase().indexOf(filter.toLowerCase()) > -1) {
             allowed = false
           }
-          if (type == '+' && data[0].toLowerCase().indexOf(filter.toLowerCase()) > -1) {
+          if (type === '+' && data[0].toLowerCase().indexOf(filter.toLowerCase()) > -1) {
             allowed = true
           }
         }

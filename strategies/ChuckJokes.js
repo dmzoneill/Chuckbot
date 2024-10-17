@@ -99,6 +99,7 @@ class ChuckJokes extends MessageStrategy {
   }
 
   get_joke () {
+    // eslint-disable-next-line no-undef
     const joke = request('GET', 'https://api.chucknorris.io/jokes/random', {
       headers: {
         Accept: 'text/plain'

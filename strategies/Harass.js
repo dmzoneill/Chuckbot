@@ -23,6 +23,7 @@ class Harass extends MessageStrategy {
       Harass.cronjob.stop()
     }
 
+    // eslint-disable-next-line no-undef
     Harass.cronjob = new CronJob(
       '0 */2 * * * *',
       function () {
@@ -125,6 +126,7 @@ class Harass extends MessageStrategy {
   }
 
   get_joke () {
+    // eslint-disable-next-line no-undef
     const joke = request('GET', 'https://api.yomomma.info/', {
       headers: {
         Accept: 'text/plain'
@@ -137,11 +139,11 @@ class Harass extends MessageStrategy {
   async get_sluts () {
     try {
       Harass.sluts = []
-      const all_chats = await MessageStrategy.client.getAllChats()
+      const allChats = await MessageStrategy.client.getAllChats()
 
-      for (let h = 0; h < all_chats.length; h++) {
-        const name = 'name' in all_chats[h].contact ? all_chats[h].contact.name : ''
-        const entry = all_chats[h].contact.id + ' ' + name
+      for (let h = 0; h < allChats.length; h++) {
+        const name = 'name' in allChats[h].contact ? allChats[h].contact.name : ''
+        const entry = allChats[h].contact.id + ' ' + name
 
         if (name.indexOf('Richel') > -1) continue
         if (Harass.sluts.includes(entry.trim())) continue
@@ -149,10 +151,10 @@ class Harass extends MessageStrategy {
         Harass.sluts.push(entry.trim())
       }
 
-      const all_groups = await MessageStrategy.client.getAllGroups()
+      const allGroups = await MessageStrategy.client.getAllGroups()
 
-      for (let h = 0; h < all_groups.length; h++) {
-        const members = await MessageStrategy.client.getGroupMembers(all_groups[h].id)
+      for (let h = 0; h < allGroups.length; h++) {
+        const members = await MessageStrategy.client.getGroupMembers(allGroups[h].id)
         for (let k = 0; k < members.length; k++) {
           const name = 'name' in members[k] ? members[k].name : ''
           const entry = members[k].id + ' ' + name
@@ -185,11 +187,11 @@ class Harass extends MessageStrategy {
   async harass (message) {
     try {
       const cunt = message.body.split(' ')
-      const the_cunt = parseInt(cunt[1].trim()) - 1
-      if (Harass.sluts.includes(the_cunt)) {
+      const theCunt = parseInt(cunt[1].trim()) - 1
+      if (Harass.sluts.includes(theCunt)) {
         return
       }
-      Harass.cunts.push(Harass.sluts[the_cunt])
+      Harass.cunts.push(Harass.sluts[theCunt])
     } catch (err) {
       console.log(err)
     }
@@ -198,11 +200,11 @@ class Harass extends MessageStrategy {
   async stopharass (message) {
     try {
       const cunt = message.body.split(' ')
-      const the_cunt = cunt[2].trim()
+      const theCunt = cunt[2].trim()
       for (let y = 0; y < Harass.cunts.length; y++) {
         if (!Harass.cunts[y]) continue
 
-        if (Harass.cunts[y].toLowerCase().indexOf(the_cunt) > -1) {
+        if (Harass.cunts[y].toLowerCase().indexOf(theCunt) > -1) {
           delete Harass.cunts[y]
           y = y - 1
         }

@@ -99,7 +99,7 @@ class Meme extends MessageStrategy {
 
   async chatSetup (message) {
     try {
-      if (message == null || message == undefined) {
+      if (message === null || message === undefined) {
         return false
       }
 
@@ -172,12 +172,13 @@ class Meme extends MessageStrategy {
       // 'Jokes'
     ]
 
-    let fail_count = 3
+    let failCount = 3
 
     while (true) {
       try {
         MessageStrategy.typing(message)
         const randomIndex = Math.floor(Math.random() * topics.length)
+        // eslint-disable-next-line no-undef
         const meme = request('GET', 'https://meme-api.com/gimme/' + topics[randomIndex], {
           headers: MessageStrategy.browser_config.headers
         })
@@ -187,9 +188,9 @@ class Meme extends MessageStrategy {
         await MessageStrategy.client.sendImage(message.from, image, 'meme.jpg', json.postLink)
         return true
       } catch (err) {
-        fail_count = fail_count - 1
+        failCount = failCount - 1
         console.log(err)
-        if (fail_count == 0) {
+        if (failCount === 0) {
           return
         }
       }

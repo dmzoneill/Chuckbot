@@ -208,7 +208,7 @@ class Crypto extends MessageStrategy {
         },
         'coin name': {
           test: function (message) {
-            return message.body.match(/^coin ([0-9a-z\-]+)$/i) !== null
+            return message.body.match(/^coin ([0-9a-z-]+)$/i) !== null
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -227,7 +227,7 @@ class Crypto extends MessageStrategy {
         },
         'coin name duration': {
           test: function (message) {
-            return message.body.match(/^coin ([0-9a-z\-]+) ([173])(d|m|y)$/i) !== null
+            return message.body.match(/^coin ([0-9a-z-]+) ([173])(d|m|y)$/i) !== null
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -256,6 +256,7 @@ class Crypto extends MessageStrategy {
 
   async ExchangeList (message) {
     try {
+      // eslint-disable-next-line no-undef
       const exchanges = ccxt.exchanges
 
       let msg = '```'
@@ -264,10 +265,12 @@ class Crypto extends MessageStrategy {
         msg += exchanges[p + 1].padEnd(22, ' ')
         msg += '\n'
 
-        let exchange = new ccxt[exchanges[p]]()
-        exchange = new ccxt[exchanges[p + 1]]()
+        // eslint-disable-next-line no-undef
+        // let exchange = new ccxt[exchanges[p]]()
+        // eslint-disable-next-line no-undef
+        // exchange = new ccxt[exchanges[p + 1]]()
 
-        if (p > 0 && p % 20 == 0) {
+        if (p > 0 && p % 20 === 0) {
           msg = msg.trim()
           msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
@@ -285,18 +288,20 @@ class Crypto extends MessageStrategy {
   async ExchangeDescribe (message) {
     try {
       const parts = message.body.split(' ')
+      // eslint-disable-next-line no-undef
       const exchanges = ccxt.exchanges
 
-      if (parts.length != 3) {
+      if (parts.length !== 3) {
         console.log('bad request')
         return
       }
 
-      if (exchanges.indexOf(parts[2].toLowerCase()) == -1) {
+      if (exchanges.indexOf(parts[2].toLowerCase()) === -1) {
         console.log('bad exchange')
         return
       }
 
+      // eslint-disable-next-line no-undef
       const exchange = new ccxt[parts[2].toLowerCase()]({ verbose: true })
 
       MessageStrategy.client.sendText(message.from, JSON.stringify(exchange.describe(), null, 4))
@@ -307,20 +312,22 @@ class Crypto extends MessageStrategy {
 
   async ExchangeSymbols (message) {
     try {
-      if (Crypto.ccxtconfig == null) {
+      if (Crypto.ccxtconfig === null) {
+        // eslint-disable-next-line no-undef
         Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }))
       }
 
       const parts = message.body.split(' ')
+      // eslint-disable-next-line no-undef
       const exchanges = ccxt.exchanges
 
-      if (exchanges.indexOf(parts[3].toLowerCase()) == -1) {
+      if (exchanges.indexOf(parts[3].toLowerCase()) === -1) {
         MessageStrategy.client.sendText(message.from, 'No such exchange')
         console.log('No such exchange')
         return
       }
 
-      if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) == -1) {
+      if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) === -1) {
         MessageStrategy.client.sendText(message.from, 'Exchange not configured')
         console.log('Exchange not configured')
       }
@@ -331,6 +338,7 @@ class Crypto extends MessageStrategy {
         verbose: true
       }
 
+      // eslint-disable-next-line no-undef
       const exchange = new ccxt[parts[3].toLowerCase()](config)
       const markets = await exchange.loadMarkets()
 
@@ -338,7 +346,7 @@ class Crypto extends MessageStrategy {
       let msg = '```'
       for (let p = 0; p < keys.length; p++) {
         msg += markets[keys[p]].info.symbol + '\n'
-        if (p > 1 && p % 15 == 0) {
+        if (p > 1 && p % 15 === 0) {
           msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
           msg = '```'
@@ -355,20 +363,22 @@ class Crypto extends MessageStrategy {
   async ExchangeSymbolTicker (message) {
     // JavaScript
     try {
-      if (Crypto.ccxtconfig == null) {
+      if (Crypto.ccxtconfig === null) {
+        // eslint-disable-next-line no-undef
         Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }))
       }
 
       const parts = message.body.split(' ')
+      // eslint-disable-next-line no-undef
       const exchanges = ccxt.exchanges
 
-      if (exchanges.indexOf(parts[3].toLowerCase()) == -1) {
+      if (exchanges.indexOf(parts[3].toLowerCase()) === -1) {
         MessageStrategy.client.sendText(message.from, 'No such exchange')
         console.log('No such exchange')
         return
       }
 
-      if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) == -1) {
+      if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) === -1) {
         MessageStrategy.client.sendText(message.from, 'Exchange not configured')
         console.log('Exchange not configured')
       }
@@ -379,6 +389,7 @@ class Crypto extends MessageStrategy {
         verbose: false
       }
 
+      // eslint-disable-next-line no-undef
       const exchange = new ccxt[parts[3].toLowerCase()](config)
       await exchange.loadMarkets()
       console.log(Object.keys(exchange.markets))
@@ -389,6 +400,7 @@ class Crypto extends MessageStrategy {
       const series = ohlcv.map(x => x[index])
       const bitcoinRate = '₿ = $' + lastPrice
       const period = '1hr'
+      // eslint-disable-next-line no-undef
       const chart = asciichart.plot(series.slice(-25), { height: 12, padding: '         ' })
       MessageStrategy.client.sendText(message.from,
         '```' +
@@ -405,8 +417,9 @@ class Crypto extends MessageStrategy {
     try {
       const func = message.body.substring(13).trim().toUpperCase()
       console.log(func)
-      const function_desc = talib.explain(func)
-      MessageStrategy.client.sendText(message.from, JSON.stringify(function_desc, null, 2))
+      // eslint-disable-next-line no-undef
+      const functionDesc = talib.explain(func)
+      MessageStrategy.client.sendText(message.from, JSON.stringify(functionDesc, null, 2))
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
     }
@@ -414,10 +427,12 @@ class Crypto extends MessageStrategy {
 
   async TAFunctionDescriptionAll (message) {
     try {
+      // eslint-disable-next-line no-undef
       const functions = talib.functions
       for (const i in functions) {
-        const function_desc = talib.explain(functions[i].name)
-        console.log(function_desc)
+        // eslint-disable-next-line no-undef
+        const functionDesc = talib.explain(functions[i].name)
+        console.log(functionDesc)
       }
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
@@ -426,6 +441,7 @@ class Crypto extends MessageStrategy {
 
   async TAFunctionList (message) {
     try {
+      // eslint-disable-next-line no-undef
       const functions = talib.functions
       let msg = '```'
       let p = 0
@@ -435,14 +451,14 @@ class Crypto extends MessageStrategy {
         const hint = functions[i].hint
         const group = functions[i].group
 
-        if (name == undefined || group == undefined || hint == undefined) {
+        if (name === undefined || group === undefined || hint === undefined) {
           continue
         }
 
         msg += name + '\n'
         msg += '  ' + hint + '\n'
         msg += '  ' + group + '\n'
-        if (p > 0 && p % 8 == 0) {
+        if (p > 0 && p % 8 === 0) {
           msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
           msg = '```'
@@ -456,32 +472,34 @@ class Crypto extends MessageStrategy {
     }
   }
 
-  async get_market_data (pair, interval = '1h', source_exchange = 'binance') {
+  async get_market_data (pair, interval = '1h', sourceExchange = 'binance') {
     const config = {
-      apiKey: Crypto.ccxtconfig[source_exchange].creds.apiKey,
-      secret: Crypto.ccxtconfig[source_exchange].creds.secret,
+      apiKey: Crypto.ccxtconfig[sourceExchange].creds.apiKey,
+      secret: Crypto.ccxtconfig[sourceExchange].creds.secret,
       verbose: false
     }
 
-    const exchange = new ccxt[source_exchange](config)
+    // eslint-disable-next-line no-undef
+    const exchange = new ccxt[sourceExchange](config)
     await exchange.loadMarkets()
     const ohlcv = await exchange.fetchOHLCV(pair, interval)
 
-    const oh_open = ohlcv.map(a => a[1]) // [ timestamp, open, high, low, close, volume ]
-    const oh_close = ohlcv.map(a => a[4]) // [ timestamp, open, high, low, close, volume ]
-    const oh_high = ohlcv.map(a => a[2]) // [ timestamp, open, high, low, close, volume ]
-    const oh_low = ohlcv.map(a => a[3]) // [ timestamp, open, high, low, close, volume ]
-    const oh_volume = ohlcv.map(a => a[5]) // [ timestamp, open, high, low, close, volume ]
+    const ohOpen = ohlcv.map(a => a[1]) // [ timestamp, open, high, low, close, volume ]
+    const ohClose = ohlcv.map(a => a[4]) // [ timestamp, open, high, low, close, volume ]
+    const ohHigh = ohlcv.map(a => a[2]) // [ timestamp, open, high, low, close, volume ]
+    const ohLow = ohlcv.map(a => a[3]) // [ timestamp, open, high, low, close, volume ]
+    const ohVolume = ohlcv.map(a => a[5]) // [ timestamp, open, high, low, close, volume ]
 
     // market data as arrays
-    const marketData = { open: oh_open, close: oh_close, high: oh_high, low: oh_low, volume: oh_volume }
+    const marketData = { open: ohOpen, close: ohClose, high: ohHigh, low: ohLow, volume: ohVolume }
 
     return marketData
   }
 
   async TAAnalyzeFunc (message) {
     try {
-      if (Crypto.ccxtconfig == null) {
+      if (Crypto.ccxtconfig === null) {
+        // eslint-disable-next-line no-undef
         Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }))
       }
 
@@ -489,14 +507,15 @@ class Crypto extends MessageStrategy {
       const tafunc = parts[2].toUpperCase()
       const tapair = parts[3].toUpperCase()
       const tainterval = parts[4].toLowerCase()
-      const function_desc = talib.explain(tafunc)
+      // eslint-disable-next-line no-undef
+      const functionDesc = talib.explain(tafunc)
 
       const marketData = Object.keys(message).indexOf('marketData') > -1 ? message.marketData : await Crypto.self.get_market_data(tapair, tainterval)
 
       console.log(tafunc)
-      console.log(JSON.stringify(function_desc.inputs, null, 2))
-      console.log(JSON.stringify(function_desc.optInputs, null, 2))
-      console.log(JSON.stringify(function_desc.outputs, null, 2))
+      console.log(JSON.stringify(functionDesc.inputs, null, 2))
+      console.log(JSON.stringify(functionDesc.optInputs, null, 2))
+      console.log(JSON.stringify(functionDesc.outputs, null, 2))
 
       let options = {}
 
@@ -510,7 +529,7 @@ class Crypto extends MessageStrategy {
         optInTimePeriod: 14
       }
 
-      if (tafunc == 'SMA') {
+      if (tafunc === 'SMA') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -520,7 +539,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == 'EMA') {
+      if (tafunc === 'EMA') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -530,7 +549,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == 'STOCH') {
+      if (tafunc === 'STOCH') {
         options = {
           name: tafunc,
           inPriceHLC: marketData.close,
@@ -540,7 +559,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == 'STOCHF') {
+      if (tafunc === 'STOCHF') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -553,7 +572,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == 'STOCHRSI') {
+      if (tafunc === 'STOCHRSI') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -567,6 +586,7 @@ class Crypto extends MessageStrategy {
       }
 
       // Calculate the ADX values using Ta-Lib
+      // eslint-disable-next-line no-undef
       const taValues = talib.execute(options).result.outReal
 
       console.log(JSON.stringify(taValues, null, 2))
@@ -583,6 +603,7 @@ class Crypto extends MessageStrategy {
       interval = tainterval.indexOf('s') > -1 ? 'Second' : interval
 
       // Create a new Chart.js chart
+      // eslint-disable-next-line no-undef
       const canvas = createCanvas(800, 600)
       const ctx = canvas.getContext('2d')
       const chart = new Chart(ctx, {
@@ -609,6 +630,8 @@ class Crypto extends MessageStrategy {
         }
       })
 
+      console.log(chart)
+
       // Export the chart as a PNG image
       const imageBuffer = canvas.toBuffer('image/png')
 
@@ -627,11 +650,11 @@ class Crypto extends MessageStrategy {
       const tapair = parts[2].toUpperCase()
       const tainterval = parts[3].toLowerCase()
 
+      // eslint-disable-next-line no-undef
       const functions = talib.functions
-      const msg = ''
       let marketData
       for (const i in functions) {
-        if (functions[i].group == 'Math Transform' || functions[i].group == undefined || functions[i].group == 'Price Transform') {
+        if (functions[i].group === 'Math Transform' || functions[i].group === undefined || functions[i].group === 'Price Transform') {
           console.log('Skip ' + functions[i].name)
           continue
         }
@@ -641,7 +664,7 @@ class Crypto extends MessageStrategy {
             chatId: message.chatId,
             from: message.from
           }
-          if (marketData != undefined) {
+          if (marketData !== undefined) {
             msg.marketData = marketData
           }
           marketData = await Crypto.self.TAAnalyzeFunc(msg)
@@ -673,7 +696,9 @@ class Crypto extends MessageStrategy {
   }
 
   async get_coins (message) {
+    // eslint-disable-next-line no-undef
     const apiKey = fs.readFileSync('strategies/config/coincap-api.key').toString().trim()
+    // eslint-disable-next-line no-undef
     const client = new CoinMarketCap(apiKey)
 
     client.getTickers(
@@ -695,7 +720,9 @@ class Crypto extends MessageStrategy {
   async GetCoinMarketCap (message) {
     await this.get_coins(this)
 
+    // eslint-disable-next-line no-undef
     const apiKey = fs.readFileSync('strategies/config/coincap-api.key').toString().trim()
+    // eslint-disable-next-line no-undef
     const client = new CoinMarketCap(apiKey)
 
     MessageStrategy.typing(message)
@@ -728,13 +755,13 @@ class Crypto extends MessageStrategy {
         const pricetotal = 10 - price.toString().length
         const pricepadding = ' '.repeat(pricetotal)
 
-        let percent_change_1h = parseFloat(coins[i].quote.USD.percent_change_1h).toFixed(3).toString()
-        percent_change_1h = percent_change_1h.startsWith('-') ? percent_change_1h : '+' + percent_change_1h
-        let percent_change_24h = parseFloat(coins[i].quote.USD.percent_change_24h).toFixed(3).toString()
-        percent_change_24h = percent_change_24h.startsWith('-') ? percent_change_24h : '+' + percent_change_24h
-        // const change = '' + percent_change_1h + '%    ' + percent_change_24h + '%'
+        let percentChange1h = parseFloat(coins[i].quote.USD.percentChange1h).toFixed(3).toString()
+        percentChange1h = percentChange1h.startsWith('-') ? percentChange1h : '+' + percentChange1h
+        let percentChange24h = parseFloat(coins[i].quote.USD.percentChange24h).toFixed(3).toString()
+        percentChange24h = percentChange24h.startsWith('-') ? percentChange24h : '+' + percentChange24h
+        // const change = '' + percentChange1h + '%    ' + percentChange24h + '%'
 
-        msg += symbol + symbolpadding + ' : $' + price + pricepadding + percent_change_24h + '\n'
+        msg += symbol + symbolpadding + ' : $' + price + pricepadding + percentChange24h + '\n'
         if (i % 5 === 4) msg += '\n'
         if (i % 25 === 24) {
           MessageStrategy.typing(message)
@@ -771,6 +798,8 @@ class Crypto extends MessageStrategy {
         let msg = '```'
         msg += 'Symbol    Slug\n\n'
         let i = 0
+
+        // eslint-disable-next-line array-callback-return
         slugkeys.every(key => {
           const total = 10 - key.length
           const padding = ' '.repeat(total)
@@ -790,6 +819,7 @@ class Crypto extends MessageStrategy {
     try {
       MessageStrategy.typing(message)
 
+      // eslint-disable-next-line no-undef
       const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'], headless: true })
       const page = await browser.newPage()
 
@@ -859,7 +889,7 @@ class Crypto extends MessageStrategy {
 
       let selected = false
 
-      while (selected == false) {
+      while (selected === false) {
         try {
           const xpath = '//*[@id="section-coin-chart"]'
           await page.waitForXPath(xpath, { timeout: 1000 })
@@ -880,6 +910,7 @@ class Crypto extends MessageStrategy {
       await element[0].screenshot({ path: sha1d + '.png' })
       await browser.close()
 
+      // eslint-disable-next-line no-undef
       if (!fs.existsSync(sha1d + '.png')) {
         MessageStrategy.client.sendText(message.from, 'Problem, try again')
         return
@@ -908,8 +939,8 @@ class Crypto extends MessageStrategy {
         coinMsg += 'Market Dominance : ' + parseFloat(objfiat.market_cap_dominance).toFixed(3).toString() + '%'
       } else {
         coinMsg += '*' + coindetails.name + '* 🪙 '
-        coinMsg += '*' + parseFloat(objfiat.percent_change_24h).toFixed(3).toString() + '%* (24hr)'
-        coinMsg += objfiat.percent_change_24h > 0 ? '🔺\n' : '🔻\n'
+        coinMsg += '*' + parseFloat(objfiat.percentChange24h).toFixed(3).toString() + '%* (24hr)'
+        coinMsg += objfiat.percentChange24h > 0 ? '🔺\n' : '🔻\n'
         coinMsg += '\n'
         coinMsg += '```'
         coinMsg += 'Symbol           : ' + coindetails.symbol + '\n'
@@ -930,7 +961,9 @@ class Crypto extends MessageStrategy {
         '',
         coinMsg)
 
+      // eslint-disable-next-line no-undef
       if (fs.existsSync(sha1d + '.png')) {
+        // eslint-disable-next-line no-undef
         fs.unlinkSync(sha1d + '.png')
       }
     } catch (err) {

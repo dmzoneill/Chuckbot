@@ -76,7 +76,7 @@ class Chuck extends MessageStrategy {
         },
         'chuck groups': {
           test: function (message) {
-            return message.body.toLowerCase() == 'chuck groups'
+            return message.body.toLowerCase() === 'chuck groups'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -92,7 +92,7 @@ class Chuck extends MessageStrategy {
         },
         'chuck banned': {
           test: function (message) {
-            return message.body.toLowerCase() == 'chuck banned'
+            return message.body.toLowerCase() === 'chuck banned'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -204,7 +204,7 @@ class Chuck extends MessageStrategy {
         },
         'chuck persona delete': {
           test: function (message) {
-            return message.body.toLowerCase() == 'chuck persona delete'
+            return message.body.toLowerCase() === 'chuck persona delete'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -296,6 +296,7 @@ class Chuck extends MessageStrategy {
   }
 
   async setup () {
+    // eslint-disable-next-line no-undef
     Chuck.apikey = fs.readFileSync('strategies/config/chatgpt.key').toString().trim()
 
     const { ChatGPTAPI } = await import('chatgpt')
@@ -311,15 +312,15 @@ class Chuck extends MessageStrategy {
 
   is_help_command (message) {
     try {
-      const strat_keys = Object.keys(MessageStrategy.strategies).sort()
-      for (let h = 0; h < strat_keys.length; h++) {
+      const stratKeys = Object.keys(MessageStrategy.strategies).sort()
+      for (let h = 0; h < stratKeys.length; h++) {
         try {
-          if (strat_keys[h] == 'Chuck') continue
-          const actions = MessageStrategy.strategies[strat_keys[h]].provides()
+          if (stratKeys[h] === 'Chuck') continue
+          const actions = MessageStrategy.strategies[stratKeys[h]].provides()
           const provides = actions.provides
           const keys = Object.keys(provides)
           for (let y = 0; y < keys.length; y++) {
-            if (provides[keys[y]].interactive == false) continue
+            if (provides[keys[y]].interactive === false) continue
             if (provides[keys[y]].test(message)) {
               return true
             }
@@ -368,25 +369,25 @@ class Chuck extends MessageStrategy {
   }
 
   setup_state () {
-    if (Object.keys(MessageStrategy.state).indexOf('Chuck') == -1) {
+    if (Object.keys(MessageStrategy.state).indexOf('Chuck') === -1) {
       MessageStrategy.state.Chuck = {}
     }
-    if (Object.keys(MessageStrategy.state.Chuck).indexOf('AllowedGroups') == -1) {
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('AllowedGroups') === -1) {
       MessageStrategy.state.Chuck.AllowedGroups = []
     }
-    if (Object.keys(MessageStrategy.state.Chuck).indexOf('BannedGroups') == -1) {
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('BannedGroups') === -1) {
       MessageStrategy.state.Chuck.BannedGroups = []
     }
-    if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTBannedUsers') == -1) {
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTBannedUsers') === -1) {
       MessageStrategy.state.Chuck.GPTBannedUsers = []
     }
-    if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTUserUsage') == -1) {
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTUserUsage') === -1) {
       MessageStrategy.state.Chuck.GPTUserUsage = {}
     }
-    if (Object.keys(MessageStrategy.state.Chuck).indexOf('ChatPersonas') == -1) {
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('ChatPersonas') === -1) {
       MessageStrategy.state.Chuck.ChatPersonas = {}
     }
-    if (Object.keys(MessageStrategy.state.Chuck).indexOf('ChatPersonasMedia') == -1) {
+    if (Object.keys(MessageStrategy.state.Chuck).indexOf('ChatPersonasMedia') === -1) {
       MessageStrategy.state.Chuck.ChatPersonasMedia = {}
     }
   }
@@ -438,7 +439,7 @@ class Chuck extends MessageStrategy {
     try {
       let name
       if ('event' in message) {
-        if (message.event_type == 'onAddedToGroup') {
+        if (message.event_type === 'onAddedToGroup') {
           name = message.event.contact.id.toLowerCase()
         }
       } else {
@@ -448,7 +449,7 @@ class Chuck extends MessageStrategy {
       Chuck.self.setup_state()
       for (const key in MessageStrategy.state.Chuck.ChatPersonas) {
         const check = key.toLowerCase()
-        if (check == name) {
+        if (check === name) {
           return true
         }
       }
@@ -461,7 +462,7 @@ class Chuck extends MessageStrategy {
 
   async Persona (message) {
     try {
-      if (message.body.toLowerCase().trim() == 'chuck persona') {
+      if (message.body.toLowerCase().trim() === 'chuck persona') {
         MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonas[message.from].desc)
         return
       }
@@ -474,7 +475,7 @@ class Chuck extends MessageStrategy {
   async PersonaName (message) {
     try {
       Chuck.self.setup_state()
-      if (message.body.toLowerCase().trim() == 'chuck persona name') {
+      if (message.body.toLowerCase().trim() === 'chuck persona name') {
         MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonas[message.from].name)
         return
       }
@@ -492,7 +493,7 @@ class Chuck extends MessageStrategy {
   async PersonaDelete (message) {
     try {
       Chuck.self.setup_state()
-      if (message.body.toLowerCase().trim() == 'chuck persona delete') {
+      if (message.body.toLowerCase().trim() === 'chuck persona delete') {
         delete MessageStrategy.state.Chuck.ChatPersonas[message.from]
       }
     } catch (e) {
@@ -503,7 +504,7 @@ class Chuck extends MessageStrategy {
   async Media (message) {
     try {
       Chuck.self.setup_state()
-      if (message.body.toLowerCase().trim() == 'chuck media') {
+      if (message.body.toLowerCase().trim() === 'chuck media') {
         MessageStrategy.client.sendText(message.from, MessageStrategy.state.Chuck.ChatPersonasMedia[message.from])
         return
       }
@@ -514,11 +515,11 @@ class Chuck extends MessageStrategy {
     }
   }
 
-  async leave_group (group_id) {
+  async leave_group (groupId) {
     try {
-      MessageStrategy.client.sendText(group_id, 'Look at you! with your fucking 48% body fat! And you, you scrawny little bastard! Fuck you guys!')
+      MessageStrategy.client.sendText(groupId, 'Look at you! with your fucking 48% body fat! And you, you scrawny little bastard! Fuck you guys!')
       Chuck.self.waitFor(1000)
-      MessageStrategy.client.leaveGroup(group_id)
+      MessageStrategy.client.leaveGroup(groupId)
     } catch (e) {
       console.log(e)
       // MessageStrategy.client.sendText(message.from, e)
@@ -540,7 +541,7 @@ class Chuck extends MessageStrategy {
   async LeaveGroup (message) {
     try {
       Chuck.self.setup_state()
-      if (message.body.toLowerCase().trim() == 'chuck leave') {
+      if (message.body.toLowerCase().trim() === 'chuck leave') {
         Chuck.self.leave_group(message.chatId)
       } else {
         const groups = await MessageStrategy.client.getAllGroups()
@@ -557,7 +558,7 @@ class Chuck extends MessageStrategy {
     try {
       Chuck.self.setup_state()
       const filter = message.body.toLowerCase().substring('chuck gptban'.length).trim()
-      if (MessageStrategy.state.Chuck.GPTBannedUsers.indexOf(filter) == -1) {
+      if (MessageStrategy.state.Chuck.GPTBannedUsers.indexOf(filter) === -1) {
         MessageStrategy.state.Chuck.GPTBannedUsers.push(filter)
         MessageStrategy.client.sendText(message.from, 'banned')
       }
@@ -592,15 +593,15 @@ class Chuck extends MessageStrategy {
   async BanGroup (message) {
     try {
       Chuck.self.setup_state()
-      if (message.body.toLowerCase().trim() == 'chuck ban') {
-        if (MessageStrategy.state.Chuck.BannedGroups.indexOf(message.chatId) == -1) {
+      if (message.body.toLowerCase().trim() === 'chuck ban') {
+        if (MessageStrategy.state.Chuck.BannedGroups.indexOf(message.chatId) === -1) {
           MessageStrategy.state.Chuck.BannedGroups.push(message.chatId)
         }
         Chuck.self.leave_banned_groups()
       } else {
         const groups = await MessageStrategy.client.getAllGroups()
         const id = parseInt(message.body.substring(10).trim())
-        if (MessageStrategy.state.Chuck.BannedGroups.indexOf(groups[id].id) == -1) {
+        if (MessageStrategy.state.Chuck.BannedGroups.indexOf(groups[id].id) === -1) {
           MessageStrategy.state.Chuck.BannedGroups.push(groups[id].id)
         }
         Chuck.self.leave_banned_groups()
@@ -628,7 +629,7 @@ class Chuck extends MessageStrategy {
       Chuck.self.setup_state()
       const groups = MessageStrategy.state.Chuck.BannedGroups
 
-      if (groups.length == 0) {
+      if (groups.length === 0) {
         MessageStrategy.client.sendText(message.from, '0 banned groups')
         return
       }
@@ -680,11 +681,11 @@ class Chuck extends MessageStrategy {
   }
 
   async get_current_usage (user) {
-    let total_usage = 0
+    let totalUsage = 0
     const usage = Object.keys(MessageStrategy.state.Chuck.GPTUserUsage[user])
     for (let h = 0; h < usage.length; h++) {
       if (parseInt(usage[h]) > Math.floor(Date.now() / 1000) - 86400) {
-        total_usage += MessageStrategy.state.Chuck.GPTUserUsage[user][usage[h]]
+        totalUsage += MessageStrategy.state.Chuck.GPTUserUsage[user][usage[h]]
       }
     }
     for (let h = 0; h < usage.length; h++) {
@@ -692,7 +693,7 @@ class Chuck extends MessageStrategy {
         delete MessageStrategy.state.Chuck.GPTUserUsage[user][usage[h]]
       }
     }
-    return total_usage
+    return totalUsage
   }
 
   async Converse (message) {
@@ -717,21 +718,21 @@ class Chuck extends MessageStrategy {
         }
       }
 
-      if (MessageStrategy.state.Chuck.chats[message.chatId].conversationId != null) {
+      if (MessageStrategy.state.Chuck.chats[message.chatId].conversationId !== null) {
         options.conversationId = MessageStrategy.state.Chuck.chats[message.chatId].conversationId
       }
 
-      if (MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId != null) {
+      if (MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId !== null) {
         options.parentMessageId = MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId
       }
 
-      if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTUserUsage') == -1) {
+      if (Object.keys(MessageStrategy.state.Chuck).indexOf('GPTUserUsage') === -1) {
         MessageStrategy.state.Chuck.GPTUserUsage = {}
       }
 
       const requester = message.sender.pushname === undefined ? '' : message.sender.pushname
 
-      if (!'type' in message) {
+      if (('type' in message) === false) {
         return
       }
 
@@ -751,15 +752,16 @@ class Chuck extends MessageStrategy {
         const respondWithQuote = Math.random() < 0.5
         const randomRespond = Math.random() < 0.10
         const randomRespondWithMedia = Math.random() < 0.3
-        const iWasQuoted = 'quotedMsg' in message && message.quotedMsg.author == Chuck.number
+        const iWasQuoted = 'quotedMsg' in message && message.quotedMsg.author === Chuck.number
 
         if (randomRespondWithMedia && randomRespond && !recentlyInteractedWithAuthor) {
-          if (MessageStrategy.state.Chuck.ChatPersonasMedia[message.from] == undefined) {
+          if (MessageStrategy.state.Chuck.ChatPersonasMedia[message.from] === undefined) {
             MessageStrategy.state.Chuck.ChatPersonasMedia[message.from] = []
           }
           if (MessageStrategy.state.Chuck.ChatPersonasMedia[message.from].length > 0) {
             const array = MessageStrategy.state.Chuck.ChatPersonasMedia[message.from]
             const randomWord = array[Math.floor(Math.random() * array.length)]
+            // eslint-disable-next-line no-undef
             usetube.searchVideo(randomWord).then(results => {
               results.videos.sort(() => Math.random() - 0.5)
               for (const video of results.videos) {
@@ -776,7 +778,7 @@ class Chuck extends MessageStrategy {
           }
         }
 
-        if (message.type == 'chat') {
+        if (message.type === 'chat') {
           const name = MessageStrategy.state.Chuck.ChatPersonas[message.chatId].name.trim().toLowerCase()
           isNameInSentence = (sentence, name) => {
             const words = sentence.toLowerCase().match(/\b\w+\b/g) // Match words with word boundaries
@@ -794,7 +796,7 @@ class Chuck extends MessageStrategy {
 
         Chuck.lastInteracted[message.author] = Date.now()
 
-        if (message.type != 'chat') {
+        if (message.type !== 'chat') {
           console.log('Chuck not a chat skip')
           return
         }
@@ -802,11 +804,11 @@ class Chuck extends MessageStrategy {
         const res = await Chuck.gptapi.sendMessage(message.body, options)
         const resp = res.text
 
-        if (res.conversationId != null) {
+        if (res.conversationId !== null) {
           MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
         }
 
-        if (res.id != null) {
+        if (res.id !== null) {
           MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
         }
 
@@ -828,25 +830,25 @@ class Chuck extends MessageStrategy {
         return
       }
 
-      if (message.type != 'chat') {
+      if (message.type !== 'chat') {
         console.log('Chuck not a chat skip')
         return
       }
 
-      let the_msg = message.body
+      let theMsg = message.body
 
       if (message.isGroupMsg) {
-        if (message.body.toLowerCase().startsWith('chuck') == false && message.body.toLowerCase().indexOf(' chuck') == -1) {
+        if (message.body.toLowerCase().startsWith('chuck') === false && message.body.toLowerCase().indexOf(' chuck') === -1) {
           return
         }
       }
 
       if (message.body.toLowerCase().startsWith('chuck')) {
-        the_msg = 'Chatgpt ' + the_msg.substr(6)
+        theMsg = 'Chatgpt ' + theMsg.substr(6)
       }
 
-      if (message.body.toLowerCase().indexOf(' chuck') == -1) {
-        the_msg = the_msg.replace(/ chuck/gi, ' chatgpt')
+      if (message.body.toLowerCase().indexOf(' chuck') === -1) {
+        theMsg = theMsg.replace(/ chuck/gi, ' chatgpt')
       }
 
       const banned = MessageStrategy.state.Chuck.GPTBannedUsers
@@ -858,31 +860,31 @@ class Chuck extends MessageStrategy {
         }
       }
 
-      if (Object.keys(MessageStrategy.state.Chuck.GPTUserUsage).indexOf(message.sender.id) == -1) {
+      if (Object.keys(MessageStrategy.state.Chuck.GPTUserUsage).indexOf(message.sender.id) === -1) {
         MessageStrategy.state.Chuck.GPTUserUsage[message.sender.id] = {}
       }
 
-      const current_user_usage = await Chuck.self.get_current_usage(message.sender.id)
+      const currentUserUsage = await Chuck.self.get_current_usage(message.sender.id)
 
-      if (current_user_usage > 40000) {
+      if (currentUserUsage > 40000) {
         MessageStrategy.typing(message)
         MessageStrategy.client.sendText(message.from, 'You have a rolling 24hr quota of 40000 credits, relax a while')
         return
       }
 
-      const res = await Chuck.gptapi.sendMessage(the_msg + ' ' + requester, options)
+      const res = await Chuck.gptapi.sendMessage(theMsg + ' ' + requester, options)
       let resp = res.text.replace(/chatgpt/gi, 'chuck')
       resp = res.text.replace(/openai/gi, 'dave')
 
-      if (res.detail.usage.total_tokens != undefined) {
+      if (res.detail.usage.total_tokens !== undefined) {
         MessageStrategy.state.Chuck.GPTUserUsage[message.sender.id][Math.floor(Date.now() / 1000)] = res.detail.usage.total_tokens
       }
 
-      if (res.conversationId != null) {
+      if (res.conversationId !== null) {
         MessageStrategy.state.Chuck.chats[message.chatId].conversationId = res.conversationId
       }
 
-      if (res.id != null) {
+      if (res.id !== null) {
         MessageStrategy.state.Chuck.chats[message.chatId].parentMessageId = res.id
       }
 
@@ -909,7 +911,7 @@ class Chuck extends MessageStrategy {
 
       let prompt
 
-      if (Chuck.self.isPersonaMode(message) && MessageStrategy.state.Chuck.ChatPersonas[message.from] != undefined) {
+      if (Chuck.self.isPersonaMode(message) && MessageStrategy.state.Chuck.ChatPersonas[message.from] !== undefined) {
         prompt = MessageStrategy.state.Chuck.ChatPersonas[message.from].desc
       } else {
         prompt = 'I will ask you questions.  Each question has a name or phone number at the end of the question.  Please use that in the response'

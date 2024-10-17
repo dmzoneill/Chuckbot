@@ -1,5 +1,6 @@
 const MessageStrategy = require('../MessageStrategy.js')
 
+// eslint-disable-next-line no-extend-native
 Array.prototype.myJoin = function (seperator, start, end) {
   if (!start) start = 0
   if (!end) end = this.length - 1
@@ -136,16 +137,18 @@ class Ashtanga extends MessageStrategy {
     try {
       Ashtanga.self.yoga_keywords.sort()
 
+      // eslint-disable-next-line no-undef
       const paths = await globby('strategies/poses/*.png')
 
       Ashtanga.self.yoga_keywords.forEach(async function (move) {
-        let nearest_distance = 999
+        let nearestDistance = 999
         let nearest = ''
 
         paths.forEach(async function (path) {
+          // eslint-disable-next-line no-undef
           const distance = levenshtein('strategies/poses/' + move + '.png', path)
-          if (distance < nearest_distance && distance < 5) {
-            nearest_distance = distance
+          if (distance < nearestDistance && distance < 5) {
+            nearestDistance = distance
             nearest = path
             console.log(nearest)
           }
@@ -276,20 +279,22 @@ class Ashtanga extends MessageStrategy {
 
   async post_yoga_image (client, message, move) {
     try {
+      // eslint-disable-next-line no-undef
       const paths = await globby('strategies/poses/*.png')
 
-      let nearest_distance = 999
+      let nearestDistance = 999
       let nearest = ''
 
       paths.forEach(async function (path) {
+        // eslint-disable-next-line no-undef
         const distance = levenshtein('strategies/poses/' + move + '.png', path)
-        if (distance < nearest_distance) {
-          nearest_distance = distance
+        if (distance < nearestDistance) {
+          nearestDistance = distance
           nearest = path
         }
       })
 
-      if (nearest_distance > 3) {
+      if (nearestDistance > 3) {
         return
       }
 
@@ -305,31 +310,32 @@ class Ashtanga extends MessageStrategy {
     // arr = [the, boy, is, in, the, river]
     const len = arr.length
     const wanted = pos + seqlen
-    const max_indice = wanted > len - 1 ? len - 1 : wanted - 1
-    return arr.myJoin(' ', pos, max_indice)
+    const maxIndice = wanted > len - 1 ? len - 1 : wanted - 1
+    return arr.myJoin(' ', pos, maxIndice)
   }
 
   YogaEnabled (message) {
     if (Ashtanga.self.enabled) {
-      let nearest_distance = 9999
+      let nearestDistance = 9999
       let nearest = 9999
 
       Ashtanga.self.yoga_keywords.forEach(async function (pose) {
         try {
-          const yoga_pose = pose.toLowerCase()
+          const yogaPose = pose.toLowerCase()
           // get the length of the pose
           // use this length to match sentance in the message
-          const yoga_pose_arr = yoga_pose.indexOf(' ') > -1 ? yoga_pose.split(' ') : [yoga_pose]
-          const target_string_arr = message.body.toLowerCase().indexOf(' ') > -1 ? message.body.toLowerCase().split(' ') : [message.body.toLowerCase()]
+          const yogaPoseArr = yogaPose.indexOf(' ') > -1 ? yogaPose.split(' ') : [yogaPose]
+          const targetStringArr = message.body.toLowerCase().indexOf(' ') > -1 ? message.body.toLowerCase().split(' ') : [message.body.toLowerCase()]
 
-          for (let x = 0; x < target_string_arr.length; x++) {
-            // create a string of the next yoga_pose_arr.lenght indices from the target string
-            const substring = Ashtanga.self.get_next_indices(target_string_arr, x, yoga_pose_arr.length)
+          for (let x = 0; x < targetStringArr.length; x++) {
+            // create a string of the next yogaPoseArr.lenght indices from the target string
+            const substring = Ashtanga.self.get_next_indices(targetStringArr, x, yogaPoseArr.length)
             // e.g: substring = "string of the next"
 
-            const distance = levenshtein(yoga_pose, substring)
-            if (distance < nearest_distance) {
-              nearest_distance = distance
+            // eslint-disable-next-line no-undef
+            const distance = levenshtein(yogaPose, substring)
+            if (distance < nearestDistance) {
+              nearestDistance = distance
               nearest = pose
             }
           }
@@ -338,9 +344,9 @@ class Ashtanga extends MessageStrategy {
         }
       })
 
-      const check_distance = nearest === 'Navasana' ? 1 : 5
+      const checkDistance = nearest === 'Navasana' ? 1 : 5
 
-      if (nearest_distance < check_distance) {
+      if (nearestDistance < checkDistance) {
         MessageStrategy.typing(message)
         Ashtanga.self.post_yoga_image(MessageStrategy.client, message, nearest)
         return true

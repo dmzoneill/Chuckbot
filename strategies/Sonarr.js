@@ -18,6 +18,7 @@ class Sonarr extends MessageStrategy {
 
   load_config () {
     try {
+      // eslint-disable-next-line no-undef
       fs.readFile('strategies/config/sonarr.json', 'utf8', function (err, data) {
         if (err) {
           return console.log(err)
@@ -77,6 +78,7 @@ class Sonarr extends MessageStrategy {
             return MessageStrategy.state.Sonarr.enabled
           }
         },
+        // eslint-disable-next-line no-useless-escape
         'sonarr show \d+': {
           test: function (message) {
             return message.body.toLowerCase().match(/^sonarr show \d+$/i)
@@ -115,6 +117,7 @@ class Sonarr extends MessageStrategy {
             return MessageStrategy.state.Sonarr.enabled
           }
         },
+        // eslint-disable-next-line no-useless-escape
         'sonarr add \d+': {
           test: function (message) {
             return message.body.toLowerCase().match(/^sonarr add \d+$/i)
@@ -153,6 +156,7 @@ class Sonarr extends MessageStrategy {
             return MessageStrategy.state.Sonarr.enabled
           }
         },
+        // eslint-disable-next-line no-useless-escape
         'sonarr update \d+': {
           test: function (message) {
             return message.body.toLowerCase().match(/^sonarr update \d+$/i)
@@ -191,6 +195,7 @@ class Sonarr extends MessageStrategy {
             return MessageStrategy.state.Sonarr.enabled
           }
         },
+        // eslint-disable-next-line no-useless-escape
         'sonarr missing \d+': {
           test: function (message) {
             return message.body.toLowerCase().match(/^sonarr missing \d+$/i)
@@ -283,19 +288,21 @@ class Sonarr extends MessageStrategy {
 
   async sonarr_query (path, post = false) {
     try {
-      const sonarr_headers = MessageStrategy.browser_config.headers
-      sonarr_headers['X-Api-Key'] = Sonarr.config.key
-      sonarr_headers['Content-Type'] = 'application/json'
+      const sonarrHeaders = MessageStrategy.browser_config.headers
+      sonarrHeaders['X-Api-Key'] = Sonarr.config.key
+      sonarrHeaders['Content-Type'] = 'application/json'
       const url = Sonarr.config.host + path
 
       if (post) {
+        // eslint-disable-next-line no-undef
         return await axios.post(url, post, {
-          headers: sonarr_headers
+          headers: sonarrHeaders
         })
       }
 
+      // eslint-disable-next-line no-undef
       return await axios(url, {
-        headers: sonarr_headers
+        headers: sonarrHeaders
       })
     } catch (err) {
       console.log(err)
@@ -305,9 +312,9 @@ class Sonarr extends MessageStrategy {
   async search_wanted (message) {
     try {
       const len = 'sonarr update'.length
-      let search_id = parseInt(message.body.substring(len).trim())
+      let searchId = parseInt(message.body.substring(len).trim())
 
-      if (Number.isNaN(search_id)) {
+      if (Number.isNaN(searchId)) {
         const series = await Sonarr.self.List(message, true)
         const found = series.find(x => {
           return x.title.toLowerCase() === message.body.substring(len).trim()
@@ -317,17 +324,17 @@ class Sonarr extends MessageStrategy {
           return
         }
 
-        search_id = found.id
+        searchId = found.id
       }
 
-      const wanted_options = {
+      const wantedOptions = {
         name: 'SeriesSearch',
-        seriesId: search_id
+        seriesId: searchId
       }
 
-      console.log(wanted_options)
+      console.log(wantedOptions)
 
-      return await Sonarr.self.sonarr_query('/api/v3/command', wanted_options)
+      return await Sonarr.self.sonarr_query('/api/v3/command', wantedOptions)
     } catch (err) {
       console.log(err)
     }
@@ -338,11 +345,11 @@ class Sonarr extends MessageStrategy {
       MessageStrategy.typing(message)
 
       const len = 'sonarr missing'.length
-      let search_id = parseInt(message.body.substring(len).trim())
+      let searchId = parseInt(message.body.substring(len).trim())
       let name = ''
+      const series = await Sonarr.self.List(message, true)
 
-      if (Number.isNaN(search_id)) {
-        const series = await Sonarr.self.List(message, true)
+      if (Number.isNaN(searchId)) {
         const found = series.find(x => {
           return x.title.toLowerCase() === message.body.substring(len).trim()
         })
@@ -351,10 +358,10 @@ class Sonarr extends MessageStrategy {
           return
         }
         name = message.body.substring(len)
-        search_id = found.id
+        searchId = found.id
       } else {
         const found = series.find(x => {
-          return x.id === search_id
+          return x.id === searchId
         })
 
         if (found === undefined) {
@@ -375,7 +382,7 @@ class Sonarr extends MessageStrategy {
         const data = missing.data
 
         for (let h = 0; h < data.records.length; h++) {
-          if (data.records[h].seriesId === search_id) {
+          if (data.records[h].seriesId === searchId) {
             msg += 's' + data.records[h].seasonNumber.toString().padStart(2, '0')
             msg += 'e' + data.records[h].episodeNumber.toString().padStart(2, '0')
             msg += ' - ' + data.records[h].title + '\n'
@@ -404,6 +411,7 @@ class Sonarr extends MessageStrategy {
 
   async show_series (show, message) {
     try {
+      // eslint-disable-next-line no-undef
       const details = request('GET', 'http://api.tvmaze.com/lookup/shows?thetvdb=' + show.tvdbId, {
         headers: {
           Accept: 'text/plain'
@@ -438,11 +446,11 @@ class Sonarr extends MessageStrategy {
         msg += 'Season ' + show.seasons[y].seasonNumber + ': ' + show.seasons[y].statistics.percentOfEpisodes + '%\n'
       }
 
-      const poster_image = await MessageStrategy.get_image(poster)
+      const posterImage = await MessageStrategy.get_image(poster)
 
       await MessageStrategy.client.sendImage(
         message.from,
-        poster_image, '',
+        posterImage, '',
         msg.trim()
       )
     } catch (err) {
@@ -454,8 +462,8 @@ class Sonarr extends MessageStrategy {
     let x = 1
     try {
       MessageStrategy.typing(message)
-      const search_term = message.body.substring(13).trim().replace(' ', '+')
-      const page = await Sonarr.self.get_page(Sonarr.self, 'https://thetvdb.com/search?query=' + search_term, 500)
+      const searchTerm = message.body.substring(13).trim().replace(' ', '+')
+      const page = await Sonarr.self.get_page(Sonarr.self, 'https://thetvdb.com/search?query=' + searchTerm, 500)
 
       if (page) {
         let [elementHandle] = []
@@ -466,14 +474,14 @@ class Sonarr extends MessageStrategy {
           const xstr = x.toString()
 
           // name
-          const xpath_name = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/div/h3/a/text()';
-          [elementHandle] = await page.$x(xpath_name)
+          const xpathName = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/div/h3/a/text()';
+          [elementHandle] = await page.$x(xpathName)
           propertyHandle = await elementHandle.getProperty('textContent')
           const name = await propertyHandle.jsonValue()
 
           // link
-          const xpath_link = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/a/@href';
-          [elementHandle] = await page.$x(xpath_link)
+          const xpathLink = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/a/@href';
+          [elementHandle] = await page.$x(xpathLink)
           propertyHandle = await elementHandle.getProperty('value')
           const link = await propertyHandle.jsonValue()
 
@@ -481,14 +489,14 @@ class Sonarr extends MessageStrategy {
           if (link.indexOf('people/') > -1) continue
 
           // poster
-          const xpath_poster = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/a/img/@src';
-          [elementHandle] = await page.$x(xpath_poster)
+          const xpathPoster = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/a/img/@src';
+          [elementHandle] = await page.$x(xpathPoster)
           propertyHandle = await elementHandle.getProperty('value')
           const poster = await propertyHandle.jsonValue()
 
           // id
-          const xpath_id = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/div/div[1]/text()';
-          [elementHandle] = await page.$x(xpath_id)
+          const xpathId = '//*[@id="hits"]/div/div/ol/li[' + xstr + ']/div/div/div[1]/text()';
+          [elementHandle] = await page.$x(xpathId)
           console.log(elementHandle)
           propertyHandle = await elementHandle.getProperty('textContent')
           let id = await propertyHandle.jsonValue()
@@ -496,11 +504,11 @@ class Sonarr extends MessageStrategy {
 
           MessageStrategy.typing(message)
 
-          const poster_image = await MessageStrategy.get_image(poster)
+          const posterImage = await MessageStrategy.get_image(poster)
 
           await MessageStrategy.client.sendImage(
             message.from,
-            poster_image, '',
+            posterImage, '',
             name + '\nhttps://thetvdb.com' + link + '\n' + id
           )
         }
@@ -513,18 +521,18 @@ class Sonarr extends MessageStrategy {
     }
   }
 
-  async List (message, return_list = false) {
+  async List (message, returnList = false) {
     try {
       MessageStrategy.typing(message)
 
-      const sonarr_list = await Sonarr.self.sonarr_query('/api/series/')
+      const sonarrList = await Sonarr.self.sonarr_query('/api/series/')
 
-      const series = sonarr_list.data
+      const series = sonarrList.data
       series.sort((a, b) => {
         return a.title.localeCompare(b.title)
       })
 
-      if (return_list) {
+      if (returnList) {
         return series
       }
 
@@ -553,6 +561,7 @@ class Sonarr extends MessageStrategy {
 
       MessageStrategy.typing(message)
 
+      // eslint-disable-next-line no-undef
       const details = request('GET', 'http://api.tvmaze.com/lookup/shows?thetvdb=' + tvdbid, {
         headers: {
           Accept: 'text/plain'
@@ -561,7 +570,7 @@ class Sonarr extends MessageStrategy {
 
       const show = JSON.parse(details.getBody())
 
-      const add_series_options = {
+      const addSeriesOptions = {
         addOptions: {
           ignoreEpisodesWithFiles: true,
           ignoreEpisodesWithoutFiles: true,
@@ -589,13 +598,13 @@ class Sonarr extends MessageStrategy {
 
       MessageStrategy.typing(message)
 
-      const add_series = await Sonarr.self.sonarr_query('/api/series/', add_series_options)
+      const addSeries = await Sonarr.self.sonarr_query('/api/series/', addSeriesOptions)
 
       MessageStrategy.typing(message)
 
       MessageStrategy.client.sendText(message.from, 'Series Added')
 
-      Sonarr.self.search_wanted(add_series.data.id)
+      Sonarr.self.search_wanted(addSeries.data.id)
     } catch (err) {
       console.log(err)
       MessageStrategy.client.sendText(message.from, JSON.stringify(err.response.data, null, 2))

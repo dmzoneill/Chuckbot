@@ -118,6 +118,7 @@ class Rbac extends MessageStrategy {
             return MessageStrategy.state.Rbac.enabled
           }
         },
+        // eslint-disable-next-line no-useless-escape
         'role \d+': {
           test: function (message) {
             return message.body.toLowerCase().match(/role \d+'/)

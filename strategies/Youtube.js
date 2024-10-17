@@ -106,6 +106,7 @@ class Youtube extends MessageStrategy {
           return
         }
 
+        // eslint-disable-next-line no-undef
         const youtube = await Innertube.create(/* options */)
         const video = await youtube.getBasicInfo(videoId)
 
@@ -119,15 +120,16 @@ class Youtube extends MessageStrategy {
   }
 
   async Search (message) {
-    const search_term = message.body.substring(7)
+    const searchTerm = message.body.substring(7)
 
     try {
+      // eslint-disable-next-line no-undef
       const youtube = await Innertube.create(/* options */)
-      const videos = await youtube.search(search_term)
+      const videos = await youtube.search(searchTerm)
 
-      // console.log(await usetube.searchVideo(search_term))
-      // const results = await yt.search(search_term)
-      // const results = await usetube.searchVideo(search_term)
+      // console.log(await usetube.searchVideo(searchTerm))
+      // const results = await yt.search(searchTerm)
+      // const results = await usetube.searchVideo(searchTerm)
       // console.log("==========================================")
       // console.log(results.videos)
       // console.log("==========================================")
@@ -136,10 +138,10 @@ class Youtube extends MessageStrategy {
         return false
       }
       MessageStrategy.typing(message)
-      const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + videos.results[0].id + '/hqdefault.jpg', 200, false)
-      await MessageStrategy.client.sendImage(message.from, 'data:image/jpeg;base64,' + youtube_image, 'yt.jpg', videos.results[0].title + '\n\n' + 'https://www.youtube.com/watch?v=' + videos.results[0].id)
+      const youtubeImage = await MessageStrategy.get_image('https://img.youtube.com/vi/' + videos.results[0].id + '/hqdefault.jpg', 200, false)
+      await MessageStrategy.client.sendImage(message.from, 'data:image/jpeg;base64,' + youtubeImage, 'yt.jpg', videos.results[0].title + '\n\n' + 'https://www.youtube.com/watch?v=' + videos.results[0].id)
 
-      // console.log("data:image/jpeg;base64," + youtube_image)
+      // console.log("data:image/jpeg;base64," + youtubeImage)
 
       // await MessageStrategy.client.sendMessageWithThumb(
       //   youtube_image,

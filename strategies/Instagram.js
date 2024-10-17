@@ -24,7 +24,7 @@ class Instagram extends MessageStrategy {
       provides: {
         'instagram profile': {
           test: function (message) {
-            return message.body.toLowerCase() == 'instagram profile'
+            return message.body.toLowerCase() === 'instagram profile'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)

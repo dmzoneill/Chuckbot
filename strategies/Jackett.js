@@ -14,6 +14,7 @@ class Jackett extends MessageStrategy {
       enabled: true
     })
 
+    // eslint-disable-next-line no-undef
     Jackett.apikey = fs.readFileSync('strategies/config/jackett.key').toString().trim()
   }
 
@@ -92,7 +93,7 @@ class Jackett extends MessageStrategy {
       }
       )
 
-      if (seedersG0.length == 0) {
+      if (seedersG0.length === 0) {
         MessageStrategy.client.reply(message.from, 'No torrents found', message.id, true)
         return
       }
@@ -107,6 +108,7 @@ class Jackett extends MessageStrategy {
         MessageStrategy.client.sendLinkWithAutoPreview(message.from, result.MagnetUri, result.Title)
       } else if ('Link' in result) {
         const torrent = await MessageStrategy.axiosHttpRequest(message, 'GET', result.Link, false, 200, false, false, false, false, false, true)
+        // eslint-disable-next-line no-undef
         fs.writeFileSync('/tmp/' + result.Title + '.torrent', torrent)
         MessageStrategy.client.sendFile(message.from, '/tmp/' + result.Title + '.torrent', result.Title + '.torrent', result.Title)
       }

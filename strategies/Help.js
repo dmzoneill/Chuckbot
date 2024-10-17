@@ -129,19 +129,19 @@ class Help extends MessageStrategy {
 
     Object.keys(MessageStrategy.strategies).forEach(key => {
       if (key.toLowerCase() === feature) {
-        let full_help = MessageStrategy.strategies[key].provides().help + '\n\n'
+        let fullHelp = MessageStrategy.strategies[key].provides().help + '\n\n'
 
         const actions = MessageStrategy.strategies[key].provides().provides
         const keys = Object.keys(actions)
         for (let y = 0; y < keys.length; y++) {
           if (actions[keys[y]].interactive) {
             if (actions[keys[y]].access(message, MessageStrategy.strategies[key], actions[keys[y]].action)) {
-              full_help += keys[y] + ' - ' + actions[keys[y]].help() + '\n'
+              fullHelp += keys[y] + ' - ' + actions[keys[y]].help() + '\n'
             }
           }
         }
 
-        MessageStrategy.client.sendText(message.sender.id, full_help)
+        MessageStrategy.client.sendText(message.sender.id, fullHelp)
       }
     })
   }

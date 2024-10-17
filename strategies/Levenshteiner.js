@@ -59,6 +59,7 @@ class Levenshteiner extends MessageStrategy {
 
     MessageStrategy.typing(message)
     MessageStrategy.client.sendText(message.from,
+      // eslint-disable-next-line no-undef
       'levenshtein(' + parts[1] + ', ' + parts[2] + ') = ' + levenshtein(parts[1], parts[2]).toString())
 
     return true

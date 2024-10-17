@@ -24,6 +24,7 @@ class Formula1 extends MessageStrategy {
     super('Formula1', {
       enabled: true
     })
+    // eslint-disable-next-line no-undef
     Formula1.token = fs.readFileSync('strategies/config/f1-token').toString().trim()
   }
 
@@ -116,13 +117,15 @@ class Formula1 extends MessageStrategy {
       if (Object.keys(Formula1.cache).indexOf(url) > -1) {
         return Formula1.cache[url]
       }
+
+      // eslint-disable-next-line no-undef
       const page = request('GET', 'https://' + Formula1.endpoint + '/' + url, {
         headers: {
           'x-rapidapi-host': Formula1.endpoint,
           'x-rapidapi-key': Formula1.token
         }
       })
-      console.log(console.log(page.getBody('utf8')))
+      console.log(page.getBody('utf8'))
 
       Formula1.cache[url] = JSON.parse(page.getBody('utf8'))
       return Formula1.cache[url]
@@ -132,33 +135,42 @@ class Formula1 extends MessageStrategy {
   }
 
   static createCacheFolders () {
+    // eslint-disable-next-line no-undef
     if (!fs.existsSync(Formula1.cache_folder + '/drivers')) {
+      // eslint-disable-next-line no-undef
       fs.mkdirSync(Formula1.cache_folder + '/drivers', { recursive: true })
     }
+    // eslint-disable-next-line no-undef
     if (!fs.existsSync(Formula1.cache_folder + '/circuits')) {
+      // eslint-disable-next-line no-undef
       fs.mkdirSync(Formula1.cache_folder + '/circuits', { recursive: true })
     }
+    // eslint-disable-next-line no-undef
     if (!fs.existsSync(Formula1.cache_folder + '/teams')) {
+      // eslint-disable-next-line no-undef
       fs.mkdirSync(Formula1.cache_folder + '/teams', { recursive: true })
     }
   }
 
-  static async convert_image (save_path) {
-    const cmd = "convert '" + save_path + "' -background white -alpha remove -alpha off '" + save_path + "'.jpg"
-    const child_process = require('child_process')
-    child_process.execSync(cmd)
+  static async convert_image (savePath) {
+    const cmd = "convert '" + savePath + "' -background white -alpha remove -alpha off '" + savePath + "'.jpg"
+    const childProcess = require('child_process')
+    childProcess.execSync(cmd)
   }
 
-  static async downloadImage (url, save_path) {
+  static async downloadImage (url, savePath) {
     try {
-      if (fs.existsSync(save_path)) {
-        if (!fs.existsSync(save_path + '.jpg')) {
-          await Formula1.convert_image(save_path)
+      // eslint-disable-next-line no-undef
+      if (fs.existsSync(savePath)) {
+        // eslint-disable-next-line no-undef
+        if (!fs.existsSync(savePath + '.jpg')) {
+          await Formula1.convert_image(savePath)
           return
         }
         return
       }
 
+      // eslint-disable-next-line no-undef
       const image = request('GET', url, {
         headers: {
           'x-rapidapi-host': Formula1.endpoint,
@@ -166,8 +178,9 @@ class Formula1 extends MessageStrategy {
         }
       })
 
-      await fs.writeFileSync(save_path, image.getBody())
-      await Formula1.convert_image(save_path)
+      // eslint-disable-next-line no-undef
+      await fs.writeFileSync(savePath, image.getBody())
+      await Formula1.convert_image(savePath)
     } catch (err) {
       console.log(err)
     }
@@ -197,7 +210,7 @@ class Formula1 extends MessageStrategy {
     //     "current": null,
     //     "total": 58
     //   },
-    //   "fastest_lap": {
+    //   "fastestLap": {
     //     "driver": {
     //       "id": 25
     //     },
@@ -212,9 +225,9 @@ class Formula1 extends MessageStrategy {
 
     try {
       MessageStrategy.typing(message)
-      const filter_next = next > 0 ? '&next=' + next.toString() : ''
-      const filter_last = last > 0 ? '&last=' + last.toString() : ''
-      const filters = filter_next + filter_last
+      const filterNext = next > 0 ? '&next=' + next.toString() : ''
+      const filterLast = last > 0 ? '&last=' + last.toString() : ''
+      const filters = filterNext + filterLast
       const result = await Formula1.apiRequest('races?season=' + season + filters + '&type=' + type)
 
       console.log(result)
@@ -234,12 +247,12 @@ class Formula1 extends MessageStrategy {
         const circuit = race.circuit
         Formula1.circuits[circuit.id] = circuit
         // const laps = race.laps
-        const fastest_lap = race.fastest_lap
+        const fastestLap = race.fastestLap
         await Formula1.downloadImage(circuit.image, Formula1.cache_folder + '/circuits/' + circuit.id)
         msg += competition.name + '\n'
         msg += 'Circuit: ' + circuit.name + '\n'
-        if (fastest_lap !== null && Formula1.drivers[fastest_lap.driver.id] !== undefined) {
-          msg += 'Fastest Lap: ' + Formula1.drivers[fastest_lap.driver.id].name + ' ' + fastest_lap.time + '\n'
+        if (fastestLap !== null && Formula1.drivers[fastestLap.driver.id] !== undefined) {
+          msg += 'Fastest Lap: ' + Formula1.drivers[fastestLap.driver.id].name + ' ' + fastestLap.time + '\n'
         }
         msg += 'Laps ' + race.laps.total + ' Distance: ' + race.distance + '\n'
 
@@ -285,7 +298,7 @@ class Formula1 extends MessageStrategy {
         Formula1.teams[team.id] = team
         await Formula1.downloadImage(team.logo, Formula1.cache_folder + '/teams/' + team.id)
         msg += team.name + ' '.repeat(27 - team.name.length)
-        msg += ' ' + (pos.points == null ? 0 : pos.points) + '\n'
+        msg += ' ' + (pos.points === null ? 0 : pos.points) + '\n'
       }
 
       MessageStrategy.typing(message)
@@ -339,9 +352,9 @@ class Formula1 extends MessageStrategy {
         await Formula1.downloadImage(driver.image, Formula1.cache_folder + '/drivers/' + driver.id)
         await Formula1.downloadImage(team.logo, Formula1.cache_folder + '/teams/' + team.id)
         msg += driver.name + ' '.repeat(20 - driver.name.length)
-        msg += ' ' + (pos.points == null ? 0 : pos.points)
-        msg += ' ' + (pos.wins == null ? ' ' : pos.wins)
-        msg += ' ' + (pos.behind == null ? ' ' : pos.behind) + '\n'
+        msg += ' ' + (pos.points === null ? 0 : pos.points)
+        msg += ' ' + (pos.wins === null ? ' ' : pos.wins)
+        msg += ' ' + (pos.behind === null ? ' ' : pos.behind) + '\n'
       }
 
       MessageStrategy.typing(message)

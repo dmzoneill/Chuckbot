@@ -83,6 +83,7 @@ class PulseAudio extends MessageStrategy {
         change += incrementor + volume.toString() + '%'
       }
 
+      // eslint-disable-next-line no-undef
       exec(change, async (error, stdout, stderr) => {
         if (error) return
         try {

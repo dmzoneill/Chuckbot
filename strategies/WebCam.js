@@ -90,8 +90,8 @@ class WebCam extends MessageStrategy {
   async TakeVideo (message) {
     const sha1d = crypto.createHash('sha1').digest('hex')
     let time = '10'
-    const video_time = /webcam video ([0-9]{1,2})/i
-    const found = message.body.match(video_time)
+    const videoTime = /webcam video ([0-9]{1,2})/i
+    const found = message.body.match(videoTime)
 
     if (found) {
       time = found[1]
@@ -108,13 +108,16 @@ class WebCam extends MessageStrategy {
 
     MessageStrategy.typing(message)
 
+    // eslint-disable-next-line no-undef
     exec(cmd, (error, stdout, stderr) => {
       if (error) return
 
+      // eslint-disable-next-line no-undef
       if (fs.existsSync(sha1d + '.mp4')) {
         try {
           MessageStrategy.typing(message)
           MessageStrategy.client.sendFile(message.from, sha1d + '.mp4', new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' webcam video', 'Webcam home video')
+          // eslint-disable-next-line no-undef
           fs.unlinkSync(sha1d + '.mp4')
         } catch (err) {
           console.log(err)
@@ -138,11 +141,13 @@ class WebCam extends MessageStrategy {
         callbackReturn: 'base64'
       }
 
+      // eslint-disable-next-line no-undef
       NodeWebcam.capture('test_picture', opts, function (err, data) {
         if (err) return
 
         try {
           MessageStrategy.client.sendImage(message.chatId, data, 'filename.jpeg', '')
+          // eslint-disable-next-line no-undef
           fs.unlinkSync('test_picture.jpg')
         } catch (err) {
           console.log(err)
@@ -157,9 +162,11 @@ class WebCam extends MessageStrategy {
     try {
       // Read the directory to get all files
       const dirPath = './strategies/webcam/'
+      // eslint-disable-next-line no-undef
       const files = fs.readdirSync(dirPath)
 
       // Filter to ensure only images are selected (optional, based on file extension)
+      // eslint-disable-next-line no-undef
       const imageFiles = files.filter(file => ['.jpg', '.jpeg', '.png', '.gif'].includes(path.extname(file).toLowerCase()))
 
       if (imageFiles.length === 0) {
@@ -170,6 +177,7 @@ class WebCam extends MessageStrategy {
       const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)]
 
       // Send the randomly selected image
+      // eslint-disable-next-line no-undef
       const filePath = path.join(dirPath, randomImage)
       await MessageStrategy.client.sendImage(message.chatId, filePath, randomImage, '')
     } catch (err) {

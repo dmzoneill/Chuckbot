@@ -93,7 +93,7 @@ class Logger extends MessageStrategy {
         return
       }
 
-      const mime_types = {
+      const mimeTypes = {
         'image/jpeg': 'jpeg',
         'image/jpg': 'jpg',
         'image/png': 'png',
@@ -101,15 +101,18 @@ class Logger extends MessageStrategy {
         'video/mp4': 'mp4'
       }
 
+      // eslint-disable-next-line no-undef
       if (!fs.existsSync(MessageStrategy.state.Logger.media_dir)) {
+        // eslint-disable-next-line no-undef
         fs.mkdirSync(MessageStrategy.state.Logger.media_dir)
       }
 
-      const data_url = await MessageStrategy.client.decryptMedia(message)
-      const buff = Buffer.from(data_url.substring(data_url.indexOf(',')), 'base64')
+      const dataUrl = await MessageStrategy.client.decryptMedia(message)
+      const buff = Buffer.from(dataUrl.substring(dataUrl.indexOf(',')), 'base64')
       const sha1d = crypto.createHash('sha1').digest('hex')
-      const filename = Date.now() + ' - ' + message.from + ' - ' + sha1d + '.' + mime_types[message.mimetype]
+      const filename = Date.now() + ' - ' + message.from + ' - ' + sha1d + '.' + mimeTypes[message.mimetype]
 
+      // eslint-disable-next-line no-undef
       fs.writeFile(MessageStrategy.state.Logger.media_dir + '/' + filename, buff, function (err) {
         if (err) {
           console.log(err)
@@ -120,7 +123,7 @@ class Logger extends MessageStrategy {
     }
   }
 
-  my_files (list, filter) {
+  myFiles (list, filter) {
     const filtered = []
 
     list.forEach(item => {
@@ -136,24 +139,25 @@ class Logger extends MessageStrategy {
     Logger.self.List(message, true)
   }
 
-  async List (message, filter_mine) {
+  async List (message, filterMine) {
+    // eslint-disable-next-line no-undef
     fs.readdir(MessageStrategy.state.Logger.media_dir, (err, files) => {
       if (err) return
 
-      let full_msg = ''
-      const my_files = filter_mine ? Logger.self.my_files(files, message.from) : files
+      let fullMsg = ''
+      const myFiles = filterMine ? Logger.self.myFiles(files, message.from) : files
       let cnt = 1
 
-      my_files.forEach(file => {
+      myFiles.forEach(file => {
         const padding = 5
         let msg = cnt.toString() + ''
         msg += ' '.repeat(padding - msg.length)
         msg += ': ' + file + '\n'
-        full_msg += msg
+        fullMsg += msg
         cnt += 1
       })
 
-      MessageStrategy.client.sendText(message.from, full_msg.trim())
+      MessageStrategy.client.sendText(message.from, fullMsg.trim())
     })
   }
 }

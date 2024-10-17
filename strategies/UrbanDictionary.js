@@ -50,6 +50,7 @@ class UrbanDictionary extends MessageStrategy {
   }
 
   async GetQuote (message) {
+    // eslint-disable-next-line no-undef
     ud.random().then((results) => {
       let workd = '*' + results[0].word
       workd += '*\n\n'

@@ -70,7 +70,7 @@ class Wikipedia extends MessageStrategy {
         },
         'wiki state': {
           test: function (message) {
-            return message.body.toLowerCase() == 'wiki state'
+            return message.body.toLowerCase() === 'wiki state'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -86,7 +86,7 @@ class Wikipedia extends MessageStrategy {
         },
         'wiki clear': {
           test: function (message) {
-            return message.body.toLowerCase() == 'wiki clear'
+            return message.body.toLowerCase() === 'wiki clear'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -147,23 +147,23 @@ class Wikipedia extends MessageStrategy {
 
   async Setup (message) {
     try {
-      if (Object.keys(MessageStrategy.state).indexOf('Wikipedia') == -1) {
+      if (Object.keys(MessageStrategy.state).indexOf('Wikipedia') === -1) {
         MessageStrategy.state.Wikipedia = {}
       }
 
-      if (Object.keys(MessageStrategy.state.Wikipedia).indexOf('LastNotified') == -1) {
+      if (Object.keys(MessageStrategy.state.Wikipedia).indexOf('LastNotified') === -1) {
         MessageStrategy.state.Wikipedia.LastNotified = {}
       }
 
-      if (Object.keys(MessageStrategy.state.Wikipedia.LastNotified).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.Wikipedia.LastNotified).indexOf(message.from) === -1) {
         MessageStrategy.state.Wikipedia.LastNotified[message.from] = 0
       }
 
-      if (Object.keys(MessageStrategy.state.Wikipedia).indexOf('Chats') == -1) {
+      if (Object.keys(MessageStrategy.state.Wikipedia).indexOf('Chats') === -1) {
         MessageStrategy.state.Wikipedia.Chats = {}
       }
 
-      if (Object.keys(MessageStrategy.state.Wikipedia.Chats).indexOf(message.from) == -1) {
+      if (Object.keys(MessageStrategy.state.Wikipedia.Chats).indexOf(message.from) === -1) {
         MessageStrategy.state.Wikipedia.Chats[message.from] = false
       }
     } catch (err) {
@@ -190,7 +190,9 @@ class Wikipedia extends MessageStrategy {
   async OnThisDay (message) {
     try {
       await Wikipedia.self.Setup(message)
+      // eslint-disable-next-line no-undef
       const events = await wiki.onThisDay()
+      // eslint-disable-next-line no-undef
       const deaths = await wiki.onThisDay({ type: 'deaths' })
       Wikipedia.self.Post(events.selected[0].pages[0].content_urls.mobile.page)
       await Wikipedia.self.waitFor(1000)
@@ -243,7 +245,7 @@ class Wikipedia extends MessageStrategy {
     try {
       await Wikipedia.self.Setup(message)
 
-      if (MessageStrategy.state.Wikipedia.Chats[message.from] == false) {
+      if (MessageStrategy.state.Wikipedia.Chats[message.from] === false) {
         return
       }
 
@@ -258,6 +260,7 @@ class Wikipedia extends MessageStrategy {
 
   async Search (message) {
     try {
+      // eslint-disable-next-line no-undef
       const page = await wiki.page(message.body.substring(4))
       if (Object.keys(page).includes('fullurl')) {
         Wikipedia.self.Post(page.fullurl)

@@ -100,16 +100,17 @@ class State extends MessageStrategy {
 
     while (!success) {
       try {
-        const state_json = JSON.stringify(MessageStrategy.state)
+        const stateJson = JSON.stringify(MessageStrategy.state)
 
-        if (state_json === undefined) return
-        if (state_json === null) return
-        if (state_json === '') return
-        if (state_json.length < 3000) return
+        if (stateJson === undefined) return
+        if (stateJson === null) return
+        if (stateJson === '') return
+        if (stateJson.length < 3000) return
 
         const msg = 'The state file was saved!'
 
-        fs.writeFileSync('state.json', state_json)
+        // eslint-disable-next-line no-undef
+        fs.writeFileSync('state.json', stateJson)
         console.log(msg)
         if (message.body.toLowerCase().startsWith('state')) {
           MessageStrategy.client.sendText(message.from, msg)
@@ -136,6 +137,7 @@ class State extends MessageStrategy {
 
     while (!success) {
       try {
+        // eslint-disable-next-line no-undef
         const data = fs.readFileSync('state.json', { encoding: 'utf8', flag: 'r' })
         const obj = JSON.parse(data)
 

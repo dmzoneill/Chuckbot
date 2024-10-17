@@ -54,7 +54,7 @@ class Currency extends MessageStrategy {
         },
         'currency list': {
           test: function (message) {
-            return message.body.toLowerCase() == 'currency list'
+            return message.body.toLowerCase() === 'currency list'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -70,7 +70,7 @@ class Currency extends MessageStrategy {
         },
         currency: {
           test: function (message) {
-            return message.body.toLowerCase() == 'currency'
+            return message.body.toLowerCase() === 'currency'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -101,7 +101,7 @@ class Currency extends MessageStrategy {
       const GoogleCurrencyScraper = (await import('google-currency-scraper')).default
       const { CurrencyCode } = await import('google-currency-scraper')
 
-      if (parts.length == 2) {
+      if (parts.length === 2) {
         parts = [...parts, ...Object.keys(CurrencyCode)]
       }
 
@@ -116,8 +116,8 @@ class Currency extends MessageStrategy {
             to: parts[k].toUpperCase()
           })
 
-          const the_rate = currency.rate.toString()
-          const decimalParts = the_rate.includes('.') == false ? [the_rate, 0] : the_rate.split('.')
+          const theRate = currency.rate.toString()
+          const decimalParts = theRate.includes('.') === false ? [theRate, 0] : theRate.split('.')
           res.push(decimalParts[0].padStart(5, ' ') + '.' + decimalParts[0].padEnd(5, '0') + ' ' + parts[k] + '\n')
         } catch (err) {
           console.log(err)
@@ -127,7 +127,7 @@ class Currency extends MessageStrategy {
       for (let k = 0; k < res.length; k++) {
         try {
           msg += res[k]
-          if (k % 12 == 0) {
+          if (k % 12 === 0) {
             msg += '```'
             MessageStrategy.client.sendText(message.from, msg)
             if (k < res.length - 1) {
@@ -163,7 +163,7 @@ class Currency extends MessageStrategy {
         msg += next.padEnd(5, ' ')
         next = y + 3 < list.length ? list[y + 3] : ''
         msg += next.padEnd(5, ' ') + '\n'
-        if (y > 0 && y % 30 == 0) {
+        if (y > 0 && y % 30 === 0) {
           msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
           msg = '```'

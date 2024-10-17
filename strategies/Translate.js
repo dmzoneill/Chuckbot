@@ -256,9 +256,10 @@ class Translate extends MessageStrategy {
   }
 
   Automatic (message) {
-    const target_lang = MessageStrategy.state.Translate.user_defaults[message.from]
-    const source_lang = 'en'
-    translate(message.body, source_lang, target_lang, true, true).then(res => {
+    const targetLang = MessageStrategy.state.Translate.user_defaults[message.from]
+    const sourceLang = 'en'
+    // eslint-disable-next-line no-undef
+    translate(message.body, sourceLang, targetLang, true, true).then(res => {
       MessageStrategy.typing(message)
       MessageStrategy.client.reply(message.from, res.translation, message.id, true)
     }).catch(err => {
@@ -275,23 +276,24 @@ class Translate extends MessageStrategy {
       return false
     }
 
-    let target_lang = parts[1]
-    let source_lang = 'en'
-    const start = 'translate ' + target_lang
+    let targetLang = parts[1]
+    let sourceLang = 'en'
+    const start = 'translate ' + targetLang
     const msg = message.body.substring(start.trim().length)
 
-    if (target_lang.indexOf('/') > -1) {
-      const langparts = target_lang.split('/')
-      source_lang = langparts[0]
-      target_lang = langparts[1]
+    if (targetLang.indexOf('/') > -1) {
+      const langparts = targetLang.split('/')
+      sourceLang = langparts[0]
+      targetLang = langparts[1]
     }
 
-    if (Object.values(Translate.self.supported).includes(target_lang) === false) {
+    if (Object.values(Translate.self.supported).includes(targetLang) === false) {
       Translate.self.sendSupported(message)
       return false
     }
 
-    translate(msg, source_lang, target_lang, true, true).then(res => {
+    // eslint-disable-next-line no-undef
+    translate(msg, sourceLang, targetLang, true, true).then(res => {
       MessageStrategy.typing(message)
       MessageStrategy.client.reply(message.from, res.translation, message.id, true)
     }).catch(err => {

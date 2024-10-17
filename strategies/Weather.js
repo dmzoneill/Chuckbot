@@ -50,8 +50,9 @@ class Weather extends MessageStrategy {
   }
 
   GetWeather (message) {
-    const search_term = message.body.substring(7)
-    weather.find({ search: search_term, degreeType: 'C' }, function (err, result) {
+    const searchTerm = message.body.substring(7)
+    // eslint-disable-next-line no-undef
+    weather.find({ search: searchTerm, degreeType: 'C' }, function (err, result) {
       if (err) {
         console.log(err)
         return
