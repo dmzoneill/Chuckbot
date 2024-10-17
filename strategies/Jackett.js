@@ -9,7 +9,7 @@ class Jackett extends MessageStrategy {
   static self = null
   static apikey = null
 
-  constructor() {
+  constructor () {
     super('Jackett', {
       enabled: true
     })
@@ -17,13 +17,13 @@ class Jackett extends MessageStrategy {
     Jackett.apikey = fs.readFileSync('strategies/config/jackett.key').toString().trim()
   }
 
-  provides() {
+  provides () {
     Jackett.self = this
 
     return {
       help: 'Jackett seearch',
       provides: {
-        'jackett': {
+        jackett: {
           test: function (message) {
             return message.body.toLowerCase() === 'jackett'
           },
@@ -65,54 +65,53 @@ class Jackett extends MessageStrategy {
     }
   }
 
-  Jackett() {
+  Jackett () {
     return false
   }
 
-  async Search(message) {
+  async Search (message) {
     try {
       MessageStrategy.typing(message)
 
-      let url = "http://192.168.0.30:9117/api/v2.0/indexers/all/results"
-      url += "?apikey=" + Jackett.apikey
+      let url = 'http://192.168.0.30:9117/api/v2.0/indexers/all/results'
+      url += '?apikey=' + Jackett.apikey
       // url += "&Category[]=2000,2030,2040,2045,2080,5000,5010,5030,5040,5080"
-      url += "&Query=" + message.body.substring(8)
-      url += "&Tracker[]=iptorrents"
+      url += '&Query=' + message.body.substring(8)
+      url += '&Tracker[]=iptorrents'
 
       console.log(url)
 
-      let results = await MessageStrategy.axiosHttpRequest(message, 'GET', url, false, 200, true, 'Results');
+      const results = await MessageStrategy.axiosHttpRequest(message, 'GET', url, false, 200, true, 'Results')
 
       console.log(results)
 
       MessageStrategy.typing(message)
 
-      var seedersG0 = results.filter(function (el) {
-        return el.Seeders > 0;
+      const seedersG0 = results.filter(function (el) {
+        return el.Seeders > 0
       }
-      );
+      )
 
       if (seedersG0.length == 0) {
-        MessageStrategy.client.reply(message.from, "No torrents found", message.id, true);
-        return;
+        MessageStrategy.client.reply(message.from, 'No torrents found', message.id, true)
+        return
       }
 
       seedersG0.sort(function (a, b) {
-        return a.Seeders - b.Seeders;
-      });
+        return a.Seeders - b.Seeders
+      })
 
-      let result = seedersG0[seedersG0.length - 1];
+      const result = seedersG0[seedersG0.length - 1]
 
-      if ("MagnetUri" in result && result['MagnetUri'] != null) {
-        MessageStrategy.client.sendLinkWithAutoPreview(message.from, result['MagnetUri'], result['Title']);
+      if ('MagnetUri' in result && result.MagnetUri != null) {
+        MessageStrategy.client.sendLinkWithAutoPreview(message.from, result.MagnetUri, result.Title)
       } else if ('Link' in result) {
-        let torrent = await MessageStrategy.axiosHttpRequest(message, 'GET', result['Link'], false, 200, false, false, false, false, false, true);
-        fs.writeFileSync('/tmp/' + result['Title'] + '.torrent', torrent);
-        MessageStrategy.client.sendFile(message.from, '/tmp/' + result['Title'] + '.torrent', result['Title'] + '.torrent', result['Title'])
+        const torrent = await MessageStrategy.axiosHttpRequest(message, 'GET', result.Link, false, 200, false, false, false, false, false, true)
+        fs.writeFileSync('/tmp/' + result.Title + '.torrent', torrent)
+        MessageStrategy.client.sendFile(message.from, '/tmp/' + result.Title + '.torrent', result.Title + '.torrent', result.Title)
       }
-    }
-    catch (err) {
-      console.log(err);
+    } catch (err) {
+      console.log(err)
     }
   }
 }

@@ -8,19 +8,19 @@ class Meme extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
   static self = null
 
-  constructor() {
+  constructor () {
     super('Meme', {
       enabled: true
     })
   }
 
-  provides(message) {
+  provides (message) {
     Meme.self = this
 
     return {
       help: 'Gets a random meme',
       provides: {
-        'meme': {
+        meme: {
           test: function (message) {
             return message.body.toLowerCase() === 'meme'
           },
@@ -78,7 +78,7 @@ class Meme extends MessageStrategy {
           help: function () {
             return 'Posts a meme'
           },
-          action: function(message) {
+          action: function (message) {
             Meme.self.post(message)
             return false
           },
@@ -97,7 +97,7 @@ class Meme extends MessageStrategy {
     }
   }
 
-  async chatSetup(message) {
+  async chatSetup (message) {
     try {
       if (message == null || message == undefined) {
         return false
@@ -122,35 +122,32 @@ class Meme extends MessageStrategy {
       if (Object.keys(MessageStrategy.state.Meme.chats[message.chatId]).indexOf('frequency') === -1) {
         MessageStrategy.state.Meme.chats[message.chatId].frequency = (Math.floor(Date.now() / 1000)) + await Meme.self.randomIntFromInterval(100800, 120800)
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err)
     }
   }
 
-  async enable(message) {
+  async enable (message) {
     try {
       await Meme.self.chatSetup(message)
       MessageStrategy.state.Meme.chats[message.chatId].enabled = true
       MessageStrategy.client.sendText(message.from, 'Enabled')
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err)
     }
   }
 
-  async disable(message) {
+  async disable (message) {
     try {
       await Meme.self.chatSetup(message)
       MessageStrategy.state.Meme.chats[message.chatId].enabled = false
       MessageStrategy.client.sendText(message.from, 'Disabled')
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err)
     }
   }
 
-  async post(message) {
+  async post (message) {
     await Meme.self.chatSetup(message)
     if (MessageStrategy.state.Meme.chats[message.chatId].enabled) {
       if (Math.floor(Date.now() / 1000) > MessageStrategy.state.Meme.chats[message.chatId].frequency) {
@@ -160,7 +157,7 @@ class Meme extends MessageStrategy {
     }
   }
 
-  async getMeme(message) {
+  async getMeme (message) {
     const topics = [
       'me_irl',
       'WackyTicTacs',
@@ -171,11 +168,11 @@ class Meme extends MessageStrategy {
       'sarcasm',
       'humour',
       'funny',
-      'ProgrammerHumor',
+      'ProgrammerHumor'
       // 'Jokes'
     ]
 
-    let fail_count = 3;
+    let fail_count = 3
 
     while (true) {
       try {

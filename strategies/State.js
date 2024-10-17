@@ -9,14 +9,14 @@ class State extends MessageStrategy {
   static self = null
   static lock = false
 
-  constructor() {
+  constructor () {
     super('State', {
       enabled: true
     })
     this.Load()
   }
 
-  provides() {
+  provides () {
     State.self = this
 
     return {
@@ -80,7 +80,7 @@ class State extends MessageStrategy {
     }
   }
 
-  Show(message) {
+  Show (message) {
     try {
       console.log(JSON.stringify(MessageStrategy.state, null, 2))
       MessageStrategy.client.sendText(message.from, JSON.stringify(MessageStrategy.state, null, 2))
@@ -89,9 +89,9 @@ class State extends MessageStrategy {
     }
   }
 
-  Save(message) {
+  Save (message) {
     if (State.lock) {
-      console.log("State locked, possible load or save in progress")
+      console.log('State locked, possible load or save in progress')
       return
     }
 
@@ -107,7 +107,7 @@ class State extends MessageStrategy {
         if (state_json === '') return
         if (state_json.length < 3000) return
 
-        let msg = 'The state file was saved!'
+        const msg = 'The state file was saved!'
 
         fs.writeFileSync('state.json', state_json)
         console.log(msg)
@@ -125,9 +125,9 @@ class State extends MessageStrategy {
     State.lock = false
   }
 
-  Load(message) {
+  Load (message) {
     if (State.lock) {
-      console.log("State locked, possible load or save in progress")
+      console.log('State locked, possible load or save in progress')
       return
     }
 
@@ -136,7 +136,7 @@ class State extends MessageStrategy {
 
     while (!success) {
       try {
-        const data = fs.readFileSync('state.json', { encoding: 'utf8', flag: 'r' });
+        const data = fs.readFileSync('state.json', { encoding: 'utf8', flag: 'r' })
         const obj = JSON.parse(data)
 
         if (obj != null) {
@@ -145,11 +145,10 @@ class State extends MessageStrategy {
             MessageStrategy.client.sendText(message.from, 'State loaded')
           }
           success = true
-        }
-        else {
-          console.log("State load failed, object null")
+        } else {
+          console.log('State load failed, object null')
           State.self.waitFor(1000)
-        }        
+        }
       } catch (err) {
         console.log(err)
         State.self.waitFor(1000)

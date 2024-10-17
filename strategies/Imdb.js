@@ -8,13 +8,13 @@ class Imdb extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
   static self = null
 
-  constructor() {
+  constructor () {
     super('Imdb', {
       enabled: true
     })
   }
 
-  provides() {
+  provides () {
     Imdb.self = this
 
     return {
@@ -46,20 +46,20 @@ class Imdb extends MessageStrategy {
     }
   }
 
-  async Imdb(message) {
+  async Imdb (message) {
     try {
       const search_term = message.body.substring(5)
       nameToImdb(search_term, async function (err, res, inf) {
         if (err) return
 
         try {
-          let og_data = await Imdb.self.get_page_og_data(Imdb.self, 'https://www.imdb.com/title/' + res + '/', 1500)
+          const og_data = await Imdb.self.get_page_og_data(Imdb.self, 'https://www.imdb.com/title/' + res + '/', 1500)
 
           MessageStrategy.typing(message)
           console.log('https://www.imdb.com/title/' + res + '/')
           console.log(og_data)
           // MessageStrategy.client.sendLinkWithAutoPreview(message.from, 'https://www.imdb.com/title/' + res + '/', og_data[0], og_data[1])
-          await MessageStrategy.client.sendImage(message.from, og_data[1], 'imdb.jpg', og_data[0] + "\n\n" + 'https://www.imdb.com/title/' + res + '/')
+          await MessageStrategy.client.sendImage(message.from, og_data[1], 'imdb.jpg', og_data[0] + '\n\n' + 'https://www.imdb.com/title/' + res + '/')
         } catch (err) {
           MessageStrategy.client.sendText(message.from, err)
         }

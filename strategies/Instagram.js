@@ -10,13 +10,13 @@ class Instagram extends MessageStrategy {
   static config = {}
   static client = null
 
-  constructor() {
+  constructor () {
     super('Instagram', {
       enabled: true
     })
   }
 
-  provides() {
+  provides () {
     Instagram.self = this
 
     return {
@@ -24,7 +24,7 @@ class Instagram extends MessageStrategy {
       provides: {
         'instagram profile': {
           test: function (message) {
-            return message.body.toLowerCase() == "instagram profile"
+            return message.body.toLowerCase() == 'instagram profile'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -48,7 +48,7 @@ class Instagram extends MessageStrategy {
     }
   }
 
-  async Profile(message) {
+  async Profile (message) {
     try {
       // Instagram.config = JSON.parse(fs.readFileSync('strategies/config/instagram.json', { encoding: 'utf8', flag: 'r' }));
       // let username = Instagram.config['username']

@@ -8,13 +8,13 @@ class Youtube extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
   static self = null
 
-  constructor() {
+  constructor () {
     super('Youtube', {
       enabled: true
     })
   }
 
-  provides() {
+  provides () {
     Youtube.self = this
 
     return {
@@ -62,7 +62,7 @@ class Youtube extends MessageStrategy {
     }
   }
 
-  async Preview(message) {
+  async Preview (message) {
     try {
       let getVideo = false
 
@@ -88,41 +88,41 @@ class Youtube extends MessageStrategy {
       }
 
       const parts = message.body.split('/')
-      let video_id = ''
+      let videoId = ''
       if (parts[3].indexOf('v=') > -1) {
-        const sub_parts = parts[3].split('v=')
-        video_id = sub_parts[1]
+        const subParts = parts[3].split('v=')
+        videoId = subParts[1]
       } else if (parts[3] === 'shorts') {
-        video_id = parts[4]
+        videoId = parts[4]
       } else {
-        video_id = parts[3]
+        videoId = parts[3]
       }
 
       if (getVideo) {
         MessageStrategy.typing(message)
-        const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + video_id + '/hqdefault.jpg')
+        const youtubeImage = await MessageStrategy.get_image('https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg')
 
-        if (youtube_image === null) {
+        if (youtubeImage === null) {
           return
         }
 
-        const youtube = await Innertube.create(/* options */);
-        const video = await youtube.getBasicInfo(video_id)
+        const youtube = await Innertube.create(/* options */)
+        const video = await youtube.getBasicInfo(videoId)
 
         MessageStrategy.typing(message)
-        // MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', youtube_image)
-        await MessageStrategy.client.sendImage(message.from, youtube_image, 'yt.jpg', video.basic_info.title + "\n\n" + "https://www.youtube.com/watch?v=" + video_id)
+        // MessageStrategy.client.sendYoutubeLink(message.from, message.body, '', youtubeImage)
+        await MessageStrategy.client.sendImage(message.from, youtubeImage, 'yt.jpg', video.basic_info.title + '\n\n' + 'https://www.youtube.com/watch?v=' + videoId)
       }
     } catch (err) {
       console.log(err)
     }
   }
 
-  async Search(message) {
+  async Search (message) {
     const search_term = message.body.substring(7)
 
     try {
-      const youtube = await Innertube.create(/* options */);
+      const youtube = await Innertube.create(/* options */)
       const videos = await youtube.search(search_term)
 
       // console.log(await usetube.searchVideo(search_term))
@@ -132,12 +132,12 @@ class Youtube extends MessageStrategy {
       // console.log(results.videos)
       // console.log("==========================================")
       if (videos.results.length === 0) {
-        console.log("0 results");
+        console.log('0 results')
         return false
       }
       MessageStrategy.typing(message)
       const youtube_image = await MessageStrategy.get_image('https://img.youtube.com/vi/' + videos.results[0].id + '/hqdefault.jpg', 200, false)
-      await MessageStrategy.client.sendImage(message.from, "data:image/jpeg;base64," + youtube_image, 'yt.jpg', videos.results[0].title + "\n\n" + "https://www.youtube.com/watch?v=" + videos.results[0].id)
+      await MessageStrategy.client.sendImage(message.from, 'data:image/jpeg;base64,' + youtube_image, 'yt.jpg', videos.results[0].title + '\n\n' + 'https://www.youtube.com/watch?v=' + videos.results[0].id)
 
       // console.log("data:image/jpeg;base64," + youtube_image)
 

@@ -8,13 +8,13 @@ class Wikipedia extends MessageStrategy {
   static dummy = MessageStrategy.derived.add(this.name)
   static self = null
 
-  constructor() {
+  constructor () {
     super('Wikipedia', {
       enabled: true
     })
   }
 
-  provides() {
+  provides () {
     Wikipedia.self = this
 
     return {
@@ -70,7 +70,7 @@ class Wikipedia extends MessageStrategy {
         },
         'wiki state': {
           test: function (message) {
-            return message.body.toLowerCase() == "wiki state"
+            return message.body.toLowerCase() == 'wiki state'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -86,7 +86,7 @@ class Wikipedia extends MessageStrategy {
         },
         'wiki clear': {
           test: function (message) {
-            return message.body.toLowerCase() == "wiki clear"
+            return message.body.toLowerCase() == 'wiki clear'
           },
           access: function (message, strategy, action) {
             return MessageStrategy.hasAccess(message.sender.id, strategy.constructor.name + action.name)
@@ -127,7 +127,7 @@ class Wikipedia extends MessageStrategy {
             return 'Post wikipedia article randomly'
           },
           action: function (message) {
-            Wikipedia.self.RandomlyOnThisDay(message);
+            Wikipedia.self.RandomlyOnThisDay(message)
             return false
           },
           interactive: false,
@@ -145,33 +145,33 @@ class Wikipedia extends MessageStrategy {
     }
   }
 
-  async Setup(message) {
+  async Setup (message) {
     try {
       if (Object.keys(MessageStrategy.state).indexOf('Wikipedia') == -1) {
-        MessageStrategy.state['Wikipedia'] = {}
+        MessageStrategy.state.Wikipedia = {}
       }
 
-      if (Object.keys(MessageStrategy.state['Wikipedia']).indexOf('LastNotified') == -1) {
-        MessageStrategy.state['Wikipedia']['LastNotified'] = {}
+      if (Object.keys(MessageStrategy.state.Wikipedia).indexOf('LastNotified') == -1) {
+        MessageStrategy.state.Wikipedia.LastNotified = {}
       }
 
-      if (Object.keys(MessageStrategy.state['Wikipedia']['LastNotified']).indexOf(message.from) == -1) {
-        MessageStrategy.state['Wikipedia']['LastNotified'][message.from] = 0
+      if (Object.keys(MessageStrategy.state.Wikipedia.LastNotified).indexOf(message.from) == -1) {
+        MessageStrategy.state.Wikipedia.LastNotified[message.from] = 0
       }
 
-      if (Object.keys(MessageStrategy.state['Wikipedia']).indexOf('Chats') == -1) {
-        MessageStrategy.state['Wikipedia']['Chats'] = {}
+      if (Object.keys(MessageStrategy.state.Wikipedia).indexOf('Chats') == -1) {
+        MessageStrategy.state.Wikipedia.Chats = {}
       }
 
-      if (Object.keys(MessageStrategy.state['Wikipedia']['Chats']).indexOf(message.from) == -1) {
-        MessageStrategy.state['Wikipedia']['Chats'][message.from] = false
+      if (Object.keys(MessageStrategy.state.Wikipedia.Chats).indexOf(message.from) == -1) {
+        MessageStrategy.state.Wikipedia.Chats[message.from] = false
       }
     } catch (err) {
       console.log(err)
     }
   }
 
-  async Post(fullurl) {
+  async Post (fullurl) {
     try {
       const data = await Wikipedia.self.get_page_og_data(Wikipedia.self, fullurl, 500)
 
@@ -181,13 +181,13 @@ class Wikipedia extends MessageStrategy {
       }
 
       // MessageStrategy.client.sendLinkWithAutoPreview(Wikipedia.self.message.from, fullurl, data[0], data[1])
-      await MessageStrategy.client.sendImage(Wikipedia.self.message.from, data[1], 'meme.jpg', data[0] + "\n\n" + fullurl)
+      await MessageStrategy.client.sendImage(Wikipedia.self.message.from, data[1], 'meme.jpg', data[0] + '\n\n' + fullurl)
     } catch (err) {
       console.log(err)
     }
   }
 
-  async OnThisDay(message) {
+  async OnThisDay (message) {
     try {
       await Wikipedia.self.Setup(message)
       const events = await wiki.onThisDay()
@@ -200,64 +200,63 @@ class Wikipedia extends MessageStrategy {
     }
   }
 
-  async Clear(message) {
+  async Clear (message) {
     try {
-      delete MessageStrategy.state['Wikipedia']
+      delete MessageStrategy.state.Wikipedia
       await Wikipedia.self.Setup(message)
-      console.log(MessageStrategy.state['Wikipedia'])
+      console.log(MessageStrategy.state.Wikipedia)
     } catch (error) {
       console.log(error)
     }
   }
 
-  async State(message) {
+  async State (message) {
     try {
       await Wikipedia.self.Setup(message)
-      console.log(MessageStrategy.state['Wikipedia'])
+      console.log(MessageStrategy.state.Wikipedia)
     } catch (error) {
       console.log(error)
     }
   }
 
-  async Enable(message) {
+  async Enable (message) {
     try {
       await Wikipedia.self.Setup(message)
-      MessageStrategy.state['Wikipedia']['Chats'][message.from] = true
-      MessageStrategy.client.sendText(message.from, "Enabled")
+      MessageStrategy.state.Wikipedia.Chats[message.from] = true
+      MessageStrategy.client.sendText(message.from, 'Enabled')
     } catch (error) {
       console.log(error)
     }
   }
 
-  async Disable(message) {
+  async Disable (message) {
     try {
       await Wikipedia.self.Setup(message)
-      MessageStrategy.state['Wikipedia']['Chats'][message.from] = false
-      MessageStrategy.client.sendText(message.from, "Disabled")
+      MessageStrategy.state.Wikipedia.Chats[message.from] = false
+      MessageStrategy.client.sendText(message.from, 'Disabled')
     } catch (error) {
       console.log(error)
     }
   }
 
-  async RandomlyOnThisDay(message) {
+  async RandomlyOnThisDay (message) {
     try {
       await Wikipedia.self.Setup(message)
 
-      if (MessageStrategy.state['Wikipedia']['Chats'][message.from] == false) {
+      if (MessageStrategy.state.Wikipedia.Chats[message.from] == false) {
         return
       }
 
-      if ((Date.now() / 1000) > MessageStrategy.state['Wikipedia']['LastNotified'][message.from]) {
-        MessageStrategy.state['Wikipedia']['LastNotified'][message.from] = (Math.floor(Date.now() / 1000)) + await Wikipedia.self.randomIntFromInterval(259200, 432000)
+      if ((Date.now() / 1000) > MessageStrategy.state.Wikipedia.LastNotified[message.from]) {
+        MessageStrategy.state.Wikipedia.LastNotified[message.from] = (Math.floor(Date.now() / 1000)) + await Wikipedia.self.randomIntFromInterval(259200, 432000)
         Wikipedia.self.OnThisDay(message)
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err)
     }
   }
 
-  async Search(message) {
+  async Search (message) {
     try {
       const page = await wiki.page(message.body.substring(4))
       if (Object.keys(page).includes('fullurl')) {

@@ -10,13 +10,13 @@ class Spam extends MessageStrategy {
   static banned = {}
   static self = null
 
-  constructor() {
+  constructor () {
     super('Spam', {
       enabled: true
     })
   }
 
-  provides() {
+  provides () {
     Spam.self = this
 
     return {
@@ -48,7 +48,7 @@ class Spam extends MessageStrategy {
     }
   }
 
-  Spam(message) {
+  Spam (message) {
     const spammer = message.chatId + ' - ' + message.sender.id
 
     if (spammer in Spam.banned) {

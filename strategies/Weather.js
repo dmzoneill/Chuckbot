@@ -52,7 +52,7 @@ class Weather extends MessageStrategy {
   GetWeather (message) {
     const search_term = message.body.substring(7)
     weather.find({ search: search_term, degreeType: 'C' }, function (err, result) {
-      if (err) { 
+      if (err) {
         console.log(err)
         return
       }

@@ -11,14 +11,14 @@ class Crypto extends MessageStrategy {
   static self = null
   static ccxtconfig = null
 
-  constructor() {
+  constructor () {
     super('Crypto', {
       enabled: true
     })
     this.get_coins(this)
   }
 
-  provides() {
+  provides () {
     Crypto.self = this
 
     return {
@@ -168,7 +168,7 @@ class Crypto extends MessageStrategy {
             return MessageStrategy.state.Crypto.enabled
           }
         },
-        'coin': {
+        coin: {
           test: function (message) {
             return message.body.toLowerCase() === 'coin'
           },
@@ -178,7 +178,7 @@ class Crypto extends MessageStrategy {
           help: function () {
             return 'Shows top 50 coins'
           },
-          action: function GetCoinMarketCap(message) {
+          action: function GetCoinMarketCap (message) {
             Crypto.self.GetCoinMarketCap(message)
             return true
           },
@@ -197,7 +197,7 @@ class Crypto extends MessageStrategy {
           help: function () {
             return 'Shows X number of coins'
           },
-          action: function GetCoinMarketCap(message) {
+          action: function GetCoinMarketCap (message) {
             Crypto.self.GetCoinMarketCap(message)
             return true
           },
@@ -216,7 +216,7 @@ class Crypto extends MessageStrategy {
           help: function () {
             return 'Shows graph for a given coin'
           },
-          action: function GetGraph(message) {
+          action: function GetGraph (message) {
             Crypto.self.get_graph(message)
             return true
           },
@@ -235,7 +235,7 @@ class Crypto extends MessageStrategy {
           help: function () {
             return 'Shows graph for a given coin with a time frame 1d/7d/1m/3m/1y'
           },
-          action: function GetGraphDated(message) {
+          action: function GetGraphDated (message) {
             Crypto.self.get_graph(message)
             return true
           },
@@ -254,9 +254,9 @@ class Crypto extends MessageStrategy {
     }
   }
 
-  async ExchangeList(message) {
+  async ExchangeList (message) {
     try {
-      let exchanges = ccxt.exchanges
+      const exchanges = ccxt.exchanges
 
       let msg = '```'
       for (let p = 0; p < exchanges.length - 1; p += 2) {
@@ -271,7 +271,7 @@ class Crypto extends MessageStrategy {
           msg = msg.trim()
           msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
-          msg = "```"
+          msg = '```'
         }
       }
       msg = msg.trim()
@@ -282,22 +282,22 @@ class Crypto extends MessageStrategy {
     }
   }
 
-  async ExchangeDescribe(message) {
+  async ExchangeDescribe (message) {
     try {
       const parts = message.body.split(' ')
-      let exchanges = ccxt.exchanges
+      const exchanges = ccxt.exchanges
 
       if (parts.length != 3) {
-        console.log("bad request")
+        console.log('bad request')
         return
       }
 
       if (exchanges.indexOf(parts[2].toLowerCase()) == -1) {
-        console.log("bad exchange")
+        console.log('bad exchange')
         return
       }
 
-      let exchange = new ccxt[parts[2].toLowerCase()]({ verbose: true })
+      const exchange = new ccxt[parts[2].toLowerCase()]({ verbose: true })
 
       MessageStrategy.client.sendText(message.from, JSON.stringify(exchange.describe(), null, 4))
     } catch (err) {
@@ -305,46 +305,46 @@ class Crypto extends MessageStrategy {
     }
   }
 
-  async ExchangeSymbols(message) {
+  async ExchangeSymbols (message) {
     try {
       if (Crypto.ccxtconfig == null) {
-        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }));
+        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }))
       }
 
       const parts = message.body.split(' ')
-      let exchanges = ccxt.exchanges
+      const exchanges = ccxt.exchanges
 
       if (exchanges.indexOf(parts[3].toLowerCase()) == -1) {
-        MessageStrategy.client.sendText(message.from, "No such exchange")
-        console.log("No such exchange")
+        MessageStrategy.client.sendText(message.from, 'No such exchange')
+        console.log('No such exchange')
         return
       }
 
       if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) == -1) {
-        MessageStrategy.client.sendText(message.from, "Exchange not configured")
-        console.log("Exchange not configured")
+        MessageStrategy.client.sendText(message.from, 'Exchange not configured')
+        console.log('Exchange not configured')
       }
 
-      let config = {
+      const config = {
         apiKey: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.apiKey,
         secret: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.secret,
         verbose: true
       }
 
-      let exchange = new ccxt[parts[3].toLowerCase()](config)
-      let markets = await exchange.loadMarkets()
+      const exchange = new ccxt[parts[3].toLowerCase()](config)
+      const markets = await exchange.loadMarkets()
 
-      let keys = Object.keys(markets).sort()
-      let msg = "```"
+      const keys = Object.keys(markets).sort()
+      let msg = '```'
       for (let p = 0; p < keys.length; p++) {
-        msg += markets[keys[p]]['info']['symbol'] + "\n"
+        msg += markets[keys[p]].info.symbol + '\n'
         if (p > 1 && p % 15 == 0) {
-          msg += "```"
+          msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
-          msg = "```"
+          msg = '```'
         }
       }
-      msg += "```"
+      msg += '```'
 
       MessageStrategy.client.sendText(message.from, msg)
     } catch (err) {
@@ -352,34 +352,34 @@ class Crypto extends MessageStrategy {
     }
   }
 
-  async ExchangeSymbolTicker(message) {
+  async ExchangeSymbolTicker (message) {
     // JavaScript
     try {
       if (Crypto.ccxtconfig == null) {
-        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }));
+        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }))
       }
 
       const parts = message.body.split(' ')
-      let exchanges = ccxt.exchanges
+      const exchanges = ccxt.exchanges
 
       if (exchanges.indexOf(parts[3].toLowerCase()) == -1) {
-        MessageStrategy.client.sendText(message.from, "No such exchange")
-        console.log("No such exchange")
+        MessageStrategy.client.sendText(message.from, 'No such exchange')
+        console.log('No such exchange')
         return
       }
 
       if (Object.keys(Crypto.ccxtconfig).indexOf(parts[3].toLowerCase()) == -1) {
-        MessageStrategy.client.sendText(message.from, "Exchange not configured")
-        console.log("Exchange not configured")
+        MessageStrategy.client.sendText(message.from, 'Exchange not configured')
+        console.log('Exchange not configured')
       }
 
-      let config = {
+      const config = {
         apiKey: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.apiKey,
         secret: Crypto.ccxtconfig[parts[3].toLowerCase()].creds.secret,
         verbose: false
       }
 
-      let exchange = new ccxt[parts[3].toLowerCase()](config)
+      const exchange = new ccxt[parts[3].toLowerCase()](config)
       await exchange.loadMarkets()
       console.log(Object.keys(exchange.markets))
       console.log(exchange.markets['ETH/BTC'])
@@ -391,33 +391,32 @@ class Crypto extends MessageStrategy {
       const period = '1hr'
       const chart = asciichart.plot(series.slice(-25), { height: 12, padding: '         ' })
       MessageStrategy.client.sendText(message.from,
-        "```" +
-        chart + "\n\n" +
-        bitcoinRate + "\n\n" +
+        '```' +
+        chart + '\n\n' +
+        bitcoinRate + '\n\n' +
         period +
-        "```")
-
+        '```')
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
     }
   }
 
-  async TAFunctionDescription(message) {
+  async TAFunctionDescription (message) {
     try {
-      let func = message.body.substring(13).trim().toUpperCase()
+      const func = message.body.substring(13).trim().toUpperCase()
       console.log(func)
-      let function_desc = talib.explain(func);
+      const function_desc = talib.explain(func)
       MessageStrategy.client.sendText(message.from, JSON.stringify(function_desc, null, 2))
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
     }
   }
 
-  async TAFunctionDescriptionAll(message) {
+  async TAFunctionDescriptionAll (message) {
     try {
-      let functions = talib.functions;
-      for (let i in functions) {
-        let function_desc = talib.explain(functions[i].name);
+      const functions = talib.functions
+      for (const i in functions) {
+        const function_desc = talib.explain(functions[i].name)
         console.log(function_desc)
       }
     } catch (err) {
@@ -425,80 +424,79 @@ class Crypto extends MessageStrategy {
     }
   }
 
-  async TAFunctionList(message) {
+  async TAFunctionList (message) {
     try {
-      let functions = talib.functions;
-      let msg = "```"
+      const functions = talib.functions
+      let msg = '```'
       let p = 0
-      for (let i in functions) {
+      for (const i in functions) {
         console.log(JSON.stringify(functions[i]))
-        let name = functions[i].name
-        let hint = functions[i].hint
-        let group = functions[i].group
+        const name = functions[i].name
+        const hint = functions[i].hint
+        const group = functions[i].group
 
         if (name == undefined || group == undefined || hint == undefined) {
           continue
         }
 
-        msg += name + "\n"
-        msg += "  " + hint + "\n"
-        msg += "  " + group + "\n"
+        msg += name + '\n'
+        msg += '  ' + hint + '\n'
+        msg += '  ' + group + '\n'
         if (p > 0 && p % 8 == 0) {
-          msg += "```"
+          msg += '```'
           MessageStrategy.client.sendText(message.from, msg)
-          msg = "```"
+          msg = '```'
         }
         p++
       }
-      msg += "```"
+      msg += '```'
       MessageStrategy.client.sendText(message.from, msg)
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
     }
   }
 
-  async get_market_data(pair, interval = "1h", source_exchange = "binance") {
-    let config = {
+  async get_market_data (pair, interval = '1h', source_exchange = 'binance') {
+    const config = {
       apiKey: Crypto.ccxtconfig[source_exchange].creds.apiKey,
       secret: Crypto.ccxtconfig[source_exchange].creds.secret,
       verbose: false
     }
 
-    let exchange = new ccxt[source_exchange](config)
+    const exchange = new ccxt[source_exchange](config)
     await exchange.loadMarkets()
     const ohlcv = await exchange.fetchOHLCV(pair, interval)
 
-    let oh_open = ohlcv.map(a => a[1]); // [ timestamp, open, high, low, close, volume ]
-    let oh_close = ohlcv.map(a => a[4]); // [ timestamp, open, high, low, close, volume ]
-    let oh_high = ohlcv.map(a => a[2]); // [ timestamp, open, high, low, close, volume ]
-    let oh_low = ohlcv.map(a => a[3]); // [ timestamp, open, high, low, close, volume ]
-    let oh_volume = ohlcv.map(a => a[5]); // [ timestamp, open, high, low, close, volume ]
+    const oh_open = ohlcv.map(a => a[1]) // [ timestamp, open, high, low, close, volume ]
+    const oh_close = ohlcv.map(a => a[4]) // [ timestamp, open, high, low, close, volume ]
+    const oh_high = ohlcv.map(a => a[2]) // [ timestamp, open, high, low, close, volume ]
+    const oh_low = ohlcv.map(a => a[3]) // [ timestamp, open, high, low, close, volume ]
+    const oh_volume = ohlcv.map(a => a[5]) // [ timestamp, open, high, low, close, volume ]
 
     // market data as arrays
-    var marketData = { open: oh_open, close: oh_close, high: oh_high, low: oh_low, volume: oh_volume };
+    const marketData = { open: oh_open, close: oh_close, high: oh_high, low: oh_low, volume: oh_volume }
 
     return marketData
   }
 
-  async TAAnalyzeFunc(message) {
+  async TAAnalyzeFunc (message) {
     try {
-
       if (Crypto.ccxtconfig == null) {
-        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }));
+        Crypto.ccxtconfig = JSON.parse(fs.readFileSync('strategies/config/cctx.json', { encoding: 'utf8', flag: 'r' }))
       }
 
       const parts = message.body.split(' ')
-      let tafunc = parts[2].toUpperCase()
-      let tapair = parts[3].toUpperCase()
-      let tainterval = parts[4].toLowerCase()
-      let function_desc = talib.explain(tafunc);
+      const tafunc = parts[2].toUpperCase()
+      const tapair = parts[3].toUpperCase()
+      const tainterval = parts[4].toLowerCase()
+      const function_desc = talib.explain(tafunc)
 
       const marketData = Object.keys(message).indexOf('marketData') > -1 ? message.marketData : await Crypto.self.get_market_data(tapair, tainterval)
 
       console.log(tafunc)
-      console.log(JSON.stringify(function_desc['inputs'], null, 2))
-      console.log(JSON.stringify(function_desc['optInputs'], null, 2))
-      console.log(JSON.stringify(function_desc['outputs'], null, 2))
+      console.log(JSON.stringify(function_desc.inputs, null, 2))
+      console.log(JSON.stringify(function_desc.optInputs, null, 2))
+      console.log(JSON.stringify(function_desc.outputs, null, 2))
 
       let options = {}
 
@@ -512,7 +510,7 @@ class Crypto extends MessageStrategy {
         optInTimePeriod: 14
       }
 
-      if (tafunc == "SMA") {
+      if (tafunc == 'SMA') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -522,7 +520,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == "EMA") {
+      if (tafunc == 'EMA') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -532,7 +530,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == "STOCH") {
+      if (tafunc == 'STOCH') {
         options = {
           name: tafunc,
           inPriceHLC: marketData.close,
@@ -542,7 +540,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == "STOCHF") {
+      if (tafunc == 'STOCHF') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -555,7 +553,7 @@ class Crypto extends MessageStrategy {
         }
       }
 
-      if (tafunc == "STOCHRSI") {
+      if (tafunc == 'STOCHRSI') {
         options = {
           name: tafunc,
           startIdx: 0,
@@ -569,24 +567,24 @@ class Crypto extends MessageStrategy {
       }
 
       // Calculate the ADX values using Ta-Lib
-      const taValues = talib.execute(options).result.outReal;
+      const taValues = talib.execute(options).result.outReal
 
       console.log(JSON.stringify(taValues, null, 2))
 
       const { Chart, registerables } = await import('chart.js')
-      Chart.register(...registerables);
+      Chart.register(...registerables)
 
-      let interval = tainterval.indexOf("y") > -1 ? "Year" : ""
-      interval = tainterval.indexOf("M") > -1 ? "Month" : interval
-      interval = tainterval.indexOf("w") > -1 ? "Week" : interval
-      interval = tainterval.indexOf("d") > -1 ? "Day" : interval
-      interval = tainterval.indexOf("h") > -1 ? "Hour" : interval
-      interval = tainterval.indexOf("m") > -1 ? "Minute" : interval
-      interval = tainterval.indexOf("s") > -1 ? "Second" : interval
+      let interval = tainterval.indexOf('y') > -1 ? 'Year' : ''
+      interval = tainterval.indexOf('M') > -1 ? 'Month' : interval
+      interval = tainterval.indexOf('w') > -1 ? 'Week' : interval
+      interval = tainterval.indexOf('d') > -1 ? 'Day' : interval
+      interval = tainterval.indexOf('h') > -1 ? 'Hour' : interval
+      interval = tainterval.indexOf('m') > -1 ? 'Minute' : interval
+      interval = tainterval.indexOf('s') > -1 ? 'Second' : interval
 
       // Create a new Chart.js chart
-      const canvas = createCanvas(800, 600);
-      const ctx = canvas.getContext('2d');
+      const canvas = createCanvas(800, 600)
+      const ctx = canvas.getContext('2d')
       const chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -609,56 +607,54 @@ class Crypto extends MessageStrategy {
             }]
           }
         }
-      });
+      })
 
       // Export the chart as a PNG image
-      const imageBuffer = canvas.toBuffer('image/png');
+      const imageBuffer = canvas.toBuffer('image/png')
 
       MessageStrategy.client.sendImage(message.chatId, imageBuffer, 'filename.jpeg', '')
 
       return marketData
     } catch (err) {
-      console.log(err.stack);
+      console.log(err.stack)
       MessageStrategy.client.sendText(message.from, err)
     }
   }
 
-  async TAAnalyze(message) {
+  async TAAnalyze (message) {
     try {
-
       const parts = message.body.split(' ')
-      let tapair = parts[2].toUpperCase()
-      let tainterval = parts[3].toLowerCase()
+      const tapair = parts[2].toUpperCase()
+      const tainterval = parts[3].toLowerCase()
 
-      let functions = talib.functions;
-      let msg = ""
-      let marketData = undefined
-      for (let i in functions) {
-        if (functions[i].group == "Math Transform" || functions[i].group == undefined || functions[i].group == "Price Transform") {
-          console.log("Skip " + functions[i].name)
+      const functions = talib.functions
+      const msg = ''
+      let marketData
+      for (const i in functions) {
+        if (functions[i].group == 'Math Transform' || functions[i].group == undefined || functions[i].group == 'Price Transform') {
+          console.log('Skip ' + functions[i].name)
           continue
         }
         try {
-          let msg = {
-            body: "coin analyze " + functions[i].name + " " + tapair + " " + tainterval,
+          const msg = {
+            body: 'coin analyze ' + functions[i].name + ' ' + tapair + ' ' + tainterval,
             chatId: message.chatId,
             from: message.from
           }
           if (marketData != undefined) {
-            msg['marketData'] = marketData
+            msg.marketData = marketData
           }
           marketData = await Crypto.self.TAAnalyzeFunc(msg)
         } catch (err) {
           console.log(err)
         }
       }
-
     } catch (err) {
       MessageStrategy.client.sendText(message.from, err)
     }
   }
 
-  get_coin_value(slug) {
+  get_coin_value (slug) {
     for (let i = 0; i < Crypto.coins.length; i++) {
       if (Crypto.coins[i].slug === slug) {
         return parseFloat(Crypto.coins[i].quote.USD.price).toFixed(3)
@@ -667,7 +663,7 @@ class Crypto extends MessageStrategy {
     return '0'
   }
 
-  get_coin(slug) {
+  get_coin (slug) {
     for (let i = 0; i < Crypto.coins.length; i++) {
       if (Crypto.coins[i].slug === slug) {
         return Crypto.coins[i]
@@ -676,7 +672,7 @@ class Crypto extends MessageStrategy {
     return {}
   }
 
-  async get_coins(message) {
+  async get_coins (message) {
     const apiKey = fs.readFileSync('strategies/config/coincap-api.key').toString().trim()
     const client = new CoinMarketCap(apiKey)
 
@@ -696,7 +692,7 @@ class Crypto extends MessageStrategy {
     })
   }
 
-  async GetCoinMarketCap(message) {
+  async GetCoinMarketCap (message) {
     await this.get_coins(this)
 
     const apiKey = fs.readFileSync('strategies/config/coincap-api.key').toString().trim()
@@ -758,7 +754,7 @@ class Crypto extends MessageStrategy {
     })
   }
 
-  async get_graph(message) {
+  async get_graph (message) {
     await this.get_coins(this)
 
     const parts = message.body.split(' ')
@@ -794,7 +790,7 @@ class Crypto extends MessageStrategy {
     try {
       MessageStrategy.typing(message)
 
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'] , headless:true})
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'], headless: true })
       const page = await browser.newPage()
 
       const symbol = coin.toUpperCase()
@@ -858,26 +854,24 @@ class Crypto extends MessageStrategy {
 
       MessageStrategy.typing(message)
 
-      const acceptCookie = await page.waitForXPath('//*[@id="onetrust-accept-btn-handler"]');
-      await acceptCookie.click();
+      const acceptCookie = await page.waitForXPath('//*[@id="onetrust-accept-btn-handler"]')
+      await acceptCookie.click()
 
       let selected = false
 
-      while(selected == false) {
+      while (selected == false) {
         try {
           const xpath = '//*[@id="section-coin-chart"]'
-          await page.waitForXPath(xpath, {timeout: 1000})
+          await page.waitForXPath(xpath, { timeout: 1000 })
           selected = xpath
           break
-        }
-        catch(err) {}
+        } catch (err) {}
         try {
           const xpath = '//*[@id="__next"]/div/div[1]/div[2]/div/div[3]/div/div[1]/div[2]/div[1]/div/div/div'
-          await page.waitForXPath(xpath, {timeout: 1000})          
+          await page.waitForXPath(xpath, { timeout: 1000 })
           selected = xpath
           break
-        }
-        catch(err) {}
+        } catch (err) {}
       }
 
       const element = await page.$x(selected)

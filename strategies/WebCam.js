@@ -153,28 +153,27 @@ class WebCam extends MessageStrategy {
     }
   }
 
-  async SendPic(message) {
+  async SendPic (message) {
     try {
       // Read the directory to get all files
-      const dirPath = './strategies/webcam/';
-      const files = fs.readdirSync(dirPath);
-  
+      const dirPath = './strategies/webcam/'
+      const files = fs.readdirSync(dirPath)
+
       // Filter to ensure only images are selected (optional, based on file extension)
-      const imageFiles = files.filter(file => ['.jpg', '.jpeg', '.png', '.gif'].includes(path.extname(file).toLowerCase()));
-  
+      const imageFiles = files.filter(file => ['.jpg', '.jpeg', '.png', '.gif'].includes(path.extname(file).toLowerCase()))
+
       if (imageFiles.length === 0) {
-        throw new Error('No image files found in the directory');
+        throw new Error('No image files found in the directory')
       }
-  
+
       // Select a random image
-      const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
-  
+      const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)]
+
       // Send the randomly selected image
-      const filePath = path.join(dirPath, randomImage);
-      await MessageStrategy.client.sendImage(message.chatId, filePath, randomImage, '');
-  
+      const filePath = path.join(dirPath, randomImage)
+      await MessageStrategy.client.sendImage(message.chatId, filePath, randomImage, '')
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
   }
 }
