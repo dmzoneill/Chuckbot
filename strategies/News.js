@@ -305,40 +305,45 @@ class News extends MessageStrategy {
 
     return [resshort, resfull]
   }
-
-  async getLocsFromXML (message, sitemapUrl) {
+  
+  async getLocsFromXML(message, sitemapUrl) {
     const locs = []
-
-    // Fetch the XML data from the sitemap URL
-    const xmlData = await MessageStrategy.axiosHttpRequest(message, 'GET', sitemapUrl, false, 200, false)
-
-    // Parse XML data using xml2js
-    // eslint-disable-next-line no-undef
-    const parser = new xml2js.Parser({ explicitArray: false })
-    const parsedData = await parser.parseStringPromise(xmlData)
-
-    // Check for subsitemaps in <sitemap> tags
-    if (parsedData.sitemapindex && parsedData.sitemapindex.sitemap) {
-      const sitemaps = parsedData.sitemapindex.sitemap
-      // Loop through subsitemaps and recursively fetch locs
-      for (const sitemap of Array.isArray(sitemaps) ? sitemaps : [sitemaps]) {
-        const subsitemapLoc = sitemap.loc
-        const subsitemapLocs = await this.getLocsFromXML(message, subsitemapLoc)
-        locs.push(...subsitemapLocs)
+  
+    try {
+      // Fetch the XML data from the sitemap URL
+      const xmlData = await MessageStrategy.axiosHttpRequest(message, 'GET', sitemapUrl, false, 200, false)
+  
+      // Parse XML data using xml2js
+      const parser = new xml2js.Parser({ explicitArray: false })
+      const parsedData = await parser.parseStringPromise(xmlData)
+  
+      // Check for subsitemaps in <sitemap> tags
+      if (parsedData.sitemapindex && parsedData.sitemapindex.sitemap) {
+        const sitemaps = parsedData.sitemapindex.sitemap
+        // Loop through subsitemaps and recursively fetch locs
+        for (const sitemap of Array.isArray(sitemaps) ? sitemaps : [sitemaps]) {
+          const subsitemapLoc = sitemap.loc
+          const subsitemapLocs = await this.getLocsFromXML(message, subsitemapLoc)
+          locs.push(...subsitemapLocs)
+        }
       }
-    }
-
-    // Get URLs from <url> tags in the current sitemap
-    if (parsedData.urlset && parsedData.urlset.url) {
-      const urls = parsedData.urlset.url
-      for (const url of Array.isArray(urls) ? urls : [urls]) {
-        locs.push(url.loc)
+  
+      // Get URLs from <url> tags in the current sitemap
+      if (parsedData.urlset && parsedData.urlset.url) {
+        const urls = parsedData.urlset.url
+        for (const url of Array.isArray(urls) ? urls : [urls]) {
+          locs.push(url.loc)
+        }
       }
+    } catch (error) {
+      console.error(`Error processing XML from ${sitemapUrl}:`, error)
+      // Optionally: Re-throw the error or return a default value
+      // throw error
     }
-
+  
     return locs
   }
-
+  
   async subscribe (message) {
     try {
       const parts = message.body.trim().split(' ')
